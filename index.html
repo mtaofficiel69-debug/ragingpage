@@ -3,13 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ScriptMM : écriture de scénario</title>
+<title>Raging Page : écriture de scénario</title>
 <script>
   // Applique le thème sauvegardé avant le premier rendu, pour éviter un flash clair->sombre.
   try{ if(localStorage.getItem('scriptmm_theme')==='dark') document.documentElement.setAttribute('data-theme','dark'); }catch(e){}
 </script>
-<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%2032%2032%22%3E%3Crect%20width=%2232%22%20height=%2232%22%20rx=%228%22%20fill=%22%233699D4%22/%3E%3Cpath%20d=%22M9%205.5h9.5L24%2011v15a1.5%201.5%200%200%201-1.5%201.5h-12A1.5%201.5%200%200%201%209%2026z%22%20fill=%22%23fff%22/%3E%3Cpath%20d=%22M18.5%205.5V11H24z%22%20fill=%22%23BCDDF3%22/%3E%3Cpath%20d=%22M14%2015.5h5%22%20stroke=%22%23262535%22%20stroke-width=%221.9%22%20stroke-linecap=%22round%22/%3E%3Cpath%20d=%22M12.5%2019.2h8M12.5%2022.6h5.5%22%20stroke=%22%233699D4%22%20stroke-width=%221.9%22%20stroke-linecap=%22round%22/%3E%3C/svg%3E">
-<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%2032%2032%22%3E%3Crect%20width=%2232%22%20height=%2232%22%20rx=%228%22%20fill=%22%233699D4%22/%3E%3Cpath%20d=%22M9%205.5h9.5L24%2011v15a1.5%201.5%200%200%201-1.5%201.5h-12A1.5%201.5%200%200%201%209%2026z%22%20fill=%22%23fff%22/%3E%3Cpath%20d=%22M18.5%205.5V11H24z%22%20fill=%22%23BCDDF3%22/%3E%3Cpath%20d=%22M14%2015.5h5%22%20stroke=%22%23262535%22%20stroke-width=%221.9%22%20stroke-linecap=%22round%22/%3E%3Cpath%20d=%22M12.5%2019.2h8M12.5%2022.6h5.5%22%20stroke=%22%233699D4%22%20stroke-width=%221.9%22%20stroke-linecap=%22round%22/%3E%3C/svg%3E">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%2016%2016%22%20shape-rendering=%22crispEdges%22%3E%3Cstyle%3E.b%7Bfill:%231F6FA0%7D.r%7Bfill:%23FCFDFE%7D%40media%20%28prefers-color-scheme:dark%29%7B.b%7Bfill:%233699D4%7D.r%7Bfill:%230E2A3D%7D%7D%3C/style%3E%3Cpath%20class=%22b%22%20d=%22M0%200h11v1h-11zM0%201h11v1h-11zM0%202h11v1h-11zM0%203h11v1h-11zM0%204h11v1h-11zM0%205h16v1h-16zM0%206h16v1h-16zM0%207h16v1h-16zM0%208h16v1h-16zM0%209h16v1h-16zM0%2010h16v1h-16zM0%2011h16v1h-16zM0%2012h16v1h-16zM0%2013h16v1h-16zM0%2014h16v1h-16zM0%2015h16v1h-16z%22/%3E%3Cpath%20fill=%22%23B7D4EC%22%20d=%22M11%200h1v1h-1zM11%201h2v1h-2zM11%202h3v1h-3zM11%203h4v1h-4zM11%204h5v1h-5z%22/%3E%3Cpath%20class=%22r%22%20d=%22M2%203h8v1h-8zM3%204h3v1h-3zM8%204h3v1h-3zM3%205h3v1h-3zM9%205h3v1h-3zM3%206h3v1h-3zM9%206h3v1h-3zM3%207h3v1h-3zM8%207h3v1h-3zM3%208h7v1h-7zM3%209h3v1h-3zM7%209h3v1h-3zM3%2010h3v1h-3zM7%2010h3v1h-3zM3%2011h3v1h-3zM8%2011h3v1h-3zM3%2012h3v1h-3zM8%2012h3v1h-3zM3%2013h3v1h-3zM9%2013h3v1h-3zM2%2014h5v1h-5zM8%2014h4v1h-4z%22/%3E%3C/svg%3E">
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%2064%2064%22%3E%3Cstyle%3E.b%7Bfill:%231F6FA0%7D%40media%20%28prefers-color-scheme:dark%29%7B.b%7Bfill:%233699D4%7D%7D%3C/style%3E%3Crect%20class=%22b%22%20width=%2264%22%20height=%2264%22%20rx=%2214%22%20fill=%22%231F6FA0%22/%3E%3Cpath%20d=%22M8%204H40L56%2020V60H8Z%22%20fill=%22%23FCFDFE%22%20stroke=%22%23FCFDFE%22%20stroke-width=%222.5%22%20stroke-linejoin=%22round%22/%3E%3Cpath%20d=%22M40%204V20H56Z%22%20fill=%22%23B7D4EC%22%20stroke=%22%23B7D4EC%22%20stroke-width=%221.5%22%20stroke-linejoin=%22round%22/%3E%3Cpath%20d=%22M13%2025L30%2032M51%2027L34%2032%22%20stroke=%22%2314425E%22%20stroke-width=%228%22%20stroke-linecap=%22round%22/%3E%3Ccircle%20cx=%2224%22%20cy=%2241.5%22%20r=%227.6%22%20fill=%22%2314425E%22/%3E%3Ccircle%20cx=%2226.4%22%20cy=%2239%22%20r=%222.2%22%20fill=%22%23FCFDFE%22/%3E%3Ccircle%20cx=%2242%22%20cy=%2241.5%22%20r=%227.6%22%20fill=%22%2314425E%22/%3E%3Ccircle%20cx=%2244.4%22%20cy=%2239%22%20r=%222.2%22%20fill=%22%23FCFDFE%22/%3E%3Cpath%20d=%22M18%2054H37%22%20stroke=%22%2314425E%22%20stroke-width=%225.6%22%20stroke-linecap=%22round%22/%3E%3Cg%20transform=%22translate%2837%2054%29%20rotate%28-28%29%22%3E%3Crect%20x=%22-1%22%20y=%22-4%22%20width=%226%22%20height=%228%22%20rx=%221.2%22%20fill=%22%235DB6EC%22/%3E%3Crect%20x=%225%22%20y=%22-4%22%20width=%2215%22%20height=%228%22%20fill=%22%2314425E%22/%3E%3Cpath%20d=%22M20%20-4L27%200L20%204Z%22%20fill=%22%23FCFDFE%22/%3E%3C/g%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Archivo:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=Courier+Prime:wght@400;700&family=Playfair+Display:wght@600;700&family=Bebas+Neue&family=Caveat:wght@600;700&family=Special+Elite&family=Cinzel:wght@600;700&family=Cormorant+Garamond:wght@600;700&family=Tinos:ital,wght@0,400;0,700;1,400;1,700&family=Arimo:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Cutive+Mono&family=Anonymous+Pro:wght@400;700&family=IBM+Plex+Mono:wght@400;700&family=Space+Mono:wght@400;700&family=JetBrains+Mono:wght@400;700&family=Roboto+Mono:wght@400;700&family=Source+Code+Pro:wght@400;700&family=DM+Mono:wght@400&family=Overpass+Mono:wght@400;700&family=Xanh+Mono&family=Syne+Mono&family=VT323&family=Share+Tech+Mono&family=Roboto:wght@400;700&family=Open+Sans:wght@400;700&family=Lato:wght@400;700&family=Montserrat:wght@400;700&family=Poppins:wght@400;700&family=Raleway:wght@400;700&family=Nunito:wght@400;700&family=Work+Sans:wght@400;700&family=DM+Sans:wght@400;700&family=Manrope:wght@400;700&family=Outfit:wght@400;700&family=Urbanist:wght@400;700&family=Jost:wght@400;700&family=Josefin+Sans:wght@400;700&family=Quicksand:wght@400;700&family=Barlow:wght@400;700&family=Karla:wght@400;700&display=swap" rel="stylesheet">
@@ -215,7 +215,7 @@
   }
   #homeView .wd-brand{display:flex; align-items:center; gap:11px; font-family:var(--sans); font-weight:700; font-size:19px; letter-spacing:-.01em; color:var(--ink);}
   #homeView .wd-brand em{font-style:normal; color:var(--accent);}
-  #homeView .wd-logo{width:30px; height:30px; flex:none; display:block; border-radius:7px;}
+  #homeView .wd-logo{width:40px; height:40px; flex:none; display:block; border-radius:7px;}
   #homeView .wd-top-r{display:flex; align-items:center; gap:10px;}
   #homeView .wd-body{flex:1; min-height:0; display:flex; align-items:stretch; width:100%; max-width:1180px; margin:0 auto; padding:28px 24px 24px; gap:28px;}
   #homeView .wd-side{flex:none; width:268px; display:flex; flex-direction:column; gap:4px; overflow-y:auto; min-height:0;}
@@ -313,7 +313,7 @@
   .fmt-opt .d{font-size:12.5px; color:var(--ink-soft); margin-top:2px;}
   .modal-actions{display:flex; justify-content:flex-end; gap:8px; margin-top:22px;}
 
-  /* ---------- boîtes de dialogue ScriptMM (remplacent confirm()/prompt()) ---------- */
+  /* ---------- boîtes de dialogue Raging Page (remplacent confirm()/prompt()) ---------- */
   .mmd-backdrop{position:fixed; inset:0; z-index:500; display:flex; align-items:center; justify-content:center; padding:20px; background:rgba(20,20,30,.52); animation:mmdFade .14s ease-out;}
   .mmd{width:100%; max-width:410px; background:var(--surface); color:var(--ink); border-radius:12px; padding:24px 24px 18px; box-shadow:0 0 0 1px var(--hair), 0 24px 64px rgba(10,10,20,.38); animation:mmdPop .17s cubic-bezier(.2,.8,.3,1);}
   .mmd-head{display:flex; gap:14px; align-items:flex-start;}
@@ -1301,7 +1301,7 @@
   .print-page:last-child{break-after:auto; page-break-after:auto;}
   /* v47 : encre IDENTIQUE à WriterDuet à l'export PDF et à l'impression. WriterDuet imprime tout le texte
      (courant, gras, italique, numéros de scène et de page, marques de continuité) en noir 0/0/0, sans
-     transparence ; ScriptMM utilisait un gris bleuté (#23262E), un gris moyen pour les numéros et un brun
+     transparence ; Raging Page utilisait un gris bleuté (#23262E), un gris moyen pour les numéros et un brun
      pour les didascalies. Le gras reste un vrai gras (graisse de police), donc toujours distinct du reste.
      L'affichage à l'écran (éditeur) n'est pas modifié. */
   .print-page{ --paper-ink:#000; --paper-ink-soft:#000; color:#000; }
@@ -1471,19 +1471,34 @@
   html[data-theme="dark"]{ --shadow-sm:0 1px 2px rgba(0,0,0,.35); --shadow-md:0 8px 22px -6px rgba(0,0,0,.55); }
   body{font-feature-settings:'cv11','ss01'; letter-spacing:-.003em;}
 
-  /* Le nom « ScriptMM » */
-  .mm-word{display:inline-flex; align-items:baseline; font-family:'Space Grotesk','Inter',system-ui,sans-serif; line-height:1; letter-spacing:-.045em; white-space:nowrap; user-select:none;}
-  .mm-word .w1{font-weight:600; color:var(--ink);}
-  .mm-word .w2{font-weight:700; color:var(--accent); margin-left:.035em; letter-spacing:-.06em;}
+  /* Le nom « Raging Page » */
+  .mm-word{display:inline-flex; align-items:center; line-height:0; white-space:nowrap; user-select:none;}
+  .mm-word svg{display:block; height:1em; width:4.836em;}
+  .mm-word .w1{fill:var(--ink);}
+  .mm-word .w2{fill:var(--accent);}
+  .mmlb{fill:#1F6FA0;}
+  html[data-theme="dark"] .mmlb, .rail .mmlb{fill:#3699D4;}
+  /* Fumée du crayon : uniquement sur le logo de l'accueil (mmLogo(..., true)) */
+  .mm-logo-smoke{overflow:visible;}
+  .mm-smoke .sp{fill:#FCFDFE; stroke:#14425E; stroke-width:1.8; transform-box:fill-box; transform-origin:center; opacity:0; animation:mmSmoke 4.2s ease-out infinite;}
+  .mm-smoke .sp2{animation-delay:1.4s;}
+  .mm-smoke .sp3{animation-delay:2.8s;}
+  @keyframes mmSmoke{0%{opacity:0; transform:translate(0,2px) scale(.45);} 18%{opacity:1;} 65%{opacity:.9;} 100%{opacity:0; transform:translate(9px,-38px) scale(1.6);}}
+  @media (prefers-reduced-motion:reduce){
+    .mm-smoke .sp{animation:none; opacity:.95;}
+    .mm-smoke .sp1{transform:translate(0,-3px) scale(.8);}
+    .mm-smoke .sp2{transform:translate(4px,-16px) scale(1.1);}
+    .mm-smoke .sp3{transform:translate(8px,-30px) scale(1.4); opacity:.7;}
+  }
   #homeView .wd-brand{font-size:inherit; gap:12px;}
-  #homeView .wd-brand .mm-word{font-size:26px;}
+  #homeView .wd-brand .mm-word{font-size:37.5px;}
   #homeView .wd-about b{display:block; margin-bottom:8px;}
-  #homeView .wd-about b .mm-word{font-size:19px;}
-  .mm-word-sm{font-size:21px;}
+  #homeView .wd-about b .mm-word{font-size:26.6px;}
+  .mm-word-sm{font-size:31.5px;}
   .hub-sep{width:1px; height:20px; background:var(--hair); margin:0 4px; flex:none;}
-  .rail .mm-word{font-size:23px;}
-  .rail .mm-word .w1{color:#fff;}
-  .rail .mm-word .w2{color:#6DBCEB;}
+  .rail .mm-word{font-size:29.4px;}
+  .rail .mm-word .w1{fill:#fff;}
+  .rail .mm-word .w2{fill:#6DBCEB;}
 
   /* Accueil : compteur de scénarios */
   #homeView .wd-main-h{align-items:center; gap:14px; margin:2px 2px 18px;}
@@ -2937,7 +2952,7 @@ async function migrateLocalStorageToIDB(){
     }
   }catch(e){ /* IndexedDB indisponible ou erreur en cours de route : on ne touche à rien. */ }
 }
-/* Demande au navigateur de classer ScriptMM en stockage "persistant" :
+/* Demande au navigateur de classer Raging Page en stockage "persistant" :
    Chrome et Firefox honorent cette demande et excluent alors le site de
    l'éviction automatique en cas de pression mémoire (le nettoyage
    silencieux qui peut sinon vider les données d'un site peu visité).
@@ -2976,7 +2991,7 @@ function toggleTheme(){
    MODE MACHINE À ÉCRIRE (typewriter mode)
    -----------------------------------------------------------------
    Fonctionnalité de WriterDuet (Menu > View > Typewriter Mode) absente
-   de ScriptMM : quand elle est activée, le curseur reste toujours centré
+   de Raging Page : quand elle est activée, le curseur reste toujours centré
    verticalement dans la fenêtre pendant l'écriture — c'est la page qui
    défile sous lui, jamais l'inverse, comme sur une vraie machine à
    écrire. Se branche uniquement sur ensureRectVisible() (voir plus bas),
@@ -3024,12 +3039,12 @@ function toggleFocusMode(){
 /* =====================================================================
    NAVIGATEUR DE SCÈNES
    ---------------------------------------------------------------------
-   Fonctionnalité de WriterDuet absente de ScriptMM : le « Navigator »,
+   Fonctionnalité de WriterDuet absente de Raging Page : le « Navigator »,
    la liste de toutes les scènes affichée EN PERMANENCE à côté du texte,
    avec la scène en cours d'écriture surlignée et un clic pour sauter
    n'importe où.
 
-   POURQUOI C'ÉTAIT LE MANQUE PRINCIPAL : ScriptMM savait déjà sauter à
+   POURQUOI C'ÉTAIT LE MANQUE PRINCIPAL : Raging Page savait déjà sauter à
    une scène (Ctrl+G) et les montrer en cartes ou en séquencier, mais
    toujours en QUITTANT la page — soit dans une boîte modale, soit dans
    un autre onglet. Or la question qu'on se pose en écrivant n'est pas
@@ -4035,7 +4050,7 @@ function computeStats(){
 function render(){
   try{ applyLineSpacing(S.view==='editor' ? S.project : null); }catch(e){}
   const app = document.getElementById('app');
-  document.title = L('ScriptMM : écriture de scénario','ScriptMM: screenwriting');
+  document.title = L('Raging Page : écriture de scénario','Raging Page: screenwriting');
   if(S.view==='home'){ app.innerHTML = renderHome(); attachHomeEvents(); }
   else if(S.view==='series'){ app.innerHTML = renderSeriesHub(); }
   else{ applyScriptFont(S.project); app.innerHTML = renderEditorShell(); attachEditorEvents(); renderTabBody(); }
@@ -4125,7 +4140,7 @@ function renderHome(){
   <div id="homeView">
     <header class="wd-top">
       <div class="wd-brand">
-        ${mmLogo(30,'wd-logo')}
+        ${mmLogo(40,'wd-logo',true)}
         ${mmWordmark()}
       </div>
       <div class="wd-top-r">${langFlagsHtml()}${themeToggleBtnHtml('btn-ghost btn-sm')}</div>
@@ -4438,7 +4453,7 @@ function helpTabContent(tab){
       T('Tout s\u2019enregistre automatiquement dans ce navigateur, sans compte à créer.','Everything saves automatically in this browser, with no account to create.'))}
     ${C(L('Google Drive','Google Drive'),
       P([L('Une copie de ton scénario dans <b>ton</b> Drive, mise à jour toute seule','A copy of your screenplay in <b>your</b> Drive, updated automatically'),
-         L('ScriptMM ne voit que ses propres fichiers, jamais le reste de ton Drive','ScriptMM only sees its own files, never the rest of your Drive'),
+         L('Raging Page ne voit que ses propres fichiers, jamais le reste de ton Drive','Raging Page only sees its own files, never the rest of your Drive'),
          L('Menu ⋯ › « Connecter Google Drive », ou Paramètres › Sauvegarde','\u22ef menu \u203a \u201cConnect Google Drive\u201d, or Settings \u203a Backup')]))}
     ${C(L('Coffre-fort','Vault'),
       P([L('Relie ton scénario à un fichier <b>.smmproj</b> de ton ordinateur : il est réécrit tout seul après chaque modification','Link your screenplay to a <b>.smmproj</b> file on your computer: it is rewritten automatically after every change'),
@@ -4551,7 +4566,7 @@ function renderSeriesHub(){
   return `<div id="seriesHubView">
     <div class="home-wrap">
       <div class="home-brand" style="justify-content:space-between; width:100%;">
-        <span style="display:flex; align-items:center; gap:10px;">${mmLogo(26,'wd-logo')}${mmWordmark('mm-word-sm')}<span class="hub-sep"></span><button class="btn btn-ghost btn-sm" data-act="goHome">${icon('undo')} ${L('Accueil','Home')}</button></span>
+        <span style="display:flex; align-items:center; gap:10px;">${mmLogo(40,'wd-logo')}${mmWordmark('mm-word-sm')}<span class="hub-sep"></span><button class="btn btn-ghost btn-sm" data-act="goHome">${icon('undo')} ${L('Accueil','Home')}</button></span>
         ${themeToggleBtnHtml('btn-ghost btn-sm')}
       </div>
       <div class="home-sub" style="font-size:22px;font-weight:600;color:var(--ink);margin-top:10px;">${esc(name)}</div>
@@ -4689,12 +4704,12 @@ async function confirmAddEpisode(seriesId){
 /* ===================== LOGO + BOÎTES DE DIALOGUE ===================== */
 /* Un seul logo pour toute l'appli (accueil, hub de série, colonne de
    l'éditeur, favicon). Le favicon du <head> est la même image, en data-URI. */
-function mmLogo(size, cls){
-  return '<svg class="' + (cls||'') + '" width="' + size + '" height="' + size + '" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="8" fill="#3699D4"/><path d="M9 5.5h9.5L24 11v15a1.5 1.5 0 0 1-1.5 1.5h-12A1.5 1.5 0 0 1 9 26z" fill="#fff"/><path d="M18.5 5.5V11H24z" fill="#BCDDF3"/><path d="M14 15.5h5" stroke="#262535" stroke-width="1.9" stroke-linecap="round"/><path d="M12.5 19.2h8M12.5 22.6h5.5" stroke="#3699D4" stroke-width="1.9" stroke-linecap="round"/></svg>';
+function mmLogo(size, cls, smoke){
+  return '<svg class="' + (cls||'') + (smoke ? ' mm-logo-smoke' : '') + '" width="' + size + '" height="' + size + '" viewBox="0 0 64 64" aria-hidden="true"><rect class="mmlb" width="64" height="64" rx="14" fill="#1F6FA0"/><path d="M12 7H38L53 22V57H12Z" fill="#FCFDFE" stroke="#FCFDFE" stroke-width="3" stroke-linejoin="round"/><path d="M38 7V22H53Z" fill="#B7D4EC" stroke="#B7D4EC" stroke-width="2" stroke-linejoin="round"/><path d="M16 25L31 30M50 27L35 30" stroke="#14425E" stroke-width="6" stroke-linecap="round"/><circle cx="25" cy="38" r="6.6" fill="#14425E"/><circle cx="27.2" cy="35.8" r="1.9" fill="#FCFDFE"/><circle cx="41" cy="38" r="6.6" fill="#14425E"/><circle cx="43.2" cy="35.8" r="1.9" fill="#FCFDFE"/><path d="M20 51H37" stroke="#14425E" stroke-width="5.6" stroke-linecap="round"/><g transform="translate(37 51) rotate(-28)"><rect x="-1" y="-3.2" width="5" height="6.4" rx="1" fill="#5DB6EC"/><rect x="4" y="-3.2" width="15" height="6.4" fill="#14425E"/><path d="M19 -3.2L25.5 0L19 3.2Z" fill="#FCFDFE"/></g>' + (smoke ? '<g class="mm-smoke"><circle class="sp sp1" cx="58.5" cy="37" r="4.2"/><circle class="sp sp2" cx="58.5" cy="37" r="4.2"/><circle class="sp sp3" cx="58.5" cy="37" r="4.2"/></g>' : '') + '</svg>';
 }
-/* Le nom « ScriptMM », dessiné une seule fois : accueil, hub de série, colonne de l'éditeur. */
+/* Le nom « Raging Page », dessiné une seule fois : accueil, hub de série, colonne de l'éditeur. */
 function mmWordmark(cls){
-  return '<span class="mm-word' + (cls ? ' ' + cls : '') + '" aria-label="ScriptMM"><span class="w1">Script</span><span class="w2">MM</span></span>';
+  return '<span class="mm-word' + (cls ? ' ' + cls : '') + '" role="img" aria-label="Raging Page"><svg viewBox="0 -1911 11713 2422" aria-hidden="true" focusable="false"><path class="w1" d="M1428 -913Q1428 -826 1388.0 -750.0Q1348 -674 1276.0 -621.5Q1204 -569 1107 -552Q1048 -542 1004.0 -525.5Q960 -509 913.0 -496.5Q866 -484 799 -484Q746 -484 696.0 -492.5Q646 -501 603.5 -514.5Q561 -528 530 -544L528 -703Q561 -683 594.0 -672.5Q627 -662 662.0 -658.5Q697 -655 735 -655Q865 -655 934.5 -722.0Q1004 -789 1004 -917Q1004 -1005 964.5 -1074.0Q925 -1143 854.0 -1182.5Q783 -1222 686 -1222H637V-294Q637 -255 650.5 -237.0Q664 -219 689 -204L718 -189Q747 -171 758.5 -148.0Q770 -125 770 -93Q770 0 665 0H177Q125 0 99.0 -24.5Q73 -49 73 -93Q73 -161 135 -192L169 -209Q195 -221 208.5 -239.0Q222 -257 222 -294V-1106Q222 -1143 208.5 -1161.0Q195 -1179 169 -1191L135 -1208Q73 -1239 73 -1307Q73 -1351 99.0 -1375.5Q125 -1400 177 -1400H710Q944 -1400 1104.0 -1336.5Q1264 -1273 1346.0 -1163.0Q1428 -1053 1428 -913ZM800 -567 1196 -615 1392 -271Q1411 -239 1428.0 -223.0Q1445 -207 1479 -190Q1509 -175 1524.0 -151.5Q1539 -128 1539 -93Q1539 -50 1513.5 -25.0Q1488 0 1434 0H1012Q912 0 912 -93Q912 -115 921.0 -132.0Q930 -149 946 -163L963 -173Q973 -181 975.5 -195.5Q978 -210 967 -231Z M2191.0 -156V-183L2156.0 -191V-731Q2156.0 -775 2133.5 -800.5Q2111.0 -826 2071.0 -826Q2040.0 -826 2019.0 -811.5Q1998.0 -797 1998.0 -773V-715Q1998.0 -638 1947.5 -596.5Q1897.0 -555 1803.0 -555Q1720.0 -555 1680.0 -590.5Q1640.0 -626 1640.0 -689Q1640.0 -755 1698.0 -817.5Q1756.0 -880 1873.0 -920.5Q1990.0 -961 2164.0 -961Q2350.0 -961 2439.0 -886.5Q2528.0 -812 2528.0 -682V-249Q2528.0 -233 2536.5 -220.5Q2545.0 -208 2565.0 -208Q2576.0 -208 2583.5 -211.5Q2591.0 -215 2597.0 -219Q2602.0 -223 2608.0 -226.0Q2614.0 -229 2622.0 -229Q2645.0 -229 2657.5 -211.5Q2670.0 -194 2670.0 -169Q2670.0 -123 2640.5 -78.5Q2611.0 -34 2557.0 -4.5Q2503.0 25 2429.0 25Q2327.0 25 2259.0 -25.5Q2191.0 -76 2191.0 -156ZM1605.0 -212Q1605.0 -348 1725.0 -427.0Q1845.0 -506 2046.0 -506Q2100.0 -506 2144.5 -499.5Q2189.0 -493 2217.0 -480L2180.0 -371Q2158.0 -383 2136.5 -388.0Q2115.0 -393 2088.0 -393Q2040.0 -393 2010.5 -364.0Q1981.0 -335 1981.0 -286Q1981.0 -235 2009.5 -206.5Q2038.0 -178 2086.0 -178Q2121.0 -178 2150.0 -192.5Q2179.0 -207 2195.0 -227L2220.0 -119Q2173.0 -50 2083.5 -12.5Q1994.0 25 1893.0 25Q1760.0 25 1682.5 -42.0Q1605.0 -109 1605.0 -212Z M3386.0 -131Q3279.0 -143 3224.5 -151.5Q3170.0 -160 3150.5 -170.0Q3131.0 -180 3131.0 -196Q3131.0 -206 3139.5 -215.5Q3148.0 -225 3166.0 -235L3152.0 -253Q3018.0 -252 2940.5 -223.5Q2863.0 -195 2831.0 -151.0Q2799.0 -107 2799.0 -58Q2799.0 -6 2827.5 35.0Q2856.0 76 2935.5 105.5Q3015.0 135 3166.0 152Q3285.0 165 3350.5 177.0Q3416.0 189 3442.0 204.5Q3468.0 220 3468.0 245Q3468.0 267 3449.5 284.0Q3431.0 301 3382.0 310.0Q3333.0 319 3242.0 319Q3087.0 319 3033.5 290.0Q2980.0 261 2980.0 214Q2980.0 188 2994.0 164.5Q3008.0 141 3032.0 129L3011.0 106Q2834.0 112 2759.5 161.5Q2685.0 211 2685.0 297Q2685.0 358 2735.0 401.5Q2785.0 445 2891.0 467.5Q2997.0 490 3164.0 490Q3478.0 490 3635.0 396.5Q3792.0 303 3792.0 149Q3792.0 65 3751.5 8.5Q3711.0 -48 3621.5 -81.5Q3532.0 -115 3386.0 -131ZM3356.0 -861 3460.0 -846Q3486.0 -908 3508.5 -936.5Q3531.0 -965 3561.0 -965Q3584.0 -965 3599.5 -951.5Q3615.0 -938 3630.0 -921.0Q3645.0 -904 3667.5 -891.0Q3690.0 -878 3727.0 -878Q3785.0 -878 3818.0 -920.0Q3851.0 -962 3851.0 -1033Q3851.0 -1110 3805.5 -1150.5Q3760.0 -1191 3691.0 -1191Q3598.0 -1191 3520.0 -1131.0Q3442.0 -1071 3390.0 -944ZM3710.0 -600Q3710.0 -697 3655.5 -778.5Q3601.0 -860 3494.0 -909.5Q3387.0 -959 3231.0 -959Q3068.0 -959 2952.0 -911.5Q2836.0 -864 2774.0 -777.5Q2712.0 -691 2712.0 -572Q2712.0 -471 2771.0 -392.0Q2830.0 -313 2944.5 -268.0Q3059.0 -223 3224.0 -223Q3370.0 -223 3479.0 -270.0Q3588.0 -317 3649.0 -401.5Q3710.0 -486 3710.0 -600ZM3179.0 -823Q3243.0 -826 3283.0 -753.5Q3323.0 -681 3334.0 -553Q3344.0 -459 3320.5 -410.0Q3297.0 -361 3242.0 -359Q3203.0 -357 3170.5 -388.5Q3138.0 -420 3117.5 -482.5Q3097.0 -545 3089.0 -637Q3082.0 -694 3090.5 -734.5Q3099.0 -775 3121.5 -798.5Q3144.0 -822 3179.0 -823Z M4297.0 -878V-262Q4297.0 -214 4304.5 -196.0Q4312.0 -178 4326.0 -168L4343.0 -158Q4365.0 -144 4377.0 -125.0Q4389.0 -106 4389.0 -78Q4389.0 -42 4366.5 -21.0Q4344.0 0 4304.0 0H3915.0Q3876.0 0 3853.5 -21.0Q3831.0 -42 3831.0 -78Q3831.0 -106 3843.0 -125.0Q3855.0 -144 3877.0 -158L3894.0 -168Q3908.0 -178 3915.5 -196.0Q3923.0 -214 3923.0 -262V-609Q3923.0 -650 3913.0 -666.0Q3903.0 -682 3885.0 -691L3865.0 -697Q3843.0 -711 3831.0 -726.5Q3819.0 -742 3819.0 -767Q3819.0 -796 3836.0 -816.0Q3853.0 -836 3893.0 -852L4084.0 -926Q4132.0 -945 4162.0 -953.0Q4192.0 -961 4222.0 -961Q4258.0 -961 4277.5 -938.0Q4297.0 -915 4297.0 -878ZM4093.0 -1057Q3993.0 -1057 3934.0 -1106.5Q3875.0 -1156 3875.0 -1241Q3875.0 -1326 3934.0 -1375.0Q3993.0 -1424 4093.0 -1424Q4194.0 -1424 4252.5 -1375.0Q4311.0 -1326 4311.0 -1242Q4311.0 -1156 4252.5 -1106.5Q4194.0 -1057 4093.0 -1057Z M4922.0 -878V-262Q4922.0 -209 4928.0 -189.0Q4934.0 -169 4949.0 -159L4967.0 -148Q5003.0 -121 5003.0 -78Q5003.0 0 4927.0 0H4540.0Q4501.0 0 4478.0 -21.0Q4455.0 -42 4455.0 -78Q4455.0 -106 4467.0 -124.5Q4479.0 -143 4502.0 -158L4518.0 -168Q4533.0 -178 4540.0 -196.0Q4547.0 -214 4547.0 -262V-609Q4547.0 -650 4537.5 -666.0Q4528.0 -682 4510.0 -691L4490.0 -697Q4468.0 -711 4455.5 -726.5Q4443.0 -742 4443.0 -767Q4443.0 -796 4460.5 -816.0Q4478.0 -836 4517.0 -852L4709.0 -926Q4756.0 -945 4786.0 -953.0Q4816.0 -961 4847.0 -961Q4882.0 -961 4902.0 -938.0Q4922.0 -915 4922.0 -878ZM4888.0 -609 4819.0 -690 4864.0 -734Q4992.0 -861 5090.5 -911.5Q5189.0 -962 5274.0 -962Q5401.0 -962 5477.0 -878.5Q5553.0 -795 5553.0 -656V-262Q5553.0 -214 5560.0 -195.5Q5567.0 -177 5582.0 -168L5598.0 -158Q5621.0 -142 5633.0 -124.0Q5645.0 -106 5645.0 -78Q5645.0 -42 5622.5 -21.0Q5600.0 0 5560.0 0H5173.0Q5097.0 0 5097.0 -78Q5097.0 -121 5133.0 -148L5151.0 -159Q5167.0 -169 5173.0 -189.0Q5179.0 -209 5179.0 -262V-564Q5179.0 -629 5149.0 -663.5Q5119.0 -698 5065.0 -698Q5030.0 -698 4993.5 -685.0Q4957.0 -672 4922.0 -640Z M6390.0 -131Q6283.0 -143 6228.5 -151.5Q6174.0 -160 6154.5 -170.0Q6135.0 -180 6135.0 -196Q6135.0 -206 6143.5 -215.5Q6152.0 -225 6170.0 -235L6156.0 -253Q6022.0 -252 5944.5 -223.5Q5867.0 -195 5835.0 -151.0Q5803.0 -107 5803.0 -58Q5803.0 -6 5831.5 35.0Q5860.0 76 5939.5 105.5Q6019.0 135 6170.0 152Q6289.0 165 6354.5 177.0Q6420.0 189 6446.0 204.5Q6472.0 220 6472.0 245Q6472.0 267 6453.5 284.0Q6435.0 301 6386.0 310.0Q6337.0 319 6246.0 319Q6091.0 319 6037.5 290.0Q5984.0 261 5984.0 214Q5984.0 188 5998.0 164.5Q6012.0 141 6036.0 129L6015.0 106Q5838.0 112 5763.5 161.5Q5689.0 211 5689.0 297Q5689.0 358 5739.0 401.5Q5789.0 445 5895.0 467.5Q6001.0 490 6168.0 490Q6482.0 490 6639.0 396.5Q6796.0 303 6796.0 149Q6796.0 65 6755.5 8.5Q6715.0 -48 6625.5 -81.5Q6536.0 -115 6390.0 -131ZM6360.0 -861 6464.0 -846Q6490.0 -908 6512.5 -936.5Q6535.0 -965 6565.0 -965Q6588.0 -965 6603.5 -951.5Q6619.0 -938 6634.0 -921.0Q6649.0 -904 6671.5 -891.0Q6694.0 -878 6731.0 -878Q6789.0 -878 6822.0 -920.0Q6855.0 -962 6855.0 -1033Q6855.0 -1110 6809.5 -1150.5Q6764.0 -1191 6695.0 -1191Q6602.0 -1191 6524.0 -1131.0Q6446.0 -1071 6394.0 -944ZM6714.0 -600Q6714.0 -697 6659.5 -778.5Q6605.0 -860 6498.0 -909.5Q6391.0 -959 6235.0 -959Q6072.0 -959 5956.0 -911.5Q5840.0 -864 5778.0 -777.5Q5716.0 -691 5716.0 -572Q5716.0 -471 5775.0 -392.0Q5834.0 -313 5948.5 -268.0Q6063.0 -223 6228.0 -223Q6374.0 -223 6483.0 -270.0Q6592.0 -317 6653.0 -401.5Q6714.0 -486 6714.0 -600ZM6183.0 -823Q6247.0 -826 6287.0 -753.5Q6327.0 -681 6338.0 -553Q6348.0 -459 6324.5 -410.0Q6301.0 -361 6246.0 -359Q6207.0 -357 6174.5 -388.5Q6142.0 -420 6121.5 -482.5Q6101.0 -545 6093.0 -637Q6086.0 -694 6094.5 -734.5Q6103.0 -775 6125.5 -798.5Q6148.0 -822 6183.0 -823Z"/><path class="w2" transform="translate(7180 0)" d="M1445 -915Q1428 -797 1370.5 -706.5Q1313 -616 1226.5 -555.0Q1140 -494 1034.0 -463.0Q928 -432 814 -432Q709 -432 635.0 -448.5Q561 -465 481 -505L537 -667Q581 -633 632.5 -614.5Q684 -596 746 -596Q836 -596 906.0 -637.5Q976 -679 1021.0 -756.0Q1066 -833 1080 -940Q1095 -1038 1074.0 -1101.5Q1053 -1165 1007.5 -1196.0Q962 -1227 900 -1227Q842 -1227 810.5 -1192.5Q779 -1158 758 -1083Q756 -1073 745.5 -1035.5Q735 -998 720.0 -940.5Q705 -883 686.0 -813.5Q667 -744 646.5 -669.5Q626 -595 607.0 -523.0Q588 -451 572.0 -389.5Q556 -328 545 -285Q533 -234 539.5 -212.5Q546 -191 567 -186L629 -171Q657 -164 669.0 -144.0Q681 -124 681 -96Q681 -54 654.5 -27.0Q628 0 579 0H97Q45 0 27.0 -23.5Q9 -47 9 -82Q9 -118 29.5 -141.5Q50 -165 77 -177L111 -191Q138 -201 151.0 -217.0Q164 -233 174 -269Q186 -311 203.0 -372.0Q220 -433 240.0 -505.0Q260 -577 281.5 -654.5Q303 -732 323.5 -806.5Q344 -881 361.5 -948.0Q379 -1015 392.0 -1066.5Q405 -1118 411 -1147Q417 -1174 409.0 -1189.5Q401 -1205 383 -1213L348 -1229Q323 -1243 309.5 -1260.0Q296 -1277 296 -1304Q296 -1348 323.0 -1374.0Q350 -1400 401 -1400H957Q1083 -1400 1181.5 -1366.0Q1280 -1332 1345.0 -1268.0Q1410 -1204 1436.5 -1114.5Q1463 -1025 1445 -915Z M2269.0 -359Q2255.0 -308 2261.5 -281.0Q2268.0 -254 2293.0 -254Q2310.0 -254 2322.0 -261.0Q2334.0 -268 2350.0 -280Q2362.0 -288 2374.0 -289.5Q2386.0 -291 2395.0 -287Q2416.0 -280 2421.0 -253.0Q2426.0 -226 2407.0 -175Q2375.0 -85 2293.0 -31.0Q2211.0 23 2104.0 23Q2039.0 23 2002.5 -20.0Q1966.0 -63 1966.0 -139Q1966.0 -167 1968.0 -194.0Q1970.0 -221 1974.5 -251.5Q1979.0 -282 1987.0 -319.5Q1995.0 -357 2008.0 -404L2029.0 -309Q1971.0 -197 1905.0 -123.0Q1839.0 -49 1762.5 -13.0Q1686.0 23 1593.0 23Q1480.0 23 1416.0 -56.0Q1352.0 -135 1367.0 -299Q1375.0 -390 1409.5 -482.0Q1444.0 -574 1504.5 -657.0Q1565.0 -740 1650.0 -805.0Q1735.0 -870 1844.0 -907.5Q1953.0 -945 2085.0 -945Q2221.0 -945 2300.0 -927.0Q2379.0 -909 2411.0 -874.5Q2443.0 -840 2437.0 -793Q2433.0 -755 2414.0 -734.5Q2395.0 -714 2374.5 -693.5Q2354.0 -673 2344.0 -635ZM1706.0 -332Q1697.0 -261 1714.5 -230.5Q1732.0 -200 1761.0 -200Q1795.0 -200 1833.5 -229.0Q1872.0 -258 1909.5 -308.0Q1947.0 -358 1978.5 -420.0Q2010.0 -482 2031.0 -549.0Q2052.0 -616 2057.0 -679Q2061.0 -719 2045.0 -741.5Q2029.0 -764 1998.0 -764Q1961.0 -764 1922.5 -739.0Q1884.0 -714 1848.5 -670.5Q1813.0 -627 1783.5 -572.0Q1754.0 -517 1733.5 -455.0Q1713.0 -393 1706.0 -332Z M3345.0 -14Q3303.0 158 3217.0 272.0Q3131.0 386 2996.5 443.5Q2862.0 501 2674.0 501Q2539.0 501 2456.0 447.0Q2373.0 393 2373.0 305Q2373.0 243 2413.0 199.5Q2453.0 156 2520.0 156Q2571.0 156 2612.5 179.5Q2654.0 203 2691.0 233.5Q2728.0 264 2764.0 287.0Q2800.0 310 2838.0 310Q2877.0 310 2908.5 291.0Q2940.0 272 2964.5 229.0Q2989.0 186 3006.0 115L3128.0 -357L3158.0 -305Q3104.0 -194 3039.5 -121.5Q2975.0 -49 2897.5 -13.0Q2820.0 23 2727.0 23Q2651.0 23 2596.5 -12.5Q2542.0 -48 2516.5 -120.0Q2491.0 -192 2501.0 -300Q2509.0 -391 2543.5 -483.0Q2578.0 -575 2638.0 -658.0Q2698.0 -741 2783.5 -805.5Q2869.0 -870 2978.5 -907.5Q3088.0 -945 3221.0 -945Q3356.0 -945 3435.0 -927.0Q3514.0 -909 3545.5 -877.0Q3577.0 -845 3569.0 -801Q3564.0 -771 3551.5 -752.0Q3539.0 -733 3525.0 -710.5Q3511.0 -688 3501.0 -646ZM2840.0 -334Q2834.0 -287 2840.5 -257.5Q2847.0 -228 2862.5 -215.0Q2878.0 -202 2898.0 -202Q2932.0 -202 2970.0 -229.5Q3008.0 -257 3044.5 -305.5Q3081.0 -354 3112.0 -415.0Q3143.0 -476 3163.5 -543.0Q3184.0 -610 3189.0 -675Q3193.0 -718 3176.5 -741.5Q3160.0 -765 3131.0 -765Q3094.0 -765 3056.0 -740.0Q3018.0 -715 2982.5 -672.0Q2947.0 -629 2917.5 -573.5Q2888.0 -518 2867.5 -456.5Q2847.0 -395 2840.0 -334Z M3733.0 -429Q3733.0 -429 3765.5 -438.5Q3798.0 -448 3851.5 -463.5Q3905.0 -479 3967.0 -498.0Q4029.0 -517 4088.5 -535.5Q4148.0 -554 4192.0 -570L4164.0 -531Q4176.0 -561 4181.5 -598.5Q4187.0 -636 4187.0 -680Q4187.0 -725 4166.5 -751.0Q4146.0 -777 4107.0 -777Q4074.0 -777 4041.5 -750.5Q4009.0 -724 3981.5 -676.0Q3954.0 -628 3935.5 -564.0Q3917.0 -500 3913.0 -427Q3906.0 -307 3951.0 -246.5Q3996.0 -186 4080.0 -186Q4127.0 -186 4171.0 -201.0Q4215.0 -216 4254.0 -244.5Q4293.0 -273 4322.0 -315Q4356.0 -353 4378.5 -367.5Q4401.0 -382 4429.0 -379Q4457.0 -378 4468.5 -356.5Q4480.0 -335 4479.0 -308Q4478.0 -229 4414.5 -152.5Q4351.0 -76 4232.5 -26.0Q4114.0 24 3948.0 24Q3813.0 24 3728.0 -24.0Q3643.0 -72 3605.5 -158.0Q3568.0 -244 3574.0 -356Q3581.0 -478 3628.0 -584.5Q3675.0 -691 3756.0 -771.5Q3837.0 -852 3944.5 -897.5Q4052.0 -943 4180.0 -943Q4269.0 -943 4327.5 -914.5Q4386.0 -886 4420.0 -834.5Q4454.0 -783 4468.0 -716Q4474.0 -694 4481.0 -680.0Q4488.0 -666 4499.0 -660Q4514.0 -655 4523.0 -642.5Q4532.0 -630 4533.0 -609Q4533.0 -578 4512.0 -552.5Q4491.0 -527 4435.0 -512Q4381.0 -496 4309.0 -475.0Q4237.0 -454 4158.5 -432.0Q4080.0 -410 4005.5 -389.0Q3931.0 -368 3871.5 -351.0Q3812.0 -334 3776.0 -324.0Q3740.0 -314 3740.0 -314Z"/></svg></span>';
 }
 /* Remplacent confirm() et prompt() : mêmes réponses (true/false, texte/null),
    mais en promesse — l'appelant fait « await ». Échap = annuler, Entrée =
@@ -4824,7 +4839,7 @@ function renderEditorShell(){
   <div id="editorView">
     <div class="rail">
       <div class="rail-top">
-        <div class="rail-brand" data-act="goHome" title="${L('Retour au portfolio','Back to portfolio')}">${mmLogo(28,'rail-logo')}${mmWordmark()}</div>
+        <div class="rail-brand" data-act="goHome" title="${L('Retour au portfolio','Back to portfolio')}">${mmLogo(38,'rail-logo')}${mmWordmark()}</div>
         <div class="rail-project" data-label="${L('Scénario','Screenplay')}">${esc(p.title)}</div>
       </div>
       <div class="rail-nav">${items}</div>
@@ -7445,7 +7460,7 @@ function gotoMatch(dir){
 /* =====================================================================
    ALLER À LA SCÈNE (Ctrl+K)
    -----------------------------------------------------------------
-   Fonctionnalité de WriterDuet absente de ScriptMM : jusqu'ici, atteindre
+   Fonctionnalité de WriterDuet absente de Raging Page : jusqu'ici, atteindre
    une scène précise obligeait à passer par l'onglet Cartes (donc à QUITTER
    l'éditeur) ou à faire défiler à la main. Ici : une liste filtrable de
    toutes les entêtes, avec leur numéro et leur page, ↑/↓ pour choisir,
@@ -7516,7 +7531,7 @@ function jumpToScene(id){
 /* =====================================================================
    RECHERCHER & REMPLACER (Ctrl+H)
    -----------------------------------------------------------------
-   Fonctionnalité de WriterDuet absente de ScriptMM : la recherche
+   Fonctionnalité de WriterDuet absente de Raging Page : la recherche
    existante savait TROUVER mais pas REMPLACER, alors que c'est l'outil
    qu'on utilise le plus souvent sur un scénario — rebaptiser un
    personnage ou un lieu d'un coup dans tout le texte.
@@ -8691,7 +8706,7 @@ ${[['projet',L('Projet','Project')],['page',L('Mise en page','Layout')],['backup
       <p class="sset-lead">${L('Choisis comment protéger ton travail. Ces réglages s\u2019appliquent tout de suite.','Choose how to protect your work. These settings apply immediately.')}</p>
     ${settingsCloudHtml()}
     <div class="panel-block"><h4>${L('Sauvegarde','Backup')}</h4>
-      <p class="sset-sub">${L('De temps en temps, ScriptMM télécharge une copie <b>.smmproj</b> de ton scénario, hors du navigateur.','From time to time, ScriptMM downloads a <b>.smmproj</b> copy of your screenplay, outside the browser.')}</p>
+      <p class="sset-sub">${L('De temps en temps, Raging Page télécharge une copie <b>.smmproj</b> de ton scénario, hors du navigateur.','From time to time, Raging Page downloads a <b>.smmproj</b> copy of your screenplay, outside the browser.')}</p>
       <div class="sset-label">${L('À quelle fréquence ?','How often?')}</div>
       <div class="fmt-choice" style="flex-wrap:wrap;margin-bottom:14px;">
           <div class="fmt-opt ${backupLevel()==='off'?'active':''}" data-act="setBackupLevel" data-lvl="off"><div class="t">${L('Désactivée','Off')}</div><div class="d">${L('aucun fichier','no files')}</div></div>
@@ -8872,7 +8887,7 @@ function closeShortcuts(){ const b=document.getElementById('shortcutsBackdrop');
 /* =====================================================================
    COMMENTAIRES DE LIGNE
    -----------------------------------------------------------------
-   Fonctionnalité empruntée à WriterDuet (et absente de ScriptMM jusqu'ici) :
+   Fonctionnalité empruntée à WriterDuet (et absente de Raging Page jusqu'ici) :
    attacher une remarque à une ligne précise du script — repère visuel
    discret dans la marge, jamais dans le texte, jamais dans les exports
    (PDF/TXT/Fountain), exactement comme les commentaires en marge d'un
@@ -8984,11 +8999,11 @@ function measuredPageCount(){
 /* =====================================================================
    LONGUEUR DES SCÈNES, EN HUITIÈMES DE PAGE
    ---------------------------------------------------------------------
-   POURQUOI : ScriptMM savait dire combien de pages fait un SCÉNARIO, mais
+   POURQUOI : Raging Page savait dire combien de pages fait un SCÉNARIO, mais
    pas combien fait une SCÈNE. Or c'est à l'échelle de la scène qu'on juge
    le rythme — repérer la scène de six pages qui plombe un deuxième acte,
    ou l'enchaînement de douze scènes d'un huitième qui part en confettis.
-   WriterDuet affiche cette longueur, ScriptMM non : on la lisait en
+   WriterDuet affiche cette longueur, Raging Page non : on la lisait en
    faisant défiler.
 
    POURQUOI EN HUITIÈMES ET PAS EN POURCENTAGE : c'est l'unité du métier.
@@ -9714,10 +9729,10 @@ function exportFountain(){
 }
 
 /* Export Final Draft (.fdx) — le format d'échange standard du métier
-   (WriterDuet, Fade In… tous savent l'ouvrir et l'écrire). ScriptMM avait
+   (WriterDuet, Fade In… tous savent l'ouvrir et l'écrire). Raging Page avait
    déjà PDF/TXT/Fountain mais pas celui-là, qui est souvent le seul accepté
    par un partenaire de production ou un·e autre scénariste équipé·e de
-   Final Draft. Le mapping est direct : un type d'élément ScriptMM = un
+   Final Draft. Le mapping est direct : un type d'élément Raging Page = un
    Paragraph Type FDX, comme dans elementsToText() ci-dessus. */
 function fdxParagraphType(type){
   switch(type){
@@ -10057,7 +10072,7 @@ function classifyScreenplayLine(t, indentBucket, expectDialogue){
   }
   // CORRECTIF. Beaucoup de scripts (dont les exports PDF) collent le
   // numéro de scène devant l'indicatif : « 1 INT. TAXI - NUIT ». Comme
-  // ScriptMM numérote déjà les scènes tout seul, on retire ce numéro s'il
+  // Raging Page numérote déjà les scènes tout seul, on retire ce numéro s'il
   // précède bien une vraie en-tête de scène — jamais sinon, pour ne pas
   // amputer une ligne d'action qui commencerait légitimement par un chiffre.
   const numberedMatch = t.match(/^\d+[A-Za-z]?\.?\s+(.+)$/);
@@ -10138,7 +10153,7 @@ function onImportFile(e){
 /* ---------------------------------------------------------------------
    Import Final Draft (.fdx)
    ---------------------------------------------------------------------
-   ScriptMM savait déjà ÉCRIRE du .fdx (exportFDX) mais pas le relire, ce
+   Raging Page savait déjà ÉCRIRE du .fdx (exportFDX) mais pas le relire, ce
    qui rendait l'échange à sens unique : impossible de récupérer un
    scénario venu de Final Draft, WriterDuet, Fade In, Celtx… alors que tous
    exportent ce format.
@@ -10164,7 +10179,7 @@ function fdxTypeToElement(type){
 }
 /* Le texte d'un paragraphe FDX est découpé en plusieurs <Text> dès qu'il
    change de style (gras, italique, souligné…). On les recolle bout à bout :
-   ScriptMM stocke du texte brut par ligne, le style ne se perd donc pas
+   Raging Page stocke du texte brut par ligne, le style ne se perd donc pas
    « à moitié », il ne suit simplement pas — comme pour les autres imports. */
 function fdxParagraphText(par){
   const runs = par.getElementsByTagName('Text');
@@ -10261,11 +10276,11 @@ function importFDXFile(file){
 /* ---------------------------------------------------------------------
    Sauvegarde complète du projet (.smmproj)
    ---------------------------------------------------------------------
-   POURQUOI C'EST ESSENTIEL : tout ScriptMM vit dans le localStorage de CE
+   POURQUOI C'EST ESSENTIEL : tout Raging Page vit dans le localStorage de CE
    navigateur. Vider les données du navigateur, changer d'ordinateur, passer
    en navigation privée, ou une simple mise à jour agressive du navigateur —
    et les scénarios disparaissent, sans copie nulle part. C'est la seule
-   chose que WriterDuet fait et que ScriptMM ne faisait pas du tout : garder
+   chose que WriterDuet fait et que Raging Page ne faisait pas du tout : garder
    le travail ailleurs que dans le navigateur.
 
    Les exports existants (PDF, txt, Fountain, fdx) ne remplacent PAS une
@@ -10279,7 +10294,7 @@ function importFDXFile(file){
    ---------------------------------------------------------------------
    Sans compte ni cloud, l'unique exemplaire d'un scénario en cours
    d'écriture vit dans ce navigateur. Toutes les AUTO_BACKUP_INTERVAL_MS
-   d'écriture active — et juste avant de quitter l'onglet — ScriptMM
+   d'écriture active — et juste avant de quitter l'onglet — Raging Page
    télécharge discrètement une sauvegarde .smmproj du scénario ouvert :
    le même fichier que "Exporter > Sauvegarde complète", en automatique.
    Ne se déclenche que s'il y a eu du changement depuis la dernière
@@ -10328,7 +10343,7 @@ function dueForBackup(){
   return (S.project.updatedAt||0) > last; // modifié depuis la dernière sauvegarde fichier
 }
 function downloadProjectBackup(p, silent){
-  const payload = { app:'ScriptMM', kind:'project-backup', version:1, savedAt:Date.now(), project:p };
+  const payload = { app:'Raging Page', kind:'project-backup', version:1, savedAt:Date.now(), project:p };
   const name = (p.title||'scenario').replace(/[\\/:*?"<>|]/g,'-');
   downloadBlob(name + '.smmproj', JSON.stringify(payload), 'application/json');
   setLastBackupAt(Date.now());
@@ -10354,7 +10369,7 @@ function importBackupFile(file){
     try{ data = JSON.parse(String(reader.result)); }catch(e){ data = null; }
     const src = data && data.project ? data.project : null;
     if(!src || !Array.isArray(src.elements)){
-      toast(L('Ce fichier n\u2019est pas une sauvegarde ScriptMM.','This file isn\u2019t a ScriptMM backup.'));
+      toast(L('Ce fichier n\u2019est pas une sauvegarde Raging Page.','This file isn\u2019t a Raging Page backup.'));
       return;
     }
     // On RESTAURE TOUJOURS SOUS UN NOUVEL IDENTIFIANT. Sans cela, restaurer
@@ -10419,7 +10434,7 @@ function importTextFile(file){
    embarquée dans le fichier, sinon il aurait fallu multiplier sa taille
    par dix). Elle a été testée ici sur des données simulées reproduisant
    la structure que pdf.js renvoie, mais pas sur un vrai PDF de logiciel
-   de scénario (Final Draft, Fade In, l'export PDF de ScriptMM lui-même,
+   de scénario (Final Draft, Fade In, l'export PDF de Raging Page lui-même,
    etc.) faute de connexion internet pendant son écriture. Si un import
    donne un résultat manifestement faux, dites-moi lequel : la classification
    se corrige facilement une fois qu'on sait ce qui a été mal détecté.
@@ -10870,7 +10885,7 @@ let V = { handle:null, pid:null, ok:false, name:'', at:0, err:'', busy:false, ti
 
 function safeFileName(t){ return String(t || 'scenario').replace(/[\\/:*?"<>|]/g, '-').slice(0, 80); }
 function vaultPayload(p){
-  return JSON.stringify({ app:'ScriptMM', kind:'project-backup', version:1, savedAt:Date.now(), project:p });
+  return JSON.stringify({ app:'Raging Page', kind:'project-backup', version:1, savedAt:Date.now(), project:p });
 }
 function vaultActive(){ return !!(V.handle && V.ok && S.project && V.pid === S.project.id); }
 
@@ -10902,7 +10917,7 @@ async function vaultAttach(){
   try{
     const h = await window.showSaveFilePicker({
       suggestedName: safeFileName(S.project.title) + '.smmproj',
-      types:[{ description:'Scénario ScriptMM', accept:{ 'application/json':['.smmproj'] } }]
+      types:[{ description:'Scénario Raging Page', accept:{ 'application/json':['.smmproj'] } }]
     });
     V.handle = h; V.pid = S.project.id; V.ok = true; V.err = ''; V.name = h.name || '';
     try{ await idbSet(vaultKey(S.project.id), { handle:h, at:Date.now(), name:V.name }); }catch(e){}
@@ -10992,7 +11007,7 @@ async function vaultOpenFromFile(){
   let h, data;
   try{
     const picked = await window.showOpenFilePicker({
-      types:[{ description:'Scénario ScriptMM', accept:{ 'application/json':['.smmproj','.json'] } }],
+      types:[{ description:'Scénario Raging Page', accept:{ 'application/json':['.smmproj','.json'] } }],
       multiple:false
     });
     h = picked[0];
@@ -11000,11 +11015,11 @@ async function vaultOpenFromFile(){
     data = JSON.parse(await f.text());
   }catch(e){
     if(e && e.name === 'AbortError') return;
-    toast(L('Fichier illisible : ce n\u2019est pas une sauvegarde ScriptMM.','Unreadable file: this isn\u2019t a ScriptMM backup.'));
+    toast(L('Fichier illisible : ce n\u2019est pas une sauvegarde Raging Page.','Unreadable file: this isn\u2019t a Raging Page backup.'));
     return;
   }
   const src = data && data.project ? data.project : null;
-  if(!src || !Array.isArray(src.elements)){ toast(L('Ce fichier n\u2019est pas une sauvegarde ScriptMM.','This file isn\u2019t a ScriptMM backup.')); return; }
+  if(!src || !Array.isArray(src.elements)){ toast(L('Ce fichier n\u2019est pas une sauvegarde Raging Page.','This file isn\u2019t a Raging Page backup.')); return; }
 
   const entry = S.projectsIndex.find(e => e.id === src.id);
   if(entry){
@@ -11087,7 +11102,7 @@ function vaultChipClick(){
    4. GOOGLE DRIVE — sans serveur, sans abonnement
    Le navigateur parle directement à l'API Google avec un jeton obtenu en
    OAuth. La portée demandée est « drive.file » : la plus étroite qui
-   existe — ScriptMM ne voit QUE les fichiers qu'il a lui-même créés,
+   existe — Raging Page ne voit QUE les fichiers qu'il a lui-même créés,
    jamais le reste du Drive. Le jeton ne vit qu'en mémoire (perdu à la
    fermeture de l'onglet) : rien de sensible n'est écrit sur le disque.
    Seul l'identifiant client, qui n'est pas un secret, est conservé.
@@ -11098,7 +11113,7 @@ const GD_SCOPE = 'https://www.googleapis.com/auth/drive.file';
 let GD = { token:null, exp:0, tc:null, resolve:null, reject:null, timer:null, at:0, busy:false, err:'' };
 
 /* IDENTIFIANT GOOGLE DU SITE (à remplir UNE SEULE FOIS par la personne qui
-   met ScriptMM en ligne). Une fois collé ici, les visiteurs n'ont plus rien
+   met Raging Page en ligne). Une fois collé ici, les visiteurs n'ont plus rien
    à configurer : un bouton « Se connecter avec Google », et c'est tout.
    Ce n'est pas un secret. Laisser vide = ancien fonctionnement (chacun colle
    son propre identifiant dans Paramètres). */
@@ -11266,7 +11281,7 @@ function vaultSettingsHtml(){
       <p class="sset-sub">${L('Une copie de ton scénario dans <b>ton</b> Google Drive, mise à jour toute seule.','A copy of your screenplay in <b>your</b> Google Drive, updated automatically.')}</p>
       <ul class="sset-points">
         <li>${L('Tu le retrouves sur tous tes appareils','You can reach it from all your devices')}</li>
-        <li>${L('ScriptMM ne voit que ses propres fichiers, jamais le reste de ton Drive','ScriptMM only sees its own files, never the rest of your Drive')}</li>
+        <li>${L('Raging Page ne voit que ses propres fichiers, jamais le reste de ton Drive','Raging Page only sees its own files, never the rest of your Drive')}</li>
         <li>${L('Tu peux te déconnecter à tout moment','You can disconnect at any time')}</li>
       </ul>
       <div class="sset-actions">
@@ -11458,7 +11473,7 @@ function closeCompare(){ S.diffVerId = null; renderTabBody(); }
 /* =====================================================================
    LANGUE DE L'INTERFACE (FR / EN)
    ---------------------------------------------------------------------
-   ScriptMM est écrit en français dans son code, mais s'affiche en
+   Raging Page est écrit en français dans son code, mais s'affiche en
    ANGLAIS par défaut. Un clic sur l'un des deux drapeaux traduit tout
    le CHROME de l'application (boutons, onglets, menus, paramètres,
    aides, messages) — jamais le contenu du scénario : le texte des
@@ -11624,7 +11639,7 @@ const I18N_EN = {
   'Récupérer depuis Drive':'Fetch from Drive', 'Se déconnecter':'Disconnect',
   'Connecter Google Drive':'Connect Google Drive',
   'Non connecté.':'Not connected.',
-  'ScriptMM : écriture de scénario':'ScriptMM: screenwriting',
+  'Raging Page : écriture de scénario':'Raging Page: screenwriting',
 
   /* --- Ajouts : accueil, création de série, onglets « Comment faire » --- */
   'Gratuit et ouvert à tout le monde. Aucun compte à créer, aucun abonnement, aucune publicité. Tes scénarios restent sur ton ordinateur, dans ce navigateur, et n\u2019appartiennent qu\u2019à toi.':'Free and open to everyone. No account to create, no subscription, no ads. Your screenplays stay on your computer, in this browser, and belong to you alone.',
@@ -11676,7 +11691,7 @@ const I18N_EN = {
   ') mais le navigateur redemande l\u2019autorisation d\u2019y écrire : clique sur « Reconnecter le fichier ».':') but the browser is asking again for permission to write to it: click \u201cReconnect the file\u201d.',
   'Aucun fichier relié : ce scénario n\u2019existe que dans le stockage de ce navigateur.':'No file linked: this screenplay only exists in this browser\u2019s storage.',
   '(le navigateur n\u2019autorise pas à mémoriser l\u2019autorisation ici, typiquement parce que la page est ouverte en file:// ou dans un cadre). Le fichier, lui, est bien écrit pendant toute la session ; au prochain lancement, un clic sur « Ouvrir un .smmproj » rouvre le scénario et rétablit le lien. Pour que tout devienne automatique, place le fichier sur une adresse http(s) — un hébergement gratuit suffit.':'(the browser doesn\u2019t allow remembering the permission here, typically because the page is open over file:// or inside a frame). The file itself is still written throughout the session; next time you launch, clicking \u201cOpen a .smmproj\u201d reopens the screenplay and restores the link. To make it all automatic, host the file at an http(s) address \u2014 a free host is enough.',
-  'Drive, envoyée directement par le navigateur : aucun serveur à payer, aucune donnée qui passe ailleurs. ScriptMM demande la permission la plus étroite possible (':'Drive, sent directly by the browser: no server to pay for, no data going anywhere else. ScriptMM asks for the narrowest permission possible (',
+  'Drive, envoyée directement par le navigateur : aucun serveur à payer, aucune donnée qui passe ailleurs. Raging Page demande la permission la plus étroite possible (':'Drive, sent directly by the browser: no server to pay for, no data going anywhere else. Raging Page asks for the narrowest permission possible (',
   ') : il ne voit que les fichiers qu\u2019il a lui-même créés, jamais le reste de ton Drive.':'): it only sees the files it created itself, never the rest of your Drive.',
 
   /* --- Ajouts : comparaison de versions --- */
@@ -11887,7 +11902,7 @@ function setLang(l){
 ===================================================================== */
 const SAMPLE_FR = `
 s|EXT. RUE DES TILLEULS - JOUR|rue1
-n|BIENVENUE DANS « DERNIER RAYON ». Les encadrés bleus sont des notes de travail : ils n’apparaissent ni à l’impression ni à l’export. Lis le scénario comme un spectateur, puis relis-le avec les notes. Repère : une page de scénario dure environ une minute à l’écran.
+n|BIENVENUE DANS « DERNIER RAYON ». Les encadrés bleus sont des notes de travail : ils n’apparaissent ni à l’impression ni à l’export. Lis le scénario comme un spectateur, puis relis-le avec les notes. Repère : une page de scénario dure environ une minute à l’écran. Dernière chose : tout ce que tu liras ici, ce sont des repères éprouvés par l’industrie, pas des règles à suivre à la lettre. Apprends-les, puis fais-en ce que tu veux.
 n|L’IMAGE D’OUVERTURE. La première image montre qui est le personnage avant que l’histoire ne le change. Ici : une femme pressée qui ne regarde rien autour d’elle. L’image finale répondra à celle-ci.
 a|Une petite rue de province, pavés encore mouillés. Volets clos. Un chat dort sur un rebord de fenêtre. Au loin, une cloche sonne deux heures et demie.
 a|LÉA MARCHAND, 34 ans, manteau de ville, valise à roulettes, avance d’un pas rapide, le téléphone à l’oreille. Elle ne regarde ni les façades ni le chat.
@@ -11944,7 +11959,7 @@ a|Un bureau encombré, une lampe verte, un fauteuil au cuir fendillé. Sur le mu
 a|Elle ouvre les tiroirs, cherche l’acte de vente. Stylos, trombones, un tampon « LIBRAIRIE MARCHAND ». Dans le deuxième tiroir, un mug ébréché : « MEILLEUR PAPA DU MONDE », au feutre, d’une main d’enfant. Elle le remet exactement à sa place, l’anse tournée vers la droite.
 n|UN DÉCOR QUI RACONTE. Chaque objet dit quelque chose sans une ligne de dialogue. Pour décrire un lieu, choisis trois ou quatre détails qui disent qui y vit. Et regarde le geste de Léa : elle remet le mug à sa place, elle est plus touchée qu’elle ne veut l’admettre.
 a|Dans le dernier tiroir, sous un presse-papier, une enveloppe kraft. Sur le devant, en capitales tremblées : « POUR LÉA. À LIRE AVANT DE SIGNER. »
-n|LE DÉCLENCHEUR (fin du premier quart). C’est l’événement qui bouscule le quotidien du héros et pose une question : que contient cette enveloppe ? Il arrive tôt, et il vient de l’extérieur : Léa n’a rien choisi, pas encore.
+n|LE DÉCLENCHEUR (fin du premier quart). C’est l’événement qui bouscule le quotidien du héros et pose une question : que contient cette enveloppe ? Il arrive tôt, et il vient de l’extérieur : Léa n’a rien choisi, pas encore. Ce schéma a fait ses preuves, mais c’est un repère, pas un moule : beaucoup de grands films le déplacent ou le bousculent.
 a|Léa la retourne, la repose, la reprend. À l’intérieur : une feuille d’une ligne, et une toute petite clé de laiton.
 a|Elle lit à voix haute.
 c|LÉA
@@ -12048,7 +12063,7 @@ a|Léa grimace, prise en faute. Elle tourne la page plus vite.
 h|GROS PLAN - LE CARNET DE 2008
 c|HENRI (voix off)
 d|Trois juin. Elle m’a dit qu’elle ne reviendrait pas pour l’été. J’ai changé la vitrine quand même.
-n|LE PLAN. Un scénariste écrit rarement des directions de caméra : c’est le travail du réalisateur. On garde le plan pour les cas où ce que la caméra montre EST l’information. Une ou deux fois par scénario, pas plus.
+n|LE PLAN. Un scénariste écrit rarement des directions de caméra : c’est le travail du réalisateur. On garde le plan pour les cas où ce que la caméra montre EST l’information. Une ou deux fois par scénario, pas plus. Comme beaucoup de conventions, celle-ci vient du métier, pas d’une loi : si un plan est l’histoire, écris-le sans hésiter.
 a|Le soleil descend sur le parquet. Léa a allumé la lampe verte. Elle ne se lève pas. Elle prend le carnet suivant.
 c|HENRI (voix off)
 d|Dix-neuf heures douze. Chaque dimanche, entre deux trains, elle m’appelle. Je range la boutique pour ce moment-là. Je ne lui dis pas que je l’attends.
@@ -12257,7 +12272,7 @@ a|Il lui tend la main. Elle la serre une seconde, la lâche, ramasse sa valise.
 a|Elle déchire son billet en deux, le garde dans sa poche. Le dernier wagon disparaît dans la nuit.
 n|LE COÛT PAYÉ. Le choix annoncé dans la scène du téléphone (« et si je restais ? ») trouve ici sa suite : Léa assume ce qu’il coûte. Remarque que Samir ne la retient pas : ce n’est pas lui qui décide. Un bon personnage secondaire aide le héros sans prendre sa place.
 s|EXT. RUE DES TILLEULS - SOIR|rue3
-n|L’IMAGE FINALE. Elle répond à l’image d’ouverture : même rue, même femme, mais elle regarde, et elle reste. Compare les deux : la différence est l’arc du personnage.
+n|L’IMAGE FINALE. Elle répond à l’image d’ouverture : même rue, même femme, mais elle regarde, et elle reste. Compare les deux : la différence est l’arc du personnage. Et ces notes ne sont qu’un point de départ : une fois les bases acquises, c’est à toi de décider ce que tu gardes et ce que tu casses.
 a|La rue, la même, sous les lampadaires. Léa sort, sans valise. Élise est assise sur le banc d’en face, l’atlas sur les genoux.
 c|ÉLISE
 d|Il est dix-neuf heures vingt. Votre train est parti.
@@ -12279,7 +12294,7 @@ k|FIN
 
 const SAMPLE_EN = `
 s|EXT. LINDEN STREET - DAY|rue1
-n|WELCOME TO “LAST AISLE”. The blue boxes are working notes: they never appear in print or in exports. Read the script like an audience member, then read it again with the notes. Rule of thumb: one screenplay page is about one minute on screen.
+n|WELCOME TO “LAST AISLE”. The blue boxes are working notes: they never appear in print or in exports. Read the script like an audience member, then read it again with the notes. Rule of thumb: one screenplay page is about one minute on screen. One last thing: everything you’ll read here is time-tested industry practice, not rules to follow to the letter. Learn them, then do whatever you like with them.
 n|THE OPENING IMAGE. The first image shows who the character is before the story changes her. Here: a woman in a hurry who looks at nothing around her. The final image will answer this one.
 a|A small-town street, cobblestones still wet. Shutters closed. A cat sleeps on a windowsill. Far off, a church bell strikes two-thirty.
 a|LÉA MARCHAND, 34, city coat, rolling suitcase, strides along, phone to her ear. She looks at neither the façades nor the cat.
@@ -12336,7 +12351,7 @@ a|A cluttered desk, a green lamp, an armchair with cracked leather. On the wall,
 a|She opens the drawers, looking for the deed of sale. Pens, paper clips, a stamp reading “MARCHAND BOOKS”. In the second drawer, a chipped mug: “WORLD’S BEST DAD”, in felt pen, in a child’s hand. She puts it back exactly in place, handle turned to the right.
 n|A SETTING THAT TELLS A STORY. Every object says something without a line of dialogue. To describe a place, pick three or four details that tell us who lives there. And look at Léa’s gesture: she puts the mug back in place, she’s more affected than she wants to admit.
 a|In the last drawer, under a paperweight, a kraft envelope. On the front, in shaky capitals: “FOR LÉA. READ BEFORE SIGNING.”
-n|THE INCITING INCIDENT (end of the first quarter). The event that upsets the hero’s routine and raises a question: what is in this envelope? It comes early, and from outside: Léa has chosen nothing yet.
+n|THE INCITING INCIDENT (end of the first quarter). The event that upsets the hero’s routine and raises a question: what is in this envelope? It comes early, and from outside: Léa has chosen nothing yet. This pattern has proven itself, but it’s a guide, not a mould: plenty of great films shift it or bend it.
 a|Léa turns it over, sets it down, picks it up again. Inside: a one-line sheet of paper, and a very small brass key.
 a|She reads aloud.
 c|LÉA
@@ -12440,7 +12455,7 @@ a|Léa winces, caught out. She turns the page faster.
 h|CLOSE ON - THE 2008 NOTEBOOK
 c|HENRI (V.O.)
 d|June third. She told me she wouldn’t come back for the summer. I changed the window display anyway.
-n|THE SHOT. A screenwriter rarely writes camera directions: that’s the director’s job. Keep the shot for cases where what the camera shows IS the information. Once or twice per script, no more.
+n|THE SHOT. A screenwriter rarely writes camera directions: that’s the director’s job. Keep the shot for cases where what the camera shows IS the information. Once or twice per script, no more. Like many conventions, this one comes from the craft, not from a law: if a shot is the story, write it without hesitation.
 a|The sun sinks on the floorboards. Léa has switched on the green lamp. She doesn’t stand. She picks up the next notebook.
 c|HENRI (V.O.)
 d|Seven twelve. Every Sunday, between trains, she calls me. I tidy the shop for that moment. I don’t tell her that I wait for it.
@@ -12649,7 +12664,7 @@ a|He holds out his hand. She squeezes it for a second, lets go, picks up her sui
 a|She tears her ticket in two and keeps it in her pocket. The last car disappears into the night.
 n|THE COST PAID. The choice announced in the phone scene (“what if I stayed?”) finds its sequel here: Léa accepts what it costs. Notice Samir doesn’t hold her back: he isn’t the one deciding. A good supporting character helps the hero without taking her place.
 s|EXT. LINDEN STREET - EVENING|rue3
-n|THE FINAL IMAGE. It answers the opening image: same street, same woman, but now she looks, and she stays. Compare the two: the difference is the character’s arc.
+n|THE FINAL IMAGE. It answers the opening image: same street, same woman, but now she looks, and she stays. Compare the two: the difference is the character’s arc. And these notes are only a starting point: once you have the basics, it’s up to you to decide what to keep and what to break.
 a|The same street, under the streetlamps. Léa comes out, no suitcase. Élise sits on the bench opposite, the atlas on her lap.
 c|ÉLISE
 d|It’s twenty past seven. Your train is gone.
@@ -12723,7 +12738,7 @@ function parseSampleRows(txt){
 function buildSampleProject(lang){
   const en = lang === 'en';
   const p = newProject(en ? 'Last Aisle' : 'Dernier Rayon', en ? 'us' : 'fr', 'Court métrage');
-  p.author = 'ScriptMM';
+  p.author = 'Raging Page';
   p.titlePageExtra = en ? 'Example screenplay \u2014 free to copy, edit and keep' : 'Scénario d\u2019exemple \u2014 libre à copier, modifier et conserver';
   p.isSample = true; p.sampleLang = lang;
   const T = { s:'scene', a:'action', c:'character', p:'parenthetical', d:'dialogue', t:'transition', n:'note', h:'shot', k:'card' };
@@ -12827,7 +12842,7 @@ function renderWritingHelp(){
   const strip = (S.project && S.project.isSample) ? `<div class="sset-status wh-strip"><span class="sset-dot"></span><span class="wh-strip-t">${L('Ce scénario est une copie de l\u2019exemple.','This screenplay is a copy of the example.')}</span><button class="btn btn-sm" data-act="stripSampleNotes">${L('Supprimer les notes bleues de cet exemple','Remove the blue notes from this example')}</button></div>` : '';
   return `<div class="cards-toolbar"><div class="pane-title" style="margin:0;">${L('Aide à l\u2019écriture','Writing help')}</div></div>
   <div class="wh-wrap">
-    <p class="wh-lead">${L('Un exemple annoté, les éléments d\u2019un scénario, les trois actes et une checklist pour bien démarrer.','An annotated example, the elements of a screenplay, the three acts and a checklist to get you started.')}</p>
+    <p class="wh-lead">${L('Un exemple annoté, les éléments d\u2019un scénario, les trois actes et une checklist pour bien démarrer. Ce sont des repères éprouvés, pas des règles : garde ce qui t’aide.','An annotated example, the elements of a screenplay, the three acts and a checklist to get you started. These are tried-and-tested guides, not rules: keep what helps you.')}</p>
     <div class="wh-card wh-sample">
       <div class="wh-card-t">${icon('book')}<span>${L('Scénario d\u2019exemple : « Dernier Rayon »','Example screenplay: \u201CLast Aisle\u201D')}</span></div>
       <p class="wh-card-s">${L('Un court métrage de 17 pages à lire pour apprendre, avec chaque étape expliquée là où elle arrive.','A 17-page short film to learn from, with each step explained right where it happens.')}</p>
@@ -12843,22 +12858,23 @@ function renderWritingHelp(){
     </div>
     <div class="wh-card">
       <div class="wh-card-t"><span>${L('Les éléments d\u2019un scénario','The elements of a screenplay')}</span></div>
-      <p class="wh-card-s">${L('Écris une ligne, puis choisis son type avec le raccourci, ou laisse ScriptMM le deviner. Entrée passe à l\u2019élément suivant.','Write a line, then pick its type with the shortcut, or let ScriptMM guess it. Enter moves to the next element.')}</p>
+      <p class="wh-card-s">${L('Écris une ligne, puis choisis son type avec le raccourci, ou laisse Raging Page le deviner. Entrée passe à l\u2019élément suivant.','Write a line, then pick its type with the shortcut, or let Raging Page guess it. Enter moves to the next element.')}</p>
       <div class="wh-els">${elsHtml}</div>
+      <div class="help-callout">${L('<b>Des standards, pas une prison :</b> ces conventions sont celles de l’industrie depuis des décennies et elles ont fait leurs preuves, notamment parce qu’elles rendent ton scénario facile à lire. Apprends-les d’abord ; ensuite, rien ne t’oblige à les suivre à la lettre si ton histoire demande autre chose.','<b>Standards, not a cage:</b> these are industry conventions that have stood the test of time, not least because they make your script easy to read. Learn them first; after that, nothing forces you to follow them to the letter if your story needs something else.')}</div>
     </div>
     <div class="wh-card">
       <div class="wh-card-t"><span>${L('Les trois actes','The three acts')}</span></div>
-      <p class="wh-card-s">${L('Une histoire se découpe en trois temps. Voici où chacun se place et ce qui s\u2019y passe.','A story breaks into three parts. Here is where each one sits and what happens in it.')}</p>
+      <p class="wh-card-s">${L('Une histoire se découpe en trois temps. Voici où chacun se place et ce qui s\u2019y passe. C’est un schéma qui a fait ses preuves, pas un moule : beaucoup de bons scénarios le déplacent ou le brisent.','A story breaks into three parts. Here is where each one sits and what happens in it. It’s a pattern that has proven itself, not a mould: plenty of good scripts shift it or break it.')}</p>
       <ol class="wh-acts">${actsHtml}</ol>
       <div class="help-callout">${L('<b>Repère de longueur :</b> 1 page ≈ 1 minute de film. Sur 17 pages, le déclencheur tombe vers la page 4, le point médian vers la page 9, « tout est perdu » vers la page 13 et le climax vers la page 15.','<b>Length guide:</b> 1 page \u2248 1 minute of film. In 17 pages, the inciting incident lands around page 4, the midpoint around page 9, \u201Call is lost\u201D around page 13 and the climax around page 15.')}</div>
     </div>
     <div class="wh-card">
       <div class="wh-card-t"><span>${L('Ta checklist de débutant','Your beginner\u2019s checklist')}</span></div>
-      <p class="wh-card-s">${L('Sept questions à te poser quand ton premier jet est fini.','Seven questions to ask yourself once your first draft is done.')}</p>
+      <p class="wh-card-s">${L('Sept questions à te poser quand ton premier jet est fini. Ce sont des questions, pas des obligations : si tu réponds « non » quelque part, que ce soit un choix.','Seven questions to ask yourself once your first draft is done. These are questions, not obligations: if you answer “no” somewhere, make it a choice.')}</p>
       <ul class="help-points">${checks.map(c=>`<li>${c}</li>`).join('')}</ul>
     </div>
     <div class="wh-card">
-      <div class="wh-card-t"><span>${L('Où trouver quoi dans ScriptMM','Where to find what in ScriptMM')}</span></div>
+      <div class="wh-card-t"><span>${L('Où trouver quoi dans Raging Page','Where to find what in Raging Page')}</span></div>
       <p class="wh-card-s">${L('Les onglets qui t\u2019aident à construire l\u2019histoire, à côté de l\u2019éditeur.','The tabs that help you build the story, next to the editor.')}</p>
       <div class="wh-where">${where.map(w=>`<div class="wh-tile"><div class="wh-tile-t">${w[0]}</div><p class="wh-tile-d">${w[1]}</p></div>`).join('')}</div>
     </div>
