@@ -729,6 +729,21 @@
   }
   .titlepage .tp-bg-image{position:absolute; inset:0; width:100%; height:100%; object-fit:cover; opacity:var(--tp-img-opacity,1); z-index:0;}
   .titlepage .tp-drawing-layer{position:absolute; inset:0; width:100%; height:100%; z-index:1; pointer-events:none;}
+  /* Image libre de la page de titre : posée où l'on veut, à la taille voulue (valeurs en % de la page). */
+  .titlepage .tp-title.tp-title-off{visibility:hidden;}
+  .titlepage .tp-free-img{position:absolute; z-index:2; margin:0; padding:0; line-height:0; box-sizing:border-box;}
+  .titlepage .tp-free-img > img{display:block; width:100%; height:100%; object-fit:fill; pointer-events:none; -webkit-user-drag:none; user-select:none;}
+  .tp-editing .tp-free-img{cursor:move; touch-action:none; outline:2px solid transparent; outline-offset:0; transition:outline-color .12s;}
+  .tp-editing .tp-free-img:hover{outline-color:#3699D470;}
+  .tp-editing .tp-free-img.tp-sel{outline-color:var(--accent);}
+  .tp-free-h{position:absolute; width:calc(13px * var(--tp-hs,1)); height:calc(13px * var(--tp-hs,1)); margin:calc(-6.5px * var(--tp-hs,1)); background:#fff; border:calc(2px * var(--tp-hs,1)) solid var(--accent); border-radius:50%; box-sizing:border-box; z-index:5; touch-action:none;}
+  .tp-free-h[data-h="nw"]{left:0; top:0; cursor:nwse-resize;} .tp-free-h[data-h="ne"]{left:100%; top:0; cursor:nesw-resize;}
+  .tp-free-h[data-h="sw"]{left:0; top:100%; cursor:nesw-resize;} .tp-free-h[data-h="se"]{left:100%; top:100%; cursor:nwse-resize;}
+  .tp-free-h[data-h="n"]{left:50%; top:0; cursor:ns-resize; border-radius:3px;} .tp-free-h[data-h="s"]{left:50%; top:100%; cursor:ns-resize; border-radius:3px;}
+  .tp-free-h[data-h="w"]{left:0; top:50%; cursor:ew-resize; border-radius:3px;} .tp-free-h[data-h="e"]{left:100%; top:50%; cursor:ew-resize; border-radius:3px;}
+  .tp-drawing-on .tp-free-img{pointer-events:none;}
+  .tp-checkrow{display:flex; align-items:center; gap:9px; font-size:13.5px; color:var(--ink); cursor:pointer; margin-top:10px;}
+  .tp-checkrow input{accent-color:var(--accent); width:16px; height:16px;}
   .titlepage .tp-content{position:relative; z-index:2; display:flex; flex-direction:column; align-items:var(--tp-align-items,center); gap:6px; width:100%;}
   .titlepage .tp-title{font-size:var(--tp-title-size,20pt); font-weight:700; text-transform:uppercase; margin-bottom:30px;}
   .titlepage .tp-sub{font-size:var(--tp-sub-size,12pt); margin-bottom:60px;}
@@ -2386,6 +2401,7 @@ function tpFitPreview(){
   const s = Math.max(0.25, Math.min(availH/ph, availW/pw, 0.9));
   shell.style.width = Math.round(pw*s)+'px'; shell.style.height = Math.round(ph*s)+'px';
   tp.style.transform = 'scale('+s.toFixed(4)+')';
+  tp.style.setProperty('--tp-hs', (1/s).toFixed(4));
   if(cap) cap.style.width = (shell.parentNode.offsetWidth)+'px';
 }
 function tpTbColor(id){
@@ -2441,7 +2457,7 @@ function tpDecoratePreview(shell, tp){
     if(!box.querySelector('.tp-author-name')) box.innerHTML = `<div class="tp-author-label">${L('Écrit par','Written by')}</div><div class="tp-author-name"></div>`;
     box.classList.toggle('tp-ph-grp', !String(p.author||'').trim());
   }
-  mark('.tp-title','title',true);
+  mark('.tp-title','title',!ensureTPDesign(p).titleHidden);
   mark('.tp-sub','sub');
   mark('.tp-author-label','by');
   mark('.tp-author-name','author',true,L('Nom de l\u2019auteur','Author name'));
@@ -2449,6 +2465,7 @@ function tpDecoratePreview(shell, tp){
   mark('.tp-foot','foot');
   tpBindPreview(shell);
   tpMarkSelection();
+  tpFreeImgDecorate(shell, tp);
 }
 function tpDragSelKey(shell){
   const sel = window.getSelection ? window.getSelection() : null;
@@ -2750,7 +2767,7 @@ function tpAuthorInnerHtml(author){
 }
 function tpInnerHtml(p){
   return `<div class="tp-content">
-      <div class="tp-title">${esc(p.title)}</div>
+      <div class="tp-title${ensureTPDesign(p).titleHidden?' tp-title-off':''}">${esc(p.title)}</div>
       ${p.kind?`<div class="tp-sub">${esc(kindLabel(p))}</div>`:''}
       <div class="tp-author">${tpAuthorInnerHtml(p.author)}</div>
       <div class="tp-extra-wrap">${tpExtraLinesHtml(p.titlePageExtra)}</div>
@@ -2768,6 +2785,10 @@ function buildTitlePageEl(p){
   if(design.bgImage) html += `<img class="tp-bg-image" src="${design.bgImage}">`;
   if(design.drawing) html += `<img class="tp-drawing-layer" src="${design.drawing}">`;
   html += tpInnerHtml(p);
+  if(design.freeImg && design.freeImg.src){
+    const f = design.freeImg;
+    html += `<div class="tp-free-img" data-free-img="1" style="left:${f.x}%;top:${f.y}%;width:${f.w}%;height:${f.h}%;"><img src="${f.src}" alt="" draggable="false"></div>`;
+  }
   tp.innerHTML = html;
   return tp;
 }
@@ -3468,7 +3489,9 @@ function defaultTPDesign(){
     color:'#23262E', bg:'#ffffff',
     pattern:'none', patternColor:'#000000',
     bgImage:null, bgImageOpacity:1,
-    drawing:null
+    drawing:null,
+    titleHidden:false,      // v79 : titre rendu invisible (il garde sa place, le reste de la page ne bouge pas)
+    freeImg:null            // v79 : {src, x, y, w, h} en % de la page — image libre à la place du titre
   };
 }
 /* Interligne du scénario : « standard » (1,0 — normes du métier) ou « comfort » (1,5). */
@@ -3554,6 +3577,12 @@ function ensureTPDesign(p){
   // soit ce qu'un projet plus ancien avait pu enregistrer (l'édition de
   // cette couleur n'est plus proposée).
   p.titlePageDesign.bg = '#ffffff';
+  // v79 : l'image libre voyage avec le projet (.smmproj) — on vérifie qu'elle est complète après un import.
+  const fi = p.titlePageDesign.freeImg;
+  if(fi){
+    const ok = typeof fi.src==='string' && /^data:image\//.test(fi.src) && [fi.x,fi.y,fi.w,fi.h].every(v=>typeof v==='number' && isFinite(v)) && fi.w>0 && fi.h>0;
+    if(!ok) p.titlePageDesign.freeImg = null;
+  }
   return p.titlePageDesign;
 }
 
@@ -8057,6 +8086,14 @@ function tpControlsHtmlAll(){
           <textarea id="tpExtraText" rows="3" placeholder="${L('Ex. Adapté du roman de…','E.g. Adapted from the novel by…')}">${esc(p.titlePageExtra||'')}</textarea>
           <p class="tp-field-help">${L('Une phrase par ligne : adaptation, avertissement, citation, mention légale…','One line per sentence: adaptation, disclaimer, quote, legal notice…')}</p>
         </div>
+        <div class="tp-field">
+          <label class="tp-field-label" for="tpFreeImgInput">${L('Image à la place du titre','Image in place of the title')}</label>
+          <input type="file" id="tpFreeImgInput" accept="image/*,.png,.jpg,.jpeg,.webp,.gif,.svg,.bmp,.avif">
+          <p class="tp-field-help">${L('Tous les formats d\u2019image sont acceptés (PNG avec transparence, JPG, WebP, GIF, SVG…). Sur la page : glisse l\u2019image pour la déplacer, tire sur les points bleus pour l\u2019agrandir ou la rétrécir (coins = proportions gardées, côtés = étirer).','All image formats are accepted (PNG with transparency, JPG, WebP, GIF, SVG…). On the page: drag the image to move it, pull the blue handles to enlarge or shrink it (corners = keep proportions, sides = stretch).')}</p>
+          <label class="tp-checkrow"><input type="checkbox" id="tpTitleHidden" ${design.titleHidden?'checked':''}><span>${L('Rendre le titre invisible','Hide the title')}</span></label>
+          ${design.freeImg?`<div class="tp-range-row" style="margin-top:12px;"><label>${L('Largeur','Width')}</label><input type="range" id="tpFreeImgW" min="5" max="100" step="1" value="${Math.round(design.freeImg.w)}"><span class="val" id="tpFreeImgWVal">${Math.round(design.freeImg.w)}%</span></div>
+          <div class="tp-draw-toolbar" style="margin-top:10px;"><button class="btn btn-sm btn-ghost" data-act="tpFreeImgCenter">${L('Centrer','Center')}</button><button class="btn btn-sm btn-ghost" data-act="tpFreeImgRatio">${L('Rétablir les proportions','Restore proportions')}</button><button class="btn btn-sm btn-danger" data-act="tpFreeImgRemove">${L('Retirer l\u2019image','Remove the image')}</button></div>`:''}
+        </div>
       </div>
       <div class="tp-panel">
         <div class="tp-panel-head"><div class="tp-panel-icon">${icon('image')}</div><h4>${L('Fond','Background')}</h4></div>
@@ -8187,6 +8224,140 @@ function tpPenMove(e){
   tpCtx.lineTo(pt.x, pt.y); tpCtx.stroke();
 }
 function tpPenUp(e){ if(e) e.preventDefault(); tpPenDownFlag = false; }
+/* =====================================================================
+   v79 — IMAGE LIBRE SUR LA PAGE DE TITRE
+   Une image (n'importe quel format que le navigateur sait lire) posée à la place du titre : on la glisse où on veut,
+   on l'agrandit / la rétrécit avec les poignées. Position et taille sont enregistrées en % de la page, donc identiques
+   à l'écran, à l'impression et dans le PDF. L'image est convertie en PNG (JPEG gardé en JPEG) à l'import : le PDF
+   n'accepte nativement que ces deux formats.
+===================================================================== */
+let tpFreeSel = false;
+function tpFreeImgLoad(file){
+  const done = src => new Promise(res=>{ const im = new Image(); im.onload = ()=>res(im); im.onerror = ()=>res(null); im.src = src; });
+  const reader = new FileReader();
+  reader.onerror = ()=>toast(L('Impossible de lire cette image.','Couldn\u2019t read this image.'));
+  reader.onload = async ()=>{
+    const im = await done(reader.result);
+    if(!im){ toast(L('Format d\u2019image non reconnu par le navigateur.','Image format not recognised by the browser.')); return; }
+    let w = im.naturalWidth || im.width, h = im.naturalHeight || im.height;
+    if(!w || !h){ w = 1000; h = 1000; }   // SVG sans dimensions
+    const MAX = 3000, k = Math.min(1, MAX / Math.max(w, h));
+    const cw = Math.max(1, Math.round(w*k)), ch = Math.max(1, Math.round(h*k));
+    const cv = document.createElement('canvas'); cv.width = cw; cv.height = ch;
+    const ctx = cv.getContext('2d');
+    const isJpg = /jpe?g/i.test(file.type || '');
+    if(isJpg){ ctx.fillStyle = '#ffffff'; ctx.fillRect(0,0,cw,ch); }
+    ctx.drawImage(im, 0, 0, cw, ch);
+    let url;
+    try{ url = isJpg ? cv.toDataURL('image/jpeg', 0.92) : cv.toDataURL('image/png'); }
+    catch(err){ toast(L('Impossible de convertir cette image.','Couldn\u2019t convert this image.')); return; }
+    const d = ensureTPDesign(S.project);
+    const tpEl0 = document.querySelector('#tpPreviewShell .titlepage');
+    const pageR = tpEl0 && tpEl0.offsetHeight ? tpEl0.offsetWidth / tpEl0.offsetHeight : (S.project.format==='us' ? 8.5/11 : 21/29.7);
+    const wPct = 50, hPct = wPct * (ch/cw) * pageR;
+    d.freeImg = { src:url, x:50 - wPct/2, y:Math.max(0, Math.min(100 - hPct, 40 - hPct/2)), w:wPct, h:hPct, ar:ch/cw };
+    d.titleHidden = true;   // l'image prend la place du titre
+    tpFreeSel = true;
+    scheduleAutosave(); refreshTPPreview(); tpRebuildControls();
+  };
+  reader.readAsDataURL(file);
+}
+function tpFreeImgApply(){
+  const d = ensureTPDesign(S.project), f = d.freeImg;
+  const n = document.querySelector('#tpPreviewShell .tp-free-img'); if(!n || !f) return;
+  n.style.left = f.x+'%'; n.style.top = f.y+'%'; n.style.width = f.w+'%'; n.style.height = f.h+'%';
+}
+function tpFreeImgDecorate(shell, tp){
+  const n = tp.querySelector('.tp-free-img'); if(!n) return;
+  tp.classList.toggle('tp-drawing-on', !!S.tpDrawMode);
+  if(S.tpDrawMode) return;
+  n.classList.toggle('tp-sel', tpFreeSel);
+  if(tpFreeSel){
+    ['nw','n','ne','e','se','s','sw','w'].forEach(h=>{ const g = document.createElement('div'); g.className = 'tp-free-h'; g.dataset.h = h; n.appendChild(g); });
+  }
+  if(!n._tpBound){
+    n._tpBound = true;
+    n.addEventListener('pointerdown', e=>tpFreeImgDown(e, n, tp));
+  }
+}
+function tpFreeImgDown(e, n, tp){
+  if(S.tpDrawMode || (e.button!==undefined && e.button!==0)) return;
+  e.preventDefault(); e.stopPropagation();
+  const d = ensureTPDesign(S.project), f = d.freeImg; if(!f) return;
+  const hEl = e.target.closest ? e.target.closest('.tp-free-h') : null;
+  const handle = hEl ? hEl.dataset.h : null;
+  const a = document.activeElement; if(a && a!==document.body && a.blur) a.blur();
+  if(!tpFreeSel){
+    tpFreeSel = true; tpSelect('none');
+    tp.querySelectorAll('.tp-free-h').forEach(x=>x.remove());
+    n.classList.add('tp-sel');
+    ['nw','n','ne','e','se','s','sw','w'].forEach(h=>{ const g = document.createElement('div'); g.className = 'tp-free-h'; g.dataset.h = h; n.appendChild(g); });
+  }
+  const rect = tp.getBoundingClientRect();
+  const sx = e.clientX, sy = e.clientY, o = { x:f.x, y:f.y, w:f.w, h:f.h };
+  const pageR = rect.width / rect.height;     // largeur / hauteur de la page
+  const ar = o.h / o.w;                       // proportions de départ (en % de page)
+  try{ n.setPointerCapture(e.pointerId); }catch(err){}
+  const move = ev=>{
+    const dx = (ev.clientX - sx) / rect.width * 100, dy = (ev.clientY - sy) / rect.height * 100;
+    let x = o.x, y = o.y, w = o.w, h = o.h;
+    if(!handle){ x = o.x + dx; y = o.y + dy; }
+    else{
+      const MIN = 3;
+      const L_ = handle.includes('w'), R_ = handle.includes('e'), T_ = handle.includes('n'), B_ = handle.includes('s');
+      const corner = handle.length === 2;
+      if(L_){ w = o.w - dx; x = o.x + dx; } if(R_){ w = o.w + dx; }
+      if(T_){ h = o.h - dy; y = o.y + dy; } if(B_){ h = o.h + dy; }
+      if(corner && !ev.shiftKey){
+        // coins : proportions gardées (Maj = étirement libre)
+        const wFromH = h / ar;
+        const useW = Math.abs(w - o.w) * 1 >= Math.abs(wFromH - o.w) * 1;
+        if(useW){ h = w * ar; } else { w = wFromH; }
+        if(L_) x = o.x + o.w - w; if(T_) y = o.y + o.h - h;
+      }
+      if(w < MIN){ w = MIN; if(L_) x = o.x + o.w - w; }
+      if(h < MIN){ h = MIN; if(T_) y = o.y + o.h - h; }
+    }
+    f.x = x; f.y = y; f.w = w; f.h = h;
+    tpFreeImgApply();
+    const sl = document.getElementById('tpFreeImgW'); if(sl){ sl.value = Math.round(f.w); const v = document.getElementById('tpFreeImgWVal'); if(v) v.textContent = Math.round(f.w)+'%'; }
+  };
+  const up = ()=>{
+    n.removeEventListener('pointermove', move); n.removeEventListener('pointerup', up); n.removeEventListener('pointercancel', up);
+    try{ n.releasePointerCapture(e.pointerId); }catch(err){}
+    scheduleAutosave();
+  };
+  n.addEventListener('pointermove', move); n.addEventListener('pointerup', up); n.addEventListener('pointercancel', up);
+}
+function tpFreeImgDeselect(){
+  if(!tpFreeSel) return;
+  tpFreeSel = false;
+  document.querySelectorAll('#tpPreviewShell .tp-free-h').forEach(x=>x.remove());
+  document.querySelectorAll('#tpPreviewShell .tp-free-img').forEach(x=>x.classList.remove('tp-sel'));
+}
+/* cliquer ailleurs que sur l'image la désélectionne */
+document.addEventListener('pointerdown', e=>{
+  if(!tpFreeSel) return;
+  const t = e.target; if(t && t.closest && t.closest('.tp-free-img, #tpFreeImgInput, #tpFreeImgW, [data-act^="tpFreeImg"]')) return;
+  tpFreeImgDeselect();
+}, true);
+function tpFreeImgCenter(){
+  const f = ensureTPDesign(S.project).freeImg; if(!f) return;
+  f.x = 50 - f.w/2; f.y = Math.max(0, Math.min(100 - f.h, 40 - f.h/2));
+  tpFreeImgApply(); scheduleAutosave();
+}
+function tpFreeImgRatio(){
+  const f = ensureTPDesign(S.project).freeImg; if(!f || !f.ar) return;
+  const tp = document.querySelector('#tpPreviewShell .titlepage');
+  const pageR = tp && tp.offsetHeight ? tp.offsetWidth / tp.offsetHeight : (S.project.format==='us' ? 8.5/11 : 21/29.7);
+  const cx = f.x + f.w/2, cy = f.y + f.h/2;
+  f.h = f.w * f.ar * pageR; f.x = cx - f.w/2; f.y = cy - f.h/2;
+  tpFreeImgApply(); scheduleAutosave();
+}
+function tpFreeImgRemove(){
+  const d = ensureTPDesign(S.project); d.freeImg = null; tpFreeSel = false;
+  scheduleAutosave(); refreshTPPreview(); tpRebuildControls();
+}
 function onTPTabAttach(rebindOnly){
   if(S.tab!=='titlepage') return;
   if(!rebindOnly){ tpCloseMenus(); refreshTPPreview(); tpRenderToolbar(); tpFitPreview(); requestAnimationFrame(tpFitPreview); }
@@ -8237,6 +8408,22 @@ function onTPTabAttach(rebindOnly){
   bind('tpFootSize','input', e=>{ ensureTPDesign(S.project).footSize=+e.target.value; document.getElementById('tpFootSizeVal').textContent=e.target.value+'pt'; afterTPChangeLight(); });
   bind('tpImgOpacity','input', e=>{ ensureTPDesign(S.project).bgImageOpacity=+e.target.value; document.getElementById('tpImgOpacityVal').textContent=Math.round(e.target.value*100)+'%'; afterTPChangeLight(); });
   bind('tpColorPicker','input', e=>{ ensureTPDesign(S.project).color=e.target.value; afterTPChangeLight(); });
+  bind('tpFreeImgInput','change', e=>{
+    const file = e.target.files && e.target.files[0]; if(!file) return;
+    tpFreeImgLoad(file); e.target.value = '';
+  });
+  bind('tpTitleHidden','change', e=>{
+    ensureTPDesign(S.project).titleHidden = !!e.target.checked;
+    scheduleAutosave(); refreshTPPreview();
+  });
+  bind('tpFreeImgW','input', e=>{
+    const d = ensureTPDesign(S.project), f = d.freeImg; if(!f) return;
+    const ratio = f.h / f.w, cx = f.x + f.w/2, cy = f.y + f.h/2;
+    f.w = +e.target.value; f.h = f.w * ratio;
+    f.x = cx - f.w/2; f.y = cy - f.h/2;
+    const v = document.getElementById('tpFreeImgWVal'); if(v) v.textContent = Math.round(f.w)+'%';
+    tpFreeImgApply(); scheduleAutosave();
+  });
   bind('tpImageInput','change', e=>{
     const file = e.target.files[0]; if(!file) return;
     const reader = new FileReader();
@@ -12895,6 +13082,7 @@ const ACTIONS = {
   toggleTagFilter, showCharDetail, runReportChar, reportPreset,
   tpPill, tpPanelTab, tpFmFav, tpFullscreen, tpFullscreenExit, tpTbFont, tpTbColorToggle, tpTbColor, tpTbSizeStep, tpTbFmt, tpTbAlign, tpTbReset, tpFmPick, tpFmSetCat, tpSetFont, tpSetAlign, tpSetColor, tpSetBg, tpSetPattern, tpRemoveImage,
   tpToggleDraw, tpFinishDraw, tpClearDrawing, tpSetPenColor, tpSetPenSize,
+  tpFreeImgCenter, tpFreeImgRatio, tpFreeImgRemove,
   toggleTheme, goToPage, toggleTypewriterMode,
   openSeriesHub, renameSeries, renameSeason, openAddEpisodeModal, openAddSeasonModal, epPickFmt, closeEpModal, confirmAddEpisode,
   openSeriesExportMenu, closeSeriesExportMenu, seriesExportSelectAll, doSeriesExport,
