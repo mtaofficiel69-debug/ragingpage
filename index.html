@@ -1155,18 +1155,6 @@
   /* ---------- Scénario d'exemple et Aide à l'écriture ---------- */
   #homeView .wd-nav-sample .icon{color:var(--accent);}
   .wh-wrap{padding:16px 24px 70px; max-width:860px;}
-  .wh-sample{border:1.5px solid var(--accent); background:#3699D40d; border-radius:var(--radius); padding:16px 18px; margin-bottom:26px;}
-  .wh-sample-h{display:flex; align-items:center; gap:8px; font-family:var(--display); font-weight:600; font-size:16px; color:var(--ink); margin-bottom:8px;}
-  .wh-sample-h .icon{width:18px; height:18px; color:var(--accent);}
-  .wh-sample-btns{display:flex; gap:8px; flex-wrap:wrap; margin-top:12px;}
-  .wh-rows{display:flex; flex-direction:column; border:1px solid var(--hair); border-radius:var(--radius); overflow:hidden;}
-  .wh-row{display:grid; grid-template-columns:170px 1fr 190px; gap:14px; padding:11px 14px; border-top:1px solid var(--hair); align-items:baseline; background:var(--surface);}
-  .wh-row:first-child{border-top:0;}
-  .wh-row-t{font-weight:600; font-size:13.5px; color:var(--ink);}
-  .wh-row-k{display:block; font-weight:400; font-size:11.5px; color:var(--ink-soft); margin-top:2px; font-family:var(--mono);}
-  .wh-row-d{font-size:13px; line-height:1.5; color:var(--ink);}
-  .wh-row-e{font-family:var(--mono); font-size:12.5px; color:var(--ink-soft);}
-  @media (max-width:760px){ .wh-row{grid-template-columns:1fr;gap:4px;} }
 
   /* ---------- v32 : colonne d'accueil + stabilité de la barre du haut ---------- */
   #homeView .wd-about{border-top:1px solid var(--hair); margin-top:auto; padding:18px 12px 4px;}
@@ -1750,6 +1738,127 @@
 #printArea .line.side-hl, #pdfStage .line.side-hl{background:#fff1a8 !important; -webkit-print-color-adjust:exact; print-color-adjust:exact;}
 #printArea .line--character.side-hl, #pdfStage .line--character.side-hl{width:fit-content; max-width:100%;}
 .wd-bar.wd-bar-info{border-left-color:var(--accent);}
+
+  /* ===== Paramètres : même D.A. que le reste du site (v64) ===== */
+  .center-pane > div > .sset-group > .panel-block{background:var(--surface); border:1px solid var(--hair); border-radius:12px; padding:18px 20px 6px; box-shadow:var(--shadow-sm); margin-bottom:18px;}
+  .sset-nav{gap:4px; padding:4px; background:var(--surface-soft-2); border:1px solid var(--hair); border-radius:12px; margin:8px 0 14px;}
+  .sset-nav .fmt-opt{border:0; border-radius:9px; padding:9px 10px; text-align:center; background:transparent; color:var(--ink-soft); transition:background .12s, color .12s, box-shadow .12s;}
+  .sset-nav .fmt-opt .t{font-size:14px; font-weight:600;}
+  .sset-nav .fmt-opt:hover{color:var(--ink);}
+  .sset-nav .fmt-opt.active{background:var(--surface); color:var(--accent); box-shadow:var(--shadow-sm), 0 0 0 1px var(--hair);}
+  .sset-lead{font-size:14px; line-height:1.5; margin:0 2px 14px; color:color-mix(in srgb, var(--ink) 80%, var(--surface));}
+  .sset-group .panel-block h4{font-size:16px; color:var(--ink);}
+  .sset-group .opt-help{font-size:13.5px; line-height:1.55; color:color-mix(in srgb, var(--ink) 78%, var(--surface));}
+  .sset-group .opt-label{font-size:14px; color:var(--ink);}
+  .sset-group .field label{font-size:13.5px; color:var(--ink);}
+  .sset-group .field input[type=text], .sset-group .field input[type=date], .sset-group .field input[type=number], .sset-group .field select{
+    border-color:color-mix(in srgb, var(--ink) 24%, var(--surface)); color:var(--ink);
+  }
+  .sset-group .fmt-choice:not(.sset-nav) .fmt-opt{border-color:color-mix(in srgb, var(--ink) 22%, var(--surface)); color:var(--ink);}
+  .sset-group .fmt-choice:not(.sset-nav) .fmt-opt.active{border-color:var(--accent); background:color-mix(in srgb, var(--accent) 12%, var(--surface));}
+  .sset-group .fmt-opt .d{color:color-mix(in srgb, var(--ink) 70%, var(--surface));}
+  .sset-group .btn:not(.btn-primary), .sset-group .btn-ghost:not(.btn-danger){border-color:color-mix(in srgb, var(--ink) 28%, var(--surface)); color:var(--ink); background:var(--surface);}
+  .sset-group .btn:not(.btn-primary):hover{background:var(--overlay-hover); border-color:var(--accent);}
+  .sset-group .btn-danger{color:var(--danger); border-color:color-mix(in srgb, var(--danger) 55%, var(--surface));}
+  .sset-group .btn-primary, .center-pane [data-act="saveSettings"]{background:var(--accent-2); border-color:var(--accent-2); color:#fff;}
+  .sset-group .btn-primary:hover, .center-pane [data-act="saveSettings"]:hover{background:#185A84; border-color:#185A84;}
+  .center-pane [data-act="saveSettings"]{padding:11px 22px; font-size:14.5px; font-weight:600; box-shadow:var(--shadow-sm);}
+  .sset-group details summary{color:var(--accent); font-weight:600;}
+
+  /* Paramètres › Sauvegarde : texte aéré, par petites touches lisibles (v65) */
+  .sset-sub{font-size:14px; line-height:1.5; margin:-2px 0 12px; color:color-mix(in srgb, var(--ink) 82%, var(--surface));}
+  .sset-label{font-size:13px; font-weight:600; color:var(--ink); margin:0 0 8px;}
+  .sset-points{list-style:none; margin:0 0 16px; padding:0; display:grid; gap:8px;}
+  .sset-points li{position:relative; padding-left:26px; font-size:13.5px; line-height:1.45; color:color-mix(in srgb, var(--ink) 78%, var(--surface));}
+  .sset-points li::before{content:""; position:absolute; left:2px; top:1px; width:15px; height:15px; border-radius:50%; background:color-mix(in srgb, var(--accent) 16%, var(--surface));}
+  .sset-points li::after{content:""; position:absolute; left:7.5px; top:4.5px; width:3.5px; height:6.5px; border:solid var(--accent); border-width:0 2px 2px 0; transform:rotate(45deg);}
+  .sset-actions{display:flex; gap:8px; flex-wrap:wrap; margin:0 0 14px;}
+  .sset-status{display:flex; align-items:flex-start; gap:9px; padding:10px 12px; margin:0 0 14px; background:var(--surface-soft); border:1px solid var(--hair); border-radius:9px; font-size:13px; line-height:1.45; color:var(--ink);}
+  .sset-status .sset-dot{flex:none; width:8px; height:8px; margin-top:5px; border-radius:50%; background:color-mix(in srgb, var(--ink) 35%, var(--surface));}
+  .sset-status.ok .sset-dot{background:var(--ok);}
+  .sset-status.warn .sset-dot{background:#D98A00;}
+  .sset-more{margin:0 0 14px;}
+  .sset-more summary{cursor:pointer; font-size:13px; font-weight:600; color:var(--accent); margin-bottom:6px;}
+
+  /* Paramètres › Mise en page : lignes à case + explication courte dessous (v66) */
+  .sset-row{margin:0 0 12px;}
+  .sset-row .opt-label{margin-bottom:0;}
+  .sset-hint{font-size:13px; line-height:1.5; margin:3px 0 0 24px; color:color-mix(in srgb, var(--ink) 74%, var(--surface));}
+  .sset-sep{border-top:1px solid var(--hair); margin:6px 0 14px;}
+
+  /* Menu « Plus d'options » : rubriques (v67) */
+  .tb-more-menu .tb-more-title{padding:10px 10px 4px; font-size:10.5px; font-weight:600; letter-spacing:.09em; text-transform:uppercase; color:var(--ink-soft);}
+  .tb-more-menu .tb-more-title:first-child{padding-top:4px;}
+
+  /* Comment faire : onglets en barre, contenu en cartes (v68) */
+  .help-modal{max-width:640px;}
+  .help-lead{font-size:14px; line-height:1.5; margin:-6px 0 14px; color:color-mix(in srgb, var(--ink) 80%, var(--surface));}
+  .help-tabs{gap:4px; padding:4px; background:var(--surface-soft-2); border:1px solid var(--hair); border-radius:12px; margin:0 0 16px; flex-wrap:nowrap; overflow-x:auto;}
+  .help-tab{flex:1 1 auto; justify-content:center; border:0; background:transparent; border-radius:9px; padding:8px 10px; white-space:nowrap; font-size:13px; transition:background .12s, color .12s, box-shadow .12s;}
+  .help-tab:hover{color:var(--ink);}
+  .help-tab.active{background:var(--surface); color:var(--accent); box-shadow:var(--shadow-sm), 0 0 0 1px var(--hair);}
+  .help-body{max-height:58vh;}
+  .help-card{background:var(--surface); border:1px solid var(--hair); border-radius:12px; padding:14px 16px 6px; margin-bottom:12px; box-shadow:var(--shadow-sm);}
+  .help-card:last-child{margin-bottom:4px;}
+  .help-card-t{font-size:14.5px; font-weight:700; letter-spacing:-.01em; color:var(--ink); margin:0 0 10px;}
+  .help-card .help-p{margin:0 0 12px;}
+  .help-card .help-step-list{margin:0 0 12px;}
+  .help-card .help-list{margin:0 0 12px;}
+  .help-card .help-callout{margin:2px 0 12px;}
+  .help-points{list-style:none; margin:0 0 12px; padding:0; display:grid; gap:8px;}
+  .help-points li{position:relative; padding-left:26px; font-size:13.5px; line-height:1.5; color:var(--ink);}
+  .help-points li::before{content:""; position:absolute; left:2px; top:2px; width:15px; height:15px; border-radius:50%; background:color-mix(in srgb, var(--accent) 16%, var(--surface));}
+  .help-points li::after{content:""; position:absolute; left:7.5px; top:5.5px; width:3.5px; height:6.5px; border:solid var(--accent); border-width:0 2px 2px 0; transform:rotate(45deg);}
+  /* Aide à l'écriture : cartes, même D.A. que Sauvegarde et Comment faire (v69) */
+  .wh-lead{font-size:14px; line-height:1.5; margin:0 2px 16px; color:color-mix(in srgb, var(--ink) 80%, var(--surface));}
+  .wh-card{background:var(--surface); border:1px solid var(--hair); border-radius:12px; padding:18px 20px 8px; margin-bottom:18px; box-shadow:var(--shadow-sm);}
+  .wh-card-t{display:flex; align-items:center; gap:8px; font-size:16px; font-weight:700; letter-spacing:-.01em; color:var(--ink); margin:0 0 4px;}
+  .wh-card-t .icon{width:18px; height:18px; color:var(--accent);}
+  .wh-card-s{font-size:14px; line-height:1.5; margin:0 0 14px; color:color-mix(in srgb, var(--ink) 82%, var(--surface));}
+  .wh-card.wh-sample{border:1.5px solid var(--accent); background:color-mix(in srgb, var(--accent) 6%, var(--surface));}
+  .wh-card .help-points{margin:0 0 14px;}
+  .wh-card .sset-actions{margin:0 0 14px;}
+  .wh-card .sset-status{margin:0 0 14px;}
+  .wh-strip{align-items:center; flex-wrap:wrap;}
+  .wh-strip .sset-dot{margin-top:0;}
+  .wh-strip-t{flex:1 1 200px;}
+  .wh-els{margin:0 0 6px;}
+  .wh-el{padding:12px 0; border-top:1px solid var(--hair);}
+  .wh-el:first-child{border-top:0; padding-top:2px;}
+  .wh-el-h{display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:4px;}
+  .wh-el-t{font-size:14px; font-weight:600; color:var(--ink);}
+  .wh-el-d{font-size:13.5px; line-height:1.5; color:color-mix(in srgb, var(--ink) 80%, var(--surface));}
+  .wh-el-e{display:inline-block; margin-top:8px; padding:3px 9px; font-family:var(--mono); font-size:12.5px; color:var(--ink); background:var(--surface-soft); border:1px solid var(--hair); border-radius:7px;}
+  .wh-acts{list-style:none; margin:0 0 14px; padding:0; display:flex; flex-direction:column; gap:16px;}
+  .wh-act{display:flex; gap:12px; align-items:flex-start;}
+  .wh-act-b{min-width:0;}
+  .wh-act-h{display:flex; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:3px; font-size:14px; color:var(--ink);}
+  .wh-act-k{font-size:11.5px; font-weight:600; color:var(--ink-soft); background:var(--surface-soft-2); border:1px solid var(--hair); border-radius:999px; padding:2px 9px;}
+  .wh-act-d{margin:0; font-size:13.5px; line-height:1.55; color:color-mix(in srgb, var(--ink) 80%, var(--surface));}
+  .wh-card .help-callout{margin:2px 0 14px;}
+  .wh-where{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin:0 0 14px;}
+  .wh-tile{background:var(--surface-soft); border:1px solid var(--hair); border-radius:10px; padding:11px 13px;}
+  .wh-tile-t{font-size:13.5px; font-weight:700; color:var(--accent); margin:0 0 3px;}
+  .wh-tile-d{margin:0; font-size:13px; line-height:1.5; color:color-mix(in srgb, var(--ink) 80%, var(--surface));}
+  @media (max-width:640px){ .wh-where{grid-template-columns:1fr;} .wh-wrap{padding-left:14px; padding-right:14px;} }
+  /* Autres onglets : cartes, même D.A. (v70) */
+  .wh-wrap .flat-list{padding:0 0 10px;}
+  .wh-wrap .stat-grid{grid-template-columns:repeat(3,1fr); gap:12px; padding:0; margin:0 0 18px;}
+  .wh-wrap .stat-card{border-radius:12px; padding:16px 18px; box-shadow:var(--shadow-sm);}
+  .wh-wrap .stat-num{font-size:28px;}
+  .wh-wrap .stat-label{font-size:13px;}
+  .wh-chars{margin:0 0 8px;}
+  .wh-card .char-row{padding:11px 8px; margin:0 -8px; border-bottom:0; border-top:1px solid var(--hair); border-radius:8px;}
+  .wh-card .wh-chars .char-row:first-child{border-top:0;}
+  .wh-chips{display:flex; flex-wrap:wrap; gap:8px; margin:0 0 14px;}
+  .wh-card textarea.notes-area{min-height:48vh; margin:0 0 14px; border-radius:10px;}
+  .wh-card .field{margin-bottom:12px;}
+  .wh-lines{display:flex; flex-direction:column; gap:8px; margin:0 0 14px;}
+  .wh-lines .flat-row{box-shadow:none;}
+  .wh-lines .flat-row:hover{box-shadow:none;}
+  .wh-wrap > .sset-status{margin:0 0 14px;}
+  .wh-card .sset-status:last-child{margin-bottom:14px;}
+  @media (max-width:640px){ .wh-wrap .stat-grid{grid-template-columns:1fr 1fr;} }
 </style>
 </head>
 <body>
@@ -4290,79 +4399,83 @@ function triggerImport(){ document.getElementById('importFile').click(); }
 ===================================================================== */
 let S_helpTab = 'start';
 const HELP_TABS = [
-  { id:'start',  label:['Démarrer','Getting started'],            icon:'plus'  },
-  { id:'series', label:['Séries','Series'],                       icon:'users' },
-  { id:'save',   label:['Sauvegarde & export','Backup & export'], icon:'save'  },
-  { id:'editor', label:['Éditeur','Editor'],                      icon:'pen'   },
+  { id:'start',  label:['Démarrer','Getting started'], icon:'plus'  },
+  { id:'editor', label:['Écrire','Writing'],           icon:'pen'   },
+  { id:'save',   label:['Sauvegarde','Backup'],        icon:'save'  },
+  { id:'export', label:['Export','Export'],            icon:'read'  },
+  { id:'series', label:['Séries','Series'],            icon:'users' },
 ];
 function helpTabsHtml(){
   return HELP_TABS.map(t=>`<button class="help-tab ${t.id===S_helpTab?'active':''}" data-act="helpSetTab" data-id="${t.id}">${icon(t.icon)}${L(t.label[0],t.label[1])}</button>`).join('');
 }
 function helpTabContent(tab){
+  const C = (title, inner) => `<div class="help-card"><div class="help-card-t">${title}</div>${inner}</div>`;
+  const P = arr => `<ul class="help-points">${arr.map(x=>`<li>${x}</li>`).join('')}</ul>`;
+  const T = (fr, en) => `<p class="help-p">${L(fr, en)}</p>`;
   if(tab==='series') return `
-    <div class="help-section">
-      <p class="help-p">${L('Choisir « Série » (au lieu d\u2019un « Type de projet » classique) à la création crée le premier épisode d\u2019un ensemble, et change la façon dont le projet fonctionne.','Choosing \u201cSeries\u201d (instead of a regular \u201cProject type\u201d) at creation makes the first episode of a set, and changes how the project works.')}</p>
-    </div>
-    <div class="help-section">
-      <div class="help-group-title">${L('Sur l\u2019accueil','On the home screen')}</div>
-      <p class="help-p">${L('Tous les épisodes d\u2019une série tiennent dans une seule carte, au lieu d\u2019une carte par épisode. Cliquer dessus ouvre le hub de la série : ajouter des épisodes, des saisons, renommer la série.','All the episodes of a series fit in a single card, instead of one card per episode. Clicking it opens the series hub: add episodes, seasons, rename the series.')}</p>
-    </div>
-    <div class="help-section">
-      <div class="help-group-title">${L('Exporter','Export')}</div>
-      <p class="help-p">${L('Depuis le hub, l\u2019export multi-épisodes propose un épisode, plusieurs, une saison entière, ou tout, en PDF fusionné, en PDF séparés, ou en texte.','From the hub, multi-episode export lets you pick one episode, several, a whole season, or everything, as a merged PDF, separate PDFs, or text.')}</p>
-    </div>
-    <div class="help-section">
-      <div class="help-group-title">${L('À l\u2019intérieur','Inside')}</div>
-      <p class="help-p">${L('Chaque épisode reste un scénario normal : même éditeur, même export individuel qu\u2019un scénario seul.','Each episode stays a normal screenplay: same editor, same individual export as a standalone screenplay.')}</p>
-    </div>`;
+    ${C(L('Qu\u2019est-ce qu\u2019une série ?','What is a series?'),
+      T('Choisir « Série » (au lieu d\u2019un « Type de projet » classique) à la création crée le premier épisode d\u2019un ensemble, et change la façon dont le projet fonctionne.','Choosing \u201cSeries\u201d (instead of a regular \u201cProject type\u201d) at creation makes the first episode of a set, and changes how the project works.'))}
+    ${C(L('Sur l\u2019accueil','On the home screen'),
+      T('Tous les épisodes d\u2019une série tiennent dans une seule carte, au lieu d\u2019une carte par épisode. Cliquer dessus ouvre le hub de la série : ajouter des épisodes, des saisons, renommer la série.','All the episodes of a series fit in a single card, instead of one card per episode. Clicking it opens the series hub: add episodes, seasons, rename the series.'))}
+    ${C(L('Exporter','Export'),
+      T('Depuis le hub, l\u2019export multi-épisodes propose un épisode, plusieurs, une saison entière, ou tout, en PDF fusionné, en PDF séparés, ou en texte.','From the hub, multi-episode export lets you pick one episode, several, a whole season, or everything, as a merged PDF, separate PDFs, or text.'))}
+    ${C(L('À l\u2019intérieur','Inside'),
+      T('Chaque épisode reste un scénario normal : même éditeur, même export individuel qu\u2019un scénario seul.','Each episode stays a normal screenplay: same editor, same individual export as a standalone screenplay.'))}`;
+  if(tab==='export') return `
+    ${C(L('Exporter','Export'),
+      P([L('Dans l\u2019éditeur, « Exporter » propose PDF (impression), texte, Fountain et Final Draft (<b>.fdx</b>)','In the editor, \u201cExport\u201d offers PDF (print), text, Fountain and Final Draft (<b>.fdx</b>)'),
+         L('Le .fdx est le format que lisent Final Draft, WriterDuet, Fade In et la plupart des productions','.fdx is the format read by Final Draft, WriterDuet, Fade In and most productions'),
+         L('Un .fdx peut aussi être réimporté ici depuis l\u2019accueil : c\u2019est l\u2019import le plus fidèle, puisque le fichier indique lui-même le type de chaque ligne','A .fdx file can also be re-imported here from the home screen: it\u2019s the most faithful import, since the file itself states the type of every line')]))}
+    ${C(L('Révisions colorées','Colour revisions'),
+      T('<b>Menu ⋯ ou Ctrl/Cmd+Alt+R.</b> Les lignes modifiées après le lancement d\u2019une révision portent un astérisque, les pages touchées prennent la teinte de leur révision (PDF et impression) et les exports .txt, .fountain et .fdx signalent les mêmes lignes.','<b>\u22ef menu or Ctrl/Cmd+Alt+R.</b> Lines changed after a revision is started get an asterisk, touched pages take the tint of their revision (PDF and print), and the .txt, .fountain and .fdx exports flag the same lines.'))}
+    ${C(L('Pages verrouillées','Locked pages'),
+      P([L('Dans la fenêtre Révisions, chaque page garde son numéro : une page ajoutée devient 12A, 12B…, une page disparue est listée comme omise','In the Revisions window, each page keeps its number: an added page becomes 12A, 12B…, a vanished page is listed as omitted'),
+         L('Une ligne supprimée laisse un astérisque sur la ligne qui la précédait','A deleted line leaves an asterisk on the line before it'),
+         L('Ctrl/Cmd+Alt+M marque ou démarque à la main la ligne en cours','Ctrl/Cmd+Alt+M marks or unmarks the current line by hand'),
+         L('« Voir », dans la fenêtre Révisions, montre ce qu\u2019une révision a changé','\u201cView\u201d, in the Revisions window, shows what a revision changed')]))}`;
   if(tab==='save') return `
-    <div class="help-section">
-      <div class="help-group-title">${L('Pendant que tu écris','While you write')}</div>
-      <p class="help-p">${L('Tout s\u2019enregistre automatiquement dans ce navigateur, sans compte à créer.','Everything saves automatically in this browser, with no account to create.')}</p>
-    </div>
-    <div class="help-section">
-      <div class="help-group-title">${L('Exporter','Export')}</div>
-      <p class="help-p">${L('Dans l\u2019éditeur, « Exporter » propose PDF (impression), texte, Fountain et Final Draft (<b>.fdx</b>) : le format que lisent Final Draft, WriterDuet, Fade In et la plupart des productions.','In the editor, \u201cExport\u201d offers PDF (print), text, Fountain and Final Draft (<b>.fdx</b>): the format read by Final Draft, WriterDuet, Fade In and most productions.')}</p>
-      <p class="help-p">${L('Un .fdx peut aussi être réimporté ici depuis l\u2019accueil. C\u2019est l\u2019import le plus fidèle, puisque le fichier indique lui-même le type de chaque ligne.','A .fdx file can also be re-imported here from the home screen. It\u2019s the most faithful import, since the file itself states the type of every line.')}</p>
-      <p class="help-p">${L('<b>Révisions colorées</b> (menu ⋯ ou Ctrl/Cmd+Alt+R) : les lignes modifiées après le lancement d\u2019une révision portent un astérisque, les pages touchées prennent la teinte de leur révision (PDF et impression) et les exports .txt, .fountain et .fdx signalent les mêmes lignes.','<b>Colour revisions</b> (\u22ef menu or Ctrl/Cmd+Alt+R): lines changed after a revision is started get an asterisk, touched pages take the tint of their revision (PDF and print), and the .txt, .fountain and .fdx exports flag the same lines.')}</p>
-      <p class="help-p">${L('<b>Pages verrouillées</b> (fenêtre Révisions) : chaque page garde son numéro, une page ajoutée devient 12A, 12B…, une page disparue est listée comme omise. Une ligne supprimée laisse un astérisque sur la ligne qui la précédait. Ctrl/Cmd+Alt+M marque ou démarque à la main la ligne en cours ; « Voir » dans la fenêtre Révisions montre ce qu\u2019une révision a changé.','<b>Locked pages</b> (Revisions window): each page keeps its number, an added page becomes 12A, 12B…, a vanished page is listed as omitted. A deleted line leaves an asterisk on the line before it. Ctrl/Cmd+Alt+M marks or unmarks the current line by hand; “View” in the Revisions window shows what a revision changed.')}</p>
-    </div>
-    <div class="help-section">
-      <div class="help-group-title">${L('Sauvegarde complète','Full backup')}</div>
-      <p class="help-p">${L('Le fichier <b>.smmproj</b> contient le projet entier : notes, outlines, tags, versions, cimetière, page de titre. Il se rouvre par « Importer ».','The <b>.smmproj</b> file contains the entire project: notes, outlines, tags, versions, graveyard, title page. It reopens through \u201cImport\u201d.')}</p>
-      <p class="help-p">${L('Une restauration crée toujours un nouveau scénario à côté : elle n\u2019écrase jamais celui sur lequel tu travailles.','A restore always creates a new screenplay alongside: it never overwrites the one you\u2019re working on.')}</p>
-      <div class="help-callout">${L('À faire de temps en temps : comme tout vit dans ce navigateur, vider ses données ou changer d\u2019ordinateur fait tout disparaître. C\u2019est le seul filet de sécurité en dehors de ce navigateur.','Worth doing now and then: since everything lives in this browser, clearing its data or switching computers makes everything disappear. This is the only safety net outside this browser.')}</div>
-    </div>`;
+    ${C(L('Pendant que tu écris','While you write'),
+      T('Tout s\u2019enregistre automatiquement dans ce navigateur, sans compte à créer.','Everything saves automatically in this browser, with no account to create.'))}
+    ${C(L('Google Drive','Google Drive'),
+      P([L('Une copie de ton scénario dans <b>ton</b> Drive, mise à jour toute seule','A copy of your screenplay in <b>your</b> Drive, updated automatically'),
+         L('ScriptMM ne voit que ses propres fichiers, jamais le reste de ton Drive','ScriptMM only sees its own files, never the rest of your Drive'),
+         L('Menu ⋯ › « Connecter Google Drive », ou Paramètres › Sauvegarde','\u22ef menu \u203a \u201cConnect Google Drive\u201d, or Settings \u203a Backup')]))}
+    ${C(L('Coffre-fort','Vault'),
+      P([L('Relie ton scénario à un fichier <b>.smmproj</b> de ton ordinateur : il est réécrit tout seul après chaque modification','Link your screenplay to a <b>.smmproj</b> file on your computer: it is rewritten automatically after every change'),
+         L('Fonctionne sur Chrome, Edge et Opera, sur ordinateur','Works on Chrome, Edge and Opera, on desktop'),
+         L('Paramètres › Sauvegarde, ou la pastille « Coffre » en haut de l\u2019éditeur','Settings \u203a Backup, or the \u201cVault\u201d chip at the top of the editor')]))}
+    ${C(L('Sauvegarde complète','Full backup'),
+      T('Le fichier <b>.smmproj</b> contient le projet entier : notes, outlines, tags, versions, cimetière, page de titre. Il se rouvre par « Importer ».','The <b>.smmproj</b> file contains the entire project: notes, outlines, tags, versions, graveyard, title page. It reopens through \u201cImport\u201d.') +
+      T('Une restauration crée toujours un nouveau scénario à côté : elle n\u2019écrase jamais celui sur lequel tu travailles.','A restore always creates a new screenplay alongside: it never overwrites the one you\u2019re working on.') +
+      `<div class="help-callout">${L('À faire de temps en temps si tu n\u2019as relié ni Google Drive ni le Coffre-fort : comme tout vit dans ce navigateur, vider ses données ou changer d\u2019ordinateur fait tout disparaître. Le réglage « Sauvegarde » de Paramètres peut aussi télécharger ce fichier pour toi.','Worth doing now and then if you haven\u2019t linked Google Drive or the Vault: since everything lives in this browser, clearing its data or switching computers makes everything disappear. The \u201cBackup\u201d setting in Settings can also download this file for you.')}</div>`)}`;
   if(tab==='editor') return `
-    <div class="help-section">
-      <p class="help-p">${L('Raccourcis clavier et mise en forme du texte : bouton « Raccourcis », en haut de l\u2019éditeur (ou dans le menu ⋯ sur petit écran).','Keyboard shortcuts and text formatting: \u201cShortcuts\u201d button, at the top of the editor (or in the \u22ef menu on small screens).')}</p>
-    </div>
-    <div class="help-section">
-      <div class="help-group-title">${L('Quelques essentiels','A few essentials')}</div>
-      <ul class="help-list">
+    ${C(L('Les raccourcis essentiels','Essential shortcuts'),
+      `<ul class="help-list">
         <li><span class="help-kbd-row"><span class="kbd">Tab</span></span> ${L('pour passer en ligne Personnage,','to switch to a Character line,')} <span class="help-kbd-row"><span class="kbd">${L('Maj','Shift')}</span><span class="kbd">Tab</span></span> ${L('pour revenir en Action.','to go back to Action.')}</li>
         <li><span class="help-kbd-row"><span class="kbd">Ctrl/Cmd</span><span class="kbd">K</span></span> ${L('pour sauter à une scène.','to jump to a scene.')}</li>
         <li><span class="help-kbd-row"><span class="kbd">Ctrl/Cmd</span><span class="kbd">Z</span></span> ${L('pour annuler. L\u2019historique couvre aussi le rechercher/remplacer.','to undo. The history also covers find/replace.')}</li>
-      </ul>
-    </div>
-    <div class="help-section">
-      <p class="help-p">${L('La liste complète (navigation, recherche, mode focus, lecture à voix haute, annotations…) est dans « Raccourcis ».','The full list (navigation, search, focus mode, read-aloud, annotations…) is in \u201cShortcuts\u201d.')}</p>
-    </div>`;
+      </ul>`)}
+    ${C(L('Tout voir','See everything'),
+      T('Raccourcis clavier et mise en forme du texte : bouton « Raccourcis », en haut de l\u2019éditeur (ou dans le menu ⋯ sur petit écran).','Keyboard shortcuts and text formatting: \u201cShortcuts\u201d button, at the top of the editor (or in the \u22ef menu on small screens).') +
+      T('La liste complète (navigation, recherche, mode focus, lecture à voix haute, annotations…) est dans « Raccourcis ».','The full list (navigation, search, focus mode, read-aloud, annotations…) is in \u201cShortcuts\u201d.'))}`;
   // 'start' par défaut
   return `
-    <div class="help-section">
-      <ol class="help-step-list">
+    ${C(L('En 3 étapes','In 3 steps'), `<ol class="help-step-list">
         <li class="help-step"><span class="help-step-num">1</span><span class="help-step-body">${L('Clique « Nouveau scénario » sur l\u2019accueil : l\u2019éditeur s\u2019ouvre directement, pas de formulaire à remplir avant d\u2019écrire.','Click \u201cNew screenplay\u201d on the home screen: the editor opens right away, no form to fill in before you start writing.')}</span></li>
         <li class="help-step"><span class="help-step-num">2</span><span class="help-step-body">${L('Choisis le format : Français (marges et conventions françaises) ou Américain (mise en page façon Hollywood).','Choose the format: French (French margins and conventions) or American (Hollywood-style layout).')}</span></li>
         <li class="help-step"><span class="help-step-num">3</span><span class="help-step-body">${L('Choisis un « Type de projet » : une simple étiquette affichée sur la page de titre à l\u2019export, sauf « Série », qui change la façon dont le projet fonctionne (voir l\u2019onglet <b>Séries</b>).','Choose a \u201cProject type\u201d: a simple label shown on the title page on export, except \u201cSeries\u201d, which changes how the project works (see the <b>Series</b> tab).')}</span></li>
-      </ol>
-    </div>`;
+      </ol>`)}
+    ${C(L('Bon à savoir','Good to know'),
+      P([L('Tout s\u2019enregistre automatiquement dans ce navigateur, sans compte à créer','Everything saves automatically in this browser, with no account to create'),
+         L('Tu peux aussi garder une copie sur Google Drive ou dans un fichier de ton ordinateur (onglet <b>Sauvegarde</b>)','You can also keep a copy on Google Drive or in a file on your computer (<b>Backup</b> tab)'),
+         L('Tu peux importer un scénario existant (.fdx, .fountain, .txt) ou une sauvegarde .smmproj depuis l\u2019accueil','You can import an existing screenplay (.fdx, .fountain, .txt) or a .smmproj backup from the home screen')]))}`;
 }
 function openHelp(){
   S_helpTab = 'start';
   const html = `<div class="modal-backdrop" id="helpBackdrop" data-act="closeHelp">
     <div class="modal help-modal" data-stop="1">
       <h2>${L('Comment faire','How it works')}</h2>
+      <p class="help-lead">${L('Les réponses courtes aux premières questions qu’on se pose.','Short answers to the first questions you’ll have.')}</p>
       <div class="help-tabs" id="helpTabs">${helpTabsHtml()}</div>
       <div class="help-body" id="helpBody">${helpTabContent(S_helpTab)}</div>
       <div class="modal-actions"><button class="btn btn-primary" data-act="closeHelp">${L('Fermer','Close')}</button></div>
@@ -7868,7 +7981,10 @@ function renderOutline(){
     </div>`;
   }).join('');
   return `<div class="cards-toolbar"><div class="pane-title" style="margin:0;">Outline</div></div>
-    <div class="flat-list">${rows || `<p style="color:var(--ink-soft);">${L('Aucune scène.','No scene.')}</p>`}</div>`;
+    <div class="wh-wrap">
+      <p class="wh-lead">${L('Un résumé d’une phrase par scène : la colonne vertébrale de ton scénario.','A one-sentence summary per scene: the backbone of your screenplay.')}</p>
+      ${rows ? `<div class="flat-list">${rows}</div>` : whEmpty(L('Aucune scène.','No scene.'))}
+    </div>`;
 }
 
 /* =====================================================================
@@ -8127,6 +8243,7 @@ function afterTPChangeLight(){
 /* =====================================================================
    CHARACTERS
 ===================================================================== */
+function whEmpty(t){ return `<div class="sset-status"><span class="sset-dot"></span><span>${t}</span></div>`; }
 function renderCharacters(){
   const stats = characterStats();
   const rows = stats.map(s=>`
@@ -8135,8 +8252,15 @@ function renderCharacters(){
       <div class="char-stats">${s.scenes.size} ${L(s.scenes.size===1?'scène':'scènes', s.scenes.size===1?'scene':'scenes')} · ${s.dialogueLines} ${L('répliques','lines')} · ${s.words} ${L('mots','words')}</div>
     </div>`).join('');
   return `<div class="cards-toolbar"><div class="pane-title" style="margin:0;">${L('Personnages','Characters')} (${stats.length})</div></div>
-    <div style="padding:6px 24px 60px;">${rows || `<p style="color:var(--ink-soft);">${L('Aucun personnage détecté. Ajoute une ligne de type Personnage.','No character detected. Add a Character-type line.')}</p>`}
-    <div id="charDetail"></div></div>`;
+    <div class="wh-wrap">
+      <p class="wh-lead">${L('Qui parle dans ton scénario, et combien. Clique sur un personnage pour relire ses répliques.','Who speaks in your screenplay, and how much. Click a character to reread their lines.')}</p>
+      <div class="wh-card">
+        <div class="wh-card-t"><span>${L('Les personnages','The characters')}</span></div>
+        <p class="wh-card-s">${L('Classés par nombre de mots dits.','Ranked by number of words spoken.')}</p>
+        ${rows ? `<div class="wh-chars">${rows}</div>` : whEmpty(L('Aucun personnage détecté. Ajoute une ligne de type Personnage.','No character detected. Add a Character-type line.'))}
+      </div>
+      <div id="charDetail"></div>
+    </div>`;
 }
 function showCharDetail(name){
   const numbers = sceneNumbers();
@@ -8148,12 +8272,13 @@ function showCharDetail(name){
     else if(el.type==='dialogue' && current===name){ lines.push({sceneId: sceneOf[el.id], text: el.text}); }
     else if(el.type!=='parenthetical'){ current=null; }
   });
-  const html = `<div class="panel-block" style="margin-top:18px;border-top:1px solid var(--hair);padding-top:16px;">
-    <h4>${L('Répliques de','Lines by')} ${esc(name)}</h4>
-    ${lines.map(l=>`<div class="flat-row" style="margin-bottom:8px;">
+  const html = `<div class="wh-card">
+    <div class="wh-card-t"><span>${L('Répliques de','Lines by')} ${esc(name)}</span></div>
+    <p class="wh-card-s">${lines.length} ${L(lines.length===1?'réplique':'répliques', lines.length===1?'line':'lines')}</p>
+    <div class="wh-lines">${lines.map(l=>`<div class="flat-row">
       <div style="font-size:12.5px;color:var(--ink-soft);margin-bottom:4px;">${L('Scène','Scene')} ${numbers[l.sceneId]||'?'}</div>
       <div style="font-family:var(--mono);font-size:13px;">${esc(l.text)}</div>
-    </div>`).join('') || `<p style="color:var(--ink-soft);">${L('Aucune réplique.','No line.')}</p>`}
+    </div>`).join('')}</div>${lines.length ? '' : whEmpty(L('Aucune réplique.','No line.'))}
   </div>`;
   document.getElementById('charDetail').innerHTML = html;
 }
@@ -8179,8 +8304,15 @@ function renderTags(){
     <button class="btn btn-sm btn-ghost" data-act="focusSceneFromCard" data-id="${b.sceneId}">${L('Ouvrir','Open')}</button></div>
     <div class="row-tags-edit">${sceneMeta(b.sceneId).tags.map(t=>`<span class="tag-chip">#${esc(t)}</span>`).join('')}</div></div>`).join('');
   return `<div class="cards-toolbar"><div class="pane-title" style="margin:0;">Tags</div></div>
-    <div class="toolbar-row">${chips || `<span style="color:var(--ink-soft);font-size:13px;">${L('Aucun tag pour l\u2019instant, ajoute-en depuis une scène.','No tag yet, add one from a scene.')}</span>`}</div>
-    <div class="flat-list">${rows}</div>`;
+    <div class="wh-wrap">
+      <p class="wh-lead">${L('Des étiquettes pour retrouver les scènes d\u2019un même thème ou d\u2019un même fil.','Labels to find the scenes of a same theme or thread.')}</p>
+      <div class="wh-card">
+        <div class="wh-card-t"><span>${L('Filtrer par tag','Filter by tag')}</span></div>
+        <p class="wh-card-s">${L('Clique sur un ou plusieurs tags pour ne garder que les scènes qui les portent toutes.','Click one or more tags to keep only the scenes that carry all of them.')}</p>
+        ${chips ? `<div class="wh-chips">${chips}</div>` : whEmpty(L('Aucun tag pour l\u2019instant, ajoute-en depuis une scène.','No tag yet, add one from a scene.'))}
+      </div>
+      <div class="flat-list">${rows}</div>
+    </div>`;
 }
 function toggleTagFilter(tag){
   if(S.filterTags.has(tag)) S.filterTags.delete(tag); else S.filterTags.add(tag);
@@ -8192,9 +8324,17 @@ function toggleTagFilter(tag){
 ===================================================================== */
 function renderNotes(){
   return `<div class="cards-toolbar"><div class="pane-title" style="margin:0;">${L('Notes personnelles','Personal notes')}</div></div>
-  <div style="padding:16px 24px 60px;">
-    <p style="font-size:13.5px;color:var(--ink-soft);margin-top:0;">${L('Séparées du scénario, jamais exportées. Les notes insérées directement dans le texte (Ctrl+9) restent visibles dans l\u2019éditeur mais sont, elles aussi, exclues des exports.','Kept separate from the screenplay, never exported. Notes inserted directly in the text (Ctrl+9) stay visible in the editor but are also excluded from exports.')}</p>
-    <textarea class="notes-area" id="personalNotes" placeholder="${L('Idées, recherches, choses à ne pas oublier…','Ideas, research, things not to forget…')}">${esc(S.project.personalNotes)}</textarea>
+  <div class="wh-wrap">
+    <p class="wh-lead">${L('Un bloc-notes à part, pour tout ce qui n\u2019a pas sa place dans le scénario.','A separate notepad, for everything that doesn\u2019t belong in the screenplay.')}</p>
+    <div class="wh-card">
+      <div class="wh-card-t"><span>${L('Ton bloc-notes','Your notepad')}</span></div>
+      <p class="wh-card-s">${L('Séparé du scénario, jamais exporté.','Kept separate from the screenplay, never exported.')}</p>
+      <ul class="help-points">
+        <li>${L('Les notes insérées directement dans le texte (Ctrl+9) restent visibles dans l\u2019éditeur','Notes inserted directly in the text (Ctrl+9) stay visible in the editor')}</li>
+        <li>${L('Elles sont, elles aussi, exclues des exports','They are also excluded from exports')}</li>
+      </ul>
+      <textarea class="notes-area" id="personalNotes" placeholder="${L('Idées, recherches, choses à ne pas oublier…','Ideas, research, things not to forget…')}">${esc(S.project.personalNotes)}</textarea>
+    </div>
   </div>`;
 }
 
@@ -8207,17 +8347,25 @@ function renderReports(){
   const chars = characterStats().map(c=>c.name);
   const opts = chars.map(c=>`<option value="${esc(c)}">${esc(c)}</option>`).join('');
   return `<div class="cards-toolbar"><div class="pane-title" style="margin:0;">${L('Rapports','Reports')}</div></div>
-  <div style="padding:12px 24px;">
-    <div class="field" style="max-width:320px;"><label>${L('Filtrer par personnage','Filter by character')}</label>
-      <select id="reportChar"><option value="">${L('Toutes les scènes','All scenes')}</option>${opts}</select></div>
-    <button class="btn btn-sm" data-act="runReportChar" style="margin-bottom:14px;">${L('Afficher','Show')}</button>
+  <div class="wh-wrap">
+    <p class="wh-lead">${L('Retrouve vite des scènes ou des éléments précis de ton scénario.','Quickly find specific scenes or elements of your screenplay.')}</p>
+    <div class="wh-card">
+      <div class="wh-card-t"><span>${L('Par personnage','By character')}</span></div>
+      <p class="wh-card-s">${L('Liste les scènes où un personnage prend la parole.','Lists the scenes where a character speaks.')}</p>
+      <div class="field" style="max-width:320px;"><label>${L('Filtrer par personnage','Filter by character')}</label>
+        <select id="reportChar"><option value="">${L('Toutes les scènes','All scenes')}</option>${opts}</select></div>
+      <div class="sset-actions"><button class="btn btn-sm" data-act="runReportChar">${L('Afficher','Show')}</button></div>
+    </div>
     <div id="reportResults"></div>
-    <div class="panel-block" style="margin-top:18px;">
-      <h4>${L('Raccourcis','Shortcuts')}</h4>
-      <button class="btn btn-sm" data-act="reportPreset" data-id="night">${L('Scènes de nuit','Night scenes')}</button>
-      <button class="btn btn-sm" data-act="reportPreset" data-id="notes">${L('Toutes les notes','All notes')}</button>
-      <button class="btn btn-sm" data-act="reportPreset" data-id="shots">${L('Tous les plans','All shots')}</button>
-      <button class="btn btn-sm" data-act="reportPreset" data-id="transitions">${L('Toutes les transitions','All transitions')}</button>
+    <div class="wh-card">
+      <div class="wh-card-t"><span>${L('Raccourcis','Shortcuts')}</span></div>
+      <p class="wh-card-s">${L('Des listes toutes prêtes : scènes de nuit, notes, plans, transitions.','Ready-made lists: night scenes, notes, shots, transitions.')}</p>
+      <div class="sset-actions">
+        <button class="btn btn-sm" data-act="reportPreset" data-id="night">${L('Scènes de nuit','Night scenes')}</button>
+        <button class="btn btn-sm" data-act="reportPreset" data-id="notes">${L('Toutes les notes','All notes')}</button>
+        <button class="btn btn-sm" data-act="reportPreset" data-id="shots">${L('Tous les plans','All shots')}</button>
+        <button class="btn btn-sm" data-act="reportPreset" data-id="transitions">${L('Toutes les transitions','All transitions')}</button>
+      </div>
     </div>
   </div>`;
 }
@@ -8264,17 +8412,20 @@ function renderStats(){
   const pages = measuredPageCount();   // vraie pagination, pas une estimation
   const top = characterStats().slice(0,5);
   return `<div class="cards-toolbar"><div class="pane-title" style="margin:0;">${L('Statistiques','Statistics')}</div></div>
-  <div class="stat-grid">
-    <div class="stat-card"><div class="stat-num">${pages}</div><div class="stat-label">${L('Pages (paginées)','Pages (paginated)')}</div></div>
-    <div class="stat-card"><div class="stat-num">${s.scenes}</div><div class="stat-label">${L('Scènes','Scenes')}</div></div>
-    <div class="stat-card"><div class="stat-num">${s.words}</div><div class="stat-label">${L('Mots','Words')}</div></div>
-    <div class="stat-card"><div class="stat-num">${s.dialogues}</div><div class="stat-label">${L('Répliques','Lines')}</div></div>
-    <div class="stat-card"><div class="stat-num">${pages} min</div><div class="stat-label">${L('Lecture estimée','Estimated reading time')}</div></div>
-    <div class="stat-card"><div class="stat-num">${s.chars}</div><div class="stat-label">${L('Caractères','Characters')}</div></div>
-  </div>
-  <div style="padding:0 24px 40px;">
-    <div class="panel-block"><h4>${L('Personnages les plus présents','Most present characters')}</h4>
-    ${top.map(t=>`<div class="char-row" style="cursor:default;"><div class="char-name">${esc(t.name)}</div><div class="char-stats">${t.words} ${L('mots','words')}</div></div>`).join('') || `<p style="color:var(--ink-soft);">${L('Aucun personnage pour l\u2019instant.','No character yet.')}</p>`}
+  <div class="wh-wrap">
+    <p class="wh-lead">${L('Les grands chiffres de ton scénario.','The big numbers of your screenplay.')}</p>
+    <div class="stat-grid">
+      <div class="stat-card"><div class="stat-num">${pages}</div><div class="stat-label">${L('Pages (paginées)','Pages (paginated)')}</div></div>
+      <div class="stat-card"><div class="stat-num">${s.scenes}</div><div class="stat-label">${L('Scènes','Scenes')}</div></div>
+      <div class="stat-card"><div class="stat-num">${s.words}</div><div class="stat-label">${L('Mots','Words')}</div></div>
+      <div class="stat-card"><div class="stat-num">${s.dialogues}</div><div class="stat-label">${L('Répliques','Lines')}</div></div>
+      <div class="stat-card"><div class="stat-num">${pages} min</div><div class="stat-label">${L('Lecture estimée','Estimated reading time')}</div></div>
+      <div class="stat-card"><div class="stat-num">${s.chars}</div><div class="stat-label">${L('Caractères','Characters')}</div></div>
+    </div>
+    <div class="wh-card">
+      <div class="wh-card-t"><span>${L('Personnages les plus présents','Most present characters')}</span></div>
+      <p class="wh-card-s">${L('Les cinq qui parlent le plus, en nombre de mots.','The five who speak the most, by word count.')}</p>
+      ${top.length ? `<div class="wh-chars">${top.map(t=>`<div class="char-row" style="cursor:default;"><div class="char-name">${esc(t.name)}</div><div class="char-stats">${t.words} ${L('mots','words')}</div></div>`).join('')}</div>` : whEmpty(L('Aucun personnage pour l\u2019instant.','No character yet.'))}
     </div>
   </div>`;
 }
@@ -8294,7 +8445,10 @@ function renderGraveyard(){
       <div style="font-size:12.5px;color:var(--ink-soft);">${L('Supprimée','Deleted')} ${timeAgo(item.deletedAt)}</div>
     </div>`).join('');
   return `<div class="cards-toolbar"><div class="pane-title" style="margin:0;">${L('Corbeille','Graveyard')}</div></div>
-    <div class="flat-list">${rows || `<p style="color:var(--ink-soft);">${L('La corbeille est vide.','The graveyard is empty.')}</p>`}</div>`;
+    <div class="wh-wrap">
+      <p class="wh-lead">${L('Les scènes supprimées restent ici : tu peux les restaurer, ou les supprimer pour de bon.','Deleted scenes stay here: you can restore them, or delete them for good.')}</p>
+      ${rows ? `<div class="flat-list">${rows}</div>` : whEmpty(L('La corbeille est vide.','The graveyard is empty.'))}
+    </div>`;
 }
 function restoreScene(id){
   const idx = S.project.graveyard.findIndex(x=>x.id===id); if(idx<0) return;
@@ -8334,8 +8488,11 @@ function renderHistory(){
     </div><div style="font-size:12.5px;color:var(--ink-soft);">${new Date(ver.timestamp).toLocaleString(getLang()==='en'?'en-US':'fr-FR')}</div></div>`).join('');
   return `<div class="cards-toolbar"><div class="pane-title" style="margin:0;">${L('Historique','History')}</div>
       <button class="btn btn-sm btn-primary" data-act="createVersion">${L('Enregistrer une version','Save a version')}</button></div>
-    <div class="flat-list">${rows || `<p style="color:var(--ink-soft);">${L('Aucune version enregistrée. Le bouton ci-dessus fige un instantané que tu pourras comparer ou restaurer plus tard.','No version saved yet. The button above freezes a snapshot you can compare or restore later.')}</p>`}</div>
-    ${S.diffVerId ? diffPanelHtml() : ''}`;
+    <div class="wh-wrap">
+      <p class="wh-lead">${L('Chaque version est un instantané de ton scénario, à comparer avec l’état actuel ou à restaurer.','Each version is a snapshot of your screenplay, to compare with its current state or to restore.')}</p>
+      ${rows ? `<div class="flat-list">${rows}</div>` : whEmpty(L('Aucune version enregistrée. Le bouton ci-dessus fige un instantané que tu pourras comparer ou restaurer plus tard.','No version saved yet. The button above freezes a snapshot you can compare or restore later.'))}
+      ${S.diffVerId ? diffPanelHtml() : ''}
+    </div>`;
 }
 /* CORRECTIF I18N. Le nom par défaut d'une version ("Version du 18/09/2026"
    côté français, "Version of 9/18/2026" côté anglais) était écrit une fois
@@ -8380,88 +8537,131 @@ async function restoreVersion(id){
 /* =====================================================================
    SETTINGS
 ===================================================================== */
+let __setSec = 'projet';
+function setSettingsSection(_, e){
+  const el = e && e.target && e.target.closest && e.target.closest('[data-sec]');
+  if(!el) return;
+  __setSec = el.dataset.sec;
+  document.querySelectorAll('.sset-group').forEach(g=>{ g.style.display = (g.dataset.g === __setSec) ? '' : 'none'; });
+  document.querySelectorAll('.sset-tab').forEach(t=>{ t.classList.toggle('active', t.dataset.sec === __setSec); });
+}
+function settingsCloudHtml(){
+  const h = vaultSettingsHtml();
+  const m = '<div class="panel-block"><h4>';
+  const i = h.indexOf(m, h.indexOf(m) + 1);
+  return i > 0 ? h.slice(i) + h.slice(0, i) : h; // Google Drive d'abord, puis le coffre-fort
+}
 function renderSettings(){
   const p = S.project;
   return `<div class="cards-toolbar"><div class="pane-title" style="margin:0;">${L('Paramètres','Settings')}</div></div>
-  <div style="padding:8px 24px 60px;max-width:520px;">
+  <div style="padding:8px 24px 60px;max-width:600px;">
+    <div class="fmt-choice sset-nav">
+${[['projet',L('Projet','Project')],['page',L('Mise en page','Layout')],['backup',L('Sauvegarde','Backup')]].map(x=>`      <div class="fmt-opt sset-tab ${__setSec===x[0]?'active':''}" data-act="setSettingsSection" data-sec="${x[0]}"><div class="t">${x[1]}</div></div>`).join('\n')}
+    </div>
+    <div class="sset-group" data-g="projet" style="${__setSec==='projet'?'':'display:none'}">
+      <p class="sset-lead">${L('Le titre, le format et la page de titre de ce scénario.','The title, format and title page of this screenplay.')}</p>
     <div class="panel-block"><h4>${L('Projet','Project')}</h4>
+      <p class="sset-sub">${L('Le nom et le format de ce scénario.','The name and format of this screenplay.')}</p>
       <div class="field"><label>${L('Titre','Title')}</label><input type="text" id="setTitle" value="${esc(p.title)}"></div>
       <div class="field"><label>${L('Format','Format')}</label>
         <div class="fmt-choice">
-          <div class="fmt-opt ${p.format==='fr'?'active':''}" data-act="setFormat" data-fmt="fr"><div class="t">${L('Français','French')}</div></div>
-          <div class="fmt-opt ${p.format==='us'?'active':''}" data-act="setFormat" data-fmt="us"><div class="t">${L('Américain','American')}</div></div>
+          <div class="fmt-opt ${p.format==='fr'?'active':''}" data-act="setFormat" data-fmt="fr"><div class="t">${L('Français','French')}</div><div class="d">${L('mise en page française','French layout')}</div></div>
+          <div class="fmt-opt ${p.format==='us'?'active':''}" data-act="setFormat" data-fmt="us"><div class="t">${L('Américain','American')}</div><div class="d">${L('mise en page américaine','US layout')}</div></div>
         </div>
       </div>
     </div>
-    <div class="panel-block"><h4>${L('Sauvegarde','Backup')}</h4>
-      <p class="opt-help" style="margin-top:0;">${L('ScriptMM peut télécharger de temps en temps un fichier <b>.smmproj</b> : une copie de ton scénario, hors du navigateur. Choisis à quel point tu veux être protégé.','ScriptMM can download a <b>.smmproj</b> file from time to time: a copy of your screenplay, outside the browser. Pick how protected you want to be.')}</p>
-      <div class="fmt-choice" style="flex-wrap:wrap;">
-          <div class="fmt-opt ${backupLevel()==='off'?'active':''}" data-act="setBackupLevel" data-lvl="off"><div class="t">${L('Désactivée','Off')}</div><div class="d" style="font-size:11px;opacity:.7;margin-top:2px;">${L('aucun fichier','no files')}</div></div>
-          <div class="fmt-opt ${backupLevel()==='low'?'active':''}" data-act="setBackupLevel" data-lvl="low"><div class="t">${L('Discrète','Light')}</div><div class="d" style="font-size:11px;opacity:.7;margin-top:2px;">${L('1 fichier / 4 h','1 file / 4 h')}</div></div>
-          <div class="fmt-opt ${backupLevel()==='normal'?'active':''}" data-act="setBackupLevel" data-lvl="normal"><div class="t">${L('Équilibrée','Balanced')}</div><div class="d" style="font-size:11px;opacity:.7;margin-top:2px;">${L('1 fichier / heure','1 file / hour')}</div></div>
-          <div class="fmt-opt ${backupLevel()==='high'?'active':''}" data-act="setBackupLevel" data-lvl="high"><div class="t">${L('Renforcée','Strong')}</div><div class="d" style="font-size:11px;opacity:.7;margin-top:2px;">${L('1 fichier / 20 min','1 file / 20 min')}</div></div>
-      </div>
-      <p class="opt-help">${L(
-        `Le fichier n\u2019est créé que si tu as modifié ton scénario depuis le dernier. Si ton scénario est relié à un fichier de ton ordinateur (Coffre-fort) ou à Google Drive, aucun fichier n\u2019est téléchargé : c\u2019est déjà sauvegardé ailleurs. Dernière sauvegarde\u00a0: ${getLastBackupAt() ? esc(timeAgo(getLastBackupAt())) : 'aucune pour l\u2019instant'}. Réglage valable pour tous tes scénarios.`,
-        `A file is only created if you changed your screenplay since the last one. If your screenplay is linked to a file on your computer (Vault) or to Google Drive, nothing is downloaded: it is already saved elsewhere. Last backup\u00a0: ${getLastBackupAt() ? esc(timeAgo(getLastBackupAt())) : 'none yet'}. This setting applies to all your screenplays.`
-      )}</p>
-    </div>
-    ${vaultSettingsHtml()}
     <div class="panel-block"><h4>${L('Page de titre (à l\u2019export)','Title page (on export)')}</h4>
-      <label class="opt-label">
-        <input type="checkbox" id="setTitlePage" ${p.settings.titlePageEnabled?'checked':''}> ${L('Inclure une page de titre','Include a title page')}
-      </label>
-      <div class="field"><label>${L('Auteur','Author')}</label><input type="text" id="setAuthor" value="${esc(p.author)}"></div>
-      <div class="field"><label>${L('Type de projet','Project type')}</label>
-        <select id="setKind">
-          <option value="" ${p.kind?'':'selected'}>${L('Ne rien afficher','Show nothing')}</option>
-          ${PROJECT_KINDS.concat(PROJECT_KINDS.includes(p.kind)||!p.kind ? [] : [p.kind])
-            .map(k=>`<option value="${esc(k)}" ${k===p.kind?'selected':''}>${esc(kindOptionLabel(k))}</option>`).join('')}
-        </select>
+      <p class="sset-sub">${L('Ce qui s\u2019affiche sur la page de titre, à l\u2019export.','What appears on the title page, on export.')}</p>
+      <div class="sset-row">
+        <label class="opt-label">
+          <input type="checkbox" id="setTitlePage" ${p.settings.titlePageEnabled?'checked':''}> ${L('Inclure une page de titre','Include a title page')}
+        </label>
+      </div>
+      <div class="sset-sep"></div>
+      <div class="sset-label">${L('Informations','Details')}</div>
+      <div class="wd-row2">
+        <div class="field"><label>${L('Auteur','Author')}</label><input type="text" id="setAuthor" value="${esc(p.author)}"></div>
+        <div class="field"><label>${L('Type de projet','Project type')}</label>
+          <select id="setKind">
+            <option value="" ${p.kind?'':'selected'}>${L('Ne rien afficher','Show nothing')}</option>
+            ${PROJECT_KINDS.concat(PROJECT_KINDS.includes(p.kind)||!p.kind ? [] : [p.kind])
+              .map(k=>`<option value="${esc(k)}" ${k===p.kind?'selected':''}>${esc(kindOptionLabel(k))}</option>`).join('')}
+          </select>
+        </div>
       </div>
       <div class="field"><label>${L('Contact','Contact')}</label><input type="text" id="setContact" value="${esc(p.contact)}"></div>
-      <div class="field"><label>${L('Version','Version')}</label><input type="text" id="setVersion" value="${esc(p.version)}"></div>
-      <div class="field"><label>${L('Date','Date')}</label><input type="date" id="setDate" value="${esc(p.date)}"></div>
+      <div class="wd-row2">
+        <div class="field"><label>${L('Version','Version')}</label><input type="text" id="setVersion" value="${esc(p.version)}"></div>
+        <div class="field"><label>${L('Date','Date')}</label><input type="date" id="setDate" value="${esc(p.date)}"></div>
+      </div>
     </div>
     ${p.seriesId ? `
     <div class="panel-block"><h4>${L('Série','Series')}</h4>
-      <p class="opt-help" style="margin-bottom:10px;">${L('Ce scénario est un épisode. Ces réglages s\u2019appliquent à cet épisode ; le nom de la série et le nom de la saison se répercutent sur les autres épisodes concernés.','This screenplay is an episode. These settings apply to this episode; the series name and season name carry over to the other episodes concerned.')}</p>
+      <p class="sset-sub">${L('Ce scénario est un épisode : ces réglages valent pour lui. Le nom de la série et celui de la saison se répercutent sur les autres épisodes concernés.','This screenplay is an episode: these settings apply to it. The series name and season name carry over to the other episodes concerned.')}</p>
       <div class="field"><label>${L('Nom de la série','Series name')}</label><input type="text" id="setSeriesName" value="${esc(p.seriesName||'')}"></div>
-      <div style="display:flex;gap:10px;">
-        <div class="field" style="flex:1"><label>${L('Saison','Season')}</label><input type="number" min="1" id="setSeason" value="${p.season||1}"></div>
-        <div class="field" style="flex:1"><label>${L('Épisode','Episode')}</label><input type="number" min="1" id="setEpisode" value="${p.episode||1}"></div>
+      <div class="wd-row2">
+        <div class="field"><label>${L('Saison','Season')}</label><input type="number" min="1" id="setSeason" value="${p.season||1}"></div>
+        <div class="field"><label>${L('Épisode','Episode')}</label><input type="number" min="1" id="setEpisode" value="${p.episode||1}"></div>
       </div>
       <div class="field"><label>${L('Nom de la saison (facultatif)','Season name (optional)')}</label><input type="text" id="setSeasonName" placeholder="${L('Ex. Origines','E.g. Origins')}" value="${esc(p.seasonName||'')}"></div>
-      <button class="btn btn-sm" data-act="openSeriesHub" data-id="${p.seriesId}">${icon('list')} ${L('Voir tous les épisodes de la série','See all episodes of the series')}</button>
+      <div class="sset-actions"><button class="btn btn-sm" data-act="openSeriesHub" data-id="${p.seriesId}">${icon('list')} ${L('Voir tous les épisodes de la série','See all episodes of the series')}</button></div>
     </div>` : ''}
+    </div>
+    <div class="sset-group" data-g="page" style="${__setSec==='page'?'':'display:none'}">
+      <p class="sset-lead">${L('L\u2019apparence du scénario, à l\u2019écran comme à l\u2019export.','How the screenplay looks, on screen and when exported.')}</p>
     <div class="panel-block"><h4>${L('Police du scénario','Screenplay font')}</h4>
-      <div class="field" style="margin-bottom:6px;">${scriptFontSelectHtml('')}</div>
-      <p class="opt-help">${L('S\u2019applique à tout le scénario, à l\u2019écran comme à l\u2019export, et se change à tout moment pendant l\u2019écriture. Les polices à chasse fixe (Courier) gardent la règle « une page \u2248 une minute » ; une autre police change le nombre de lignes par page, donc la pagination. Dans le PDF, les polices sans équivalent standard sont remplacées par la plus proche (Courier, Times ou Helvetica).','Applies to the whole screenplay, on screen and in exports, and can be changed at any time while writing. Monospaced fonts (Courier) keep the \u201cone page \u2248 one minute\u201d rule; any other font changes the number of lines per page, and so the pagination. In the PDF, fonts without a standard equivalent are replaced by the closest one (Courier, Times or Helvetica).')}</p>
+      <p class="sset-sub">${L('La police de tout le scénario, à l\u2019écran comme à l\u2019export. Tu peux la changer à tout moment.','The font for the whole screenplay, on screen and in exports. You can change it at any time.')}</p>
+      <div class="field" style="margin-bottom:14px;">${scriptFontSelectHtml('')}</div>
+      <ul class="sset-points">
+        <li>${L('Les polices à chasse fixe (Courier) gardent la règle « une page \u2248 une minute »','Monospaced fonts (Courier) keep the \u201cone page \u2248 one minute\u201d rule')}</li>
+        <li>${L('Une autre police change le nombre de lignes par page, donc la pagination','Any other font changes the number of lines per page, and so the pagination')}</li>
+        <li>${L('Dans le PDF, une police sans équivalent standard est remplacée par la plus proche (Courier, Times ou Helvetica)','In the PDF, a font without a standard equivalent is replaced by the closest one (Courier, Times or Helvetica)')}</li>
+      </ul>
     </div>
     <div class="panel-block"><h4>${L('Numérotation','Numbering')}</h4>
-      <label class="opt-label">
-        <input type="checkbox" id="setSceneNum" ${p.settings.showSceneNumbers?'checked':''}> ${L('Afficher les numéros de scène','Show scene numbers')}
-      </label>
+      <p class="sset-sub">${L('Les numéros de scène, à l\u2019écran et à l\u2019export.','Scene numbers, on screen and in exports.')}</p>
+      <div class="sset-row">
+        <label class="opt-label">
+          <input type="checkbox" id="setSceneNum" ${p.settings.showSceneNumbers?'checked':''}> ${L('Afficher les numéros de scène','Show scene numbers')}
+        </label>
+      </div>
       <div class="field"><label>${L('Commencer à','Start at')}</label><input type="text" id="setNumStart" value="${p.settings.numberStart}" style="max-width:100px;"></div>
-      <label class="opt-label" style="margin-bottom:6px;">
-        <input type="checkbox" id="setNumLock" ${p.settings.numbersLocked?'checked':''}> ${L('Verrouiller les numéros de scène','Lock scene numbers')}
-      </label>
-      <p class="opt-help">${L('Une fois verrouillés, les numéros existants ne bougent plus. Insérer une scène entre deux scènes verrouillées lui donne une lettre (12, 12A, 12B…) au lieu de tout décaler, pratique une fois le découpage distribué à l\u2019équipe. Déverrouiller revient à une numérotation automatique.','Once locked, existing numbers no longer move. Inserting a scene between two locked scenes gives it a letter (12, 12A, 12B…) instead of shifting everything, handy once the breakdown has been distributed to the team. Unlocking goes back to automatic numbering.')}</p>
+      <div class="sset-sep"></div>
+      <div class="sset-row">
+        <label class="opt-label">
+          <input type="checkbox" id="setNumLock" ${p.settings.numbersLocked?'checked':''}> ${L('Verrouiller les numéros de scène','Lock scene numbers')}
+        </label>
+        <p class="sset-hint">${L('Les numéros existants ne bougent plus : une scène insérée entre deux scènes verrouillées reçoit une lettre (12, 12A, 12B…) au lieu de tout décaler. Pratique une fois le découpage distribué à l\u2019équipe. Déverrouiller revient à la numérotation automatique.','Existing numbers no longer move: a scene inserted between two locked scenes gets a letter (12, 12A, 12B…) instead of shifting everything. Handy once the breakdown has been distributed to the team. Unlocking goes back to automatic numbering.')}</p>
+      </div>
     </div>
     <div class="panel-block"><h4>${L('Pagination','Pagination')}</h4>
-      <label class="opt-label">
-        <input type="checkbox" id="setPageNum" ${p.settings.showPageNumbers?'checked':''}> ${L('Afficher les numéros de page','Show page numbers')}
-      </label>
-      <label class="opt-label">
-        <input type="checkbox" id="setPageNumFirst" ${p.settings.numberFirstPage?'checked':''}> ${L('Numéroter aussi la première page','Also number the first page')}
-      </label>
-      <label class="opt-label">
-        <input type="checkbox" id="setContinued" ${p.settings.showContinued?'checked':''}> ${L('Mention « CONTINUITÉ : » en bas et en haut de page quand une scène se poursuit d\u2019une page à l\u2019autre','\u201cCONTINUED:\u201d mark at the bottom and top of the page when a scene continues from one page to the next')}
-      </label>
-      <label class="opt-label" style="margin-bottom:6px;">
-        <input type="checkbox" id="setAutoContd" ${p.settings.autoContd?'checked':''}> ${L('Mention de continuité quand un personnage reprend la parole','Continuity mark when a character resumes speaking')}
-      </label>
-      <p class="opt-help" style="margin:-6px 0 10px;">${L('Ajoutée automatiquement quand le même personnage reprend la parole dans la scène, après une action ou un plan. Elle n\u2019est pas écrite dans le texte : déplacer une scène ou couper l\u2019option la fait disparaître sans rien laisser à nettoyer. Les mentions déjà présentes dans un scénario importé sont reconnues et jamais doublées.','Added automatically when the same character resumes speaking within the scene, after an action line or a shot. It is never written into the text: moving a scene or turning the option off makes it disappear with nothing to clean up. Marks already present in an imported screenplay are recognized and never duplicated.')}</p>
+      <p class="sset-sub">${L('Les sauts de page suivent les dimensions réelles du papier (' + (p.format==='us'?'Letter':'A4') + ') : le PDF reproduit exactement les pages de l\u2019éditeur.','Page breaks follow the real paper dimensions (' + (p.format==='us'?'Letter':'A4') + '): the PDF reproduces exactly the pages shown in the editor.')}</p>
+      <div class="sset-label">${L('Numéros de page','Page numbers')}</div>
+      <div class="sset-row">
+        <label class="opt-label">
+          <input type="checkbox" id="setPageNum" ${p.settings.showPageNumbers?'checked':''}> ${L('Afficher les numéros de page','Show page numbers')}
+        </label>
+      </div>
+      <div class="sset-row">
+        <label class="opt-label">
+          <input type="checkbox" id="setPageNumFirst" ${p.settings.numberFirstPage?'checked':''}> ${L('Numéroter aussi la première page','Also number the first page')}
+        </label>
+      </div>
+      <div class="field"><label>${L('Première page numérotée','First numbered page')}</label><input type="text" id="setPageStart" value="${p.settings.pageNumberStart}" style="max-width:100px;"></div>
+      <div class="sset-sep"></div>
+      <div class="sset-label">${L('Continuité','Continuity')}</div>
+      <div class="sset-row">
+        <label class="opt-label">
+          <input type="checkbox" id="setContinued" ${p.settings.showContinued?'checked':''}> ${L('Mention « CONTINUITÉ : » entre deux pages','\u201cCONTINUED:\u201d mark between pages')}
+        </label>
+        <p class="sset-hint">${L('Affichée en bas et en haut de page quand une scène se poursuit d\u2019une page à l\u2019autre.','Shown at the bottom and top of the page when a scene continues from one page to the next.')}</p>
+      </div>
+      <div class="sset-row">
+        <label class="opt-label">
+          <input type="checkbox" id="setAutoContd" ${p.settings.autoContd?'checked':''}> ${L('Mention de continuité quand un personnage reprend la parole','Continuity mark when a character resumes speaking')}
+        </label>
+        <p class="sset-hint">${L('Ajoutée automatiquement quand le même personnage reprend la parole dans la scène, après une action ou un plan. Elle n\u2019est pas écrite dans le texte : déplacer une scène ou couper l\u2019option la fait disparaître sans rien à nettoyer. Les mentions déjà présentes dans un scénario importé sont reconnues, jamais doublées.','Added automatically when the same character resumes speaking within the scene, after an action line or a shot. It is never written into the text: moving a scene or turning the option off makes it disappear with nothing to clean up. Marks already present in an imported screenplay are recognized, never duplicated.')}</p>
+      </div>
       <div class="field" style="margin-bottom:6px;"><label>${L('Mention utilisée','Mark used')}</label>
         <select id="setContdMark">
           <option value="auto" ${(!p.settings.contdMark||p.settings.contdMark==='auto')?'selected':''}>${L('Automatique (selon la langue de l\u2019interface)','Automatic (based on interface language)')}</option>
@@ -8469,24 +8669,45 @@ function renderSettings(){
           <option value="contd" ${p.settings.contdMark==='contd'?'selected':''}>(CONT'D)</option>
         </select>
       </div>
-      <p class="opt-help" style="margin:-6px 0 14px;">${L('En automatique : « (SUITE) » en français, « (CONT\u2019D) » en anglais. On peut aussi figer une seule graphie, indépendamment de la langue de l\u2019interface.','Automatic: \u201c(SUITE)\u201d in French, \u201c(CONT\u2019D)\u201d in English. A single spelling can also be locked in, regardless of the interface language.')}</p>
-      <div class="field" style="margin-bottom:6px;"><label>${L('Interligne','Line spacing')}</label>
-        <div style="font-size:13.5px;color:var(--ink);padding:6px 0;">${L('Standard (norme du métier) — verrouillé','Standard (industry norm) — locked')}</div>
-      </div>
-      <p class="opt-help" style="margin:-6px 0 14px;">${L('Comme dans Final Draft et WriterDuet : interligne simple, 6 lignes au pouce, environ 58 lignes par page. Ce réglage est fixe pour que la page suivante ne commence jamais avant que la page soit pleine.','As in Final Draft and WriterDuet: single spacing, 6 lines per inch, about 58 lines per page. This setting is fixed so the next page never starts before the page is full.')}</p>
-      <div class="field"><label>${L('Première page numérotée','First numbered page')}</label><input type="text" id="setPageStart" value="${p.settings.pageNumberStart}" style="max-width:100px;"></div>
-      <p class="opt-help">${L(
-        `Les sauts de page sont calculés sur les dimensions réelles du papier (${p.format==='us'?'Letter':'A4'}) : l\u2019export PDF reproduit exactement les pages affichées dans l\u2019éditeur.`,
-        `Page breaks are calculated using the paper's real dimensions (${p.format==='us'?'Letter':'A4'}): the PDF export reproduces exactly the pages shown in the editor.`
-      )}</p>
+      <p class="sset-hint" style="margin:0 0 14px;">${L('En automatique : « (SUITE) » en français, « (CONT\u2019D) » en anglais. Tu peux aussi figer une seule graphie.','Automatic: \u201c(SUITE)\u201d in French, \u201c(CONT\u2019D)\u201d in English. You can also lock in a single spelling.')}</p>
+      <div class="sset-sep"></div>
+      <div class="sset-label">${L('Interligne','Line spacing')}</div>
+      <div class="sset-status ok"><span class="sset-dot"></span><span>${L('Standard (norme du métier) — verrouillé','Standard (industry norm) — locked')}</span></div>
+      <p class="sset-hint" style="margin:-4px 0 14px;">${L('Comme dans Final Draft et WriterDuet : interligne simple, 6 lignes au pouce, environ 58 lignes par page. Ce réglage est fixe pour que la page suivante ne commence jamais avant que la page soit pleine.','As in Final Draft and WriterDuet: single spacing, 6 lines per inch, about 58 lines per page. This setting is fixed so the next page never starts before the page is full.')}</p>
     </div>
     <div class="panel-block"><h4>${L('Filigrane (PDF & impression)','Watermark (PDF & print)')}</h4>
+      <p class="sset-sub">${L('Un texte discret, en diagonale, sur chaque page du PDF et de l\u2019impression. Jamais dans l\u2019éditeur.','A discreet diagonal text on every page of the PDF and print output. Never in the editor.')}</p>
       <div class="field"><label>${L('Texte du filigrane','Watermark text')}</label>
         <input type="text" id="setWatermark" placeholder="${L('Ex. CONFIDENTIEL, ou le nom du destinataire','E.g. CONFIDENTIAL, or the recipient\u2019s name')}" value="${esc(p.settings.watermarkText||'')}">
       </div>
-      <p class="opt-help">${L('Imprimé discrètement en diagonale sur chaque page du PDF et de l\u2019impression — jamais dans l\u2019éditeur. Pratique pour marquer une copie de lecture et repérer d\u2019où vient une fuite si le scénario circule avant sa sortie. Laisse vide pour ne rien afficher.','Printed discreetly in a diagonal across every page of the PDF and print output — never in the editor. Handy for marking a reading copy and tracing where a leak came from if the screenplay circulates before release. Leave empty to show nothing.')}</p>
+      <ul class="sset-points">
+        <li>${L('Pratique pour marquer une copie de lecture','Handy for marking a reading copy')}</li>
+        <li>${L('Permet de repérer d\u2019où vient une fuite si le scénario circule avant sa sortie','Helps trace where a leak came from if the screenplay circulates before release')}</li>
+        <li>${L('Laisse vide pour ne rien afficher','Leave empty to show nothing')}</li>
+      </ul>
     </div>
-    <button class="btn btn-primary" data-act="saveSettings">${L('Enregistrer les paramètres','Save settings')}</button>
+    </div>
+    <div class="sset-group" data-g="backup" style="${__setSec==='backup'?'':'display:none'}">
+      <p class="sset-lead">${L('Choisis comment protéger ton travail. Ces réglages s\u2019appliquent tout de suite.','Choose how to protect your work. These settings apply immediately.')}</p>
+    ${settingsCloudHtml()}
+    <div class="panel-block"><h4>${L('Sauvegarde','Backup')}</h4>
+      <p class="sset-sub">${L('De temps en temps, ScriptMM télécharge une copie <b>.smmproj</b> de ton scénario, hors du navigateur.','From time to time, ScriptMM downloads a <b>.smmproj</b> copy of your screenplay, outside the browser.')}</p>
+      <div class="sset-label">${L('À quelle fréquence ?','How often?')}</div>
+      <div class="fmt-choice" style="flex-wrap:wrap;margin-bottom:14px;">
+          <div class="fmt-opt ${backupLevel()==='off'?'active':''}" data-act="setBackupLevel" data-lvl="off"><div class="t">${L('Désactivée','Off')}</div><div class="d">${L('aucun fichier','no files')}</div></div>
+          <div class="fmt-opt ${backupLevel()==='low'?'active':''}" data-act="setBackupLevel" data-lvl="low"><div class="t">${L('Discrète','Light')}</div><div class="d">${L('1 fichier / 4 h','1 file / 4 h')}</div></div>
+          <div class="fmt-opt ${backupLevel()==='normal'?'active':''}" data-act="setBackupLevel" data-lvl="normal"><div class="t">${L('Équilibrée','Balanced')}</div><div class="d">${L('1 fichier / heure','1 file / hour')}</div></div>
+          <div class="fmt-opt ${backupLevel()==='high'?'active':''}" data-act="setBackupLevel" data-lvl="high"><div class="t">${L('Renforcée','Strong')}</div><div class="d">${L('1 fichier / 20 min','1 file / 20 min')}</div></div>
+      </div>
+      <ul class="sset-points">
+        <li>${L('Un fichier n\u2019est créé que si ton scénario a changé depuis le dernier','A file is only created if your screenplay changed since the last one')}</li>
+        <li>${L('Aucun fichier si le Coffre-fort ou Google Drive est actif : c\u2019est déjà sauvegardé ailleurs','No file if the Vault or Google Drive is active: it is already saved elsewhere')}</li>
+        <li>${L('Réglage valable pour tous tes scénarios','Applies to all your screenplays')}</li>
+      </ul>
+      <div class="sset-status"><span class="sset-dot"></span><span>${L('Dernière sauvegarde : ','Last backup: ')}${getLastBackupAt() ? esc(timeAgo(getLastBackupAt())) : L('aucune pour l\u2019instant','none yet')}</span></div>
+    </div>
+    </div>
+    <button class="btn btn-primary" data-act="saveSettings" style="margin-top:4px;">${L('Enregistrer les paramètres','Save settings')}</button>
   </div>`;
 }
 
@@ -11035,46 +11256,53 @@ function vaultSettingsHtml(){
   const linked = vaultActive();
   const needPerm = (V.handle && !V.ok);
   const cid = gdClientId();
+  const vaultStatus = linked
+    ? L('Relié à ','Linked to ') + '<b>' + esc(V.name || L('ton fichier','your file')) + '</b>' + (V.at ? L(' · dernière écriture ',' · last write ') + esc(timeAgo(V.at)) : '')
+    : needPerm
+      ? L('Fichier mémorisé (<b>' + esc(V.name || '') + '</b>) : clique sur « Reconnecter le fichier » pour redonner l\u2019autorisation.', 'File remembered (<b>' + esc(V.name || '') + '</b>): click \u201cReconnect the file\u201d to grant permission again.')
+      : L('Aucun fichier relié pour l\u2019instant', 'No file linked yet');
   return `
-    <div class="panel-block"><h4>${L('Coffre-fort : fichier sur mon ordinateur','Vault: file on my computer')}</h4>
-      <p class="opt-help" style="margin-top:0;">${L('Le plus sûr, et le plus proche d\u2019un logiciel classique : ce scénario est relié à un vrai fichier <b>.smmproj</b> de ton disque, réécrit tout seul quelques secondes après chaque modification. Vider le navigateur, changer de navigateur ou fermer l\u2019onglet n\u2019y change plus rien — le fichier, lui, reste.','The safest option, and the closest to traditional software: this screenplay is linked to a real <b>.smmproj</b> file on your disk, rewritten automatically a few seconds after each change. Clearing the browser, switching browsers, or closing the tab changes nothing — the file stays put.')}</p>
-      ${ !FSA_OK ? `<p class="opt-help" style="color:var(--danger,#c0392b);">${L('Ce navigateur ne gère pas l\u2019écriture directe dans un fichier. Chrome, Edge ou Opera sur ordinateur le font ; Firefox et Safari, non — là-bas, garde la sauvegarde automatique par téléchargement ci-dessus.','This browser doesn\u2019t support writing directly to a file. Chrome, Edge or Opera on desktop do; Firefox and Safari don\u2019t — there, keep the automatic download backup above.')}</p>` : `
-      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;">
-        <button class="btn btn-sm ${linked?'':'btn-primary'}" data-act="vaultAttach">${icon('save')} ${linked?L('Changer de fichier','Change file'):L('Lier un fichier','Link a file')}</button>
-        ${ needPerm ? `<button class="btn btn-sm btn-primary" data-act="vaultReconnect">${L('Reconnecter le fichier','Reconnect the file')}</button>` : '' }
-        ${ linked ? `<button class="btn btn-sm" data-act="vaultForceWrite">${L('Écrire maintenant','Write now')}</button>
-                     <button class="btn btn-sm btn-ghost btn-danger" data-act="vaultDetach">${L('Détacher','Detach')}</button>` : '' }
-        <button class="btn btn-sm btn-ghost" data-act="vaultOpenFromFile">${icon('upload')} ${L('Ouvrir un .smmproj','Open a .smmproj')}</button>
-      </div>
-      <p class="opt-help">${ linked
-          ? L('Relié à ','Linked to ') + '<b>' + esc(V.name || L('ton fichier','your file')) + '</b>' + (V.at ? L(' — dernière écriture ',' — last write ') + esc(timeAgo(V.at)) : '') + '.'
-          : needPerm
-            ? L('Un fichier est mémorisé (<b>' + esc(V.name || '') + '</b>) mais le navigateur redemande l\u2019autorisation d\u2019y écrire : clique sur « Reconnecter le fichier ».', 'A file is remembered (<b>' + esc(V.name || '') + '</b>) but the browser is asking again for permission to write to it: click \u201cReconnect the file\u201d.')
-            : L('Aucun fichier relié : ce scénario n\u2019existe que dans le stockage de ce navigateur.', 'No file linked: this screenplay only exists in this browser\u2019s storage.') }</p>
-      ${ __storageMode !== 'idb' ? `<p class="opt-help" style="color:#9a5b00;">${L('<b>Dans cette configuration, le lien vers le fichier ne survit pas au rechargement</b> (le navigateur n\u2019autorise pas à mémoriser l\u2019autorisation ici, typiquement parce que la page est ouverte en file:// ou dans un cadre). Le fichier, lui, est bien écrit pendant toute la session ; au prochain lancement, un clic sur « Ouvrir un .smmproj » rouvre le scénario et rétablit le lien. Pour que tout devienne automatique, place le fichier sur une adresse http(s) — un hébergement gratuit suffit.','<b>In this setup, the link to the file doesn\u2019t survive a reload</b> (the browser doesn\u2019t allow remembering the permission here, typically because the page is opened over file:// or inside a frame). The file itself is written correctly throughout the session; on the next launch, clicking \u201cOpen a .smmproj\u201d reopens the screenplay and restores the link. To make everything automatic, host the file at an http(s) address — free hosting is enough.')}</p>` : '' }`}
-    </div>
     <div class="panel-block"><h4>${L('Google Drive (facultatif, gratuit)','Google Drive (optional, free)')}</h4>
-      <p class="opt-help" style="margin-top:0;">${L('Garde une copie de ton scénario dans <b>ton</b> Google Drive, mise à jour toute seule pendant que tu écris. Tu le retrouves même si tu changes d\u2019ordinateur. ScriptMM ne voit que ses propres fichiers, jamais le reste de ton Drive.','Keep a copy of your screenplay in <b>your</b> Google Drive, updated automatically while you write. You will find it even if you switch computers. ScriptMM only sees its own files, never the rest of your Drive.')}</p>
-      ${ gdConnected() ? '' : (gdClientId() ? `<ol class="opt-help" style="margin:0 0 10px 18px;padding:0;">
-        <li>${L('Clique sur « Se connecter avec Google ».','Click \u201cSign in with Google\u201d.')}</li>
-        <li>${L('Choisis ton compte dans la fenêtre Google.','Pick your account in the Google window.')}</li>
-        <li>${L('Accepte : c\u2019est fini.','Accept: you\u2019re done.')}</li></ol>` : '') }
-      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;">
+      <p class="sset-sub">${L('Une copie de ton scénario dans <b>ton</b> Google Drive, mise à jour toute seule.','A copy of your screenplay in <b>your</b> Google Drive, updated automatically.')}</p>
+      <ul class="sset-points">
+        <li>${L('Tu le retrouves sur tous tes appareils','You can reach it from all your devices')}</li>
+        <li>${L('ScriptMM ne voit que ses propres fichiers, jamais le reste de ton Drive','ScriptMM only sees its own files, never the rest of your Drive')}</li>
+        <li>${L('Tu peux te déconnecter à tout moment','You can disconnect at any time')}</li>
+      </ul>
+      <div class="sset-actions">
         ${ gdConnected()
             ? `<button class="btn btn-sm btn-primary" data-act="gdPushNow">${L('Envoyer maintenant','Send now')}</button>
                <button class="btn btn-sm" data-act="gdPull">${L('Récupérer depuis Drive','Retrieve from Drive')}</button>
                <button class="btn btn-sm btn-ghost" data-act="gdDisconnect">${L('Se déconnecter','Disconnect')}</button>`
             : `<button class="btn btn-sm btn-primary" data-act="gdConnect">${L('Se connecter avec Google','Sign in with Google')}</button>` }
       </div>
-      <p class="opt-help">${ gdConnected()
-          ? L('\u2713 Connecté. Ton scénario est copié dans ton Drive automatiquement','\u2713 Connected. Your screenplay is copied to your Drive automatically') + (GD.at ? L(' — dernier envoi ',' — last sent ') + esc(timeAgo(GD.at)) : '') + '.'
-          : (gdClientId() ? L('Pas encore connecté.','Not connected yet.') : L('Google Drive n\u2019est pas encore activé sur ce site (réglage à faire une fois par la personne qui héberge ScriptMM, voir ci-dessous).','Google Drive isn\u2019t enabled on this site yet (a one-time setup by whoever hosts ScriptMM, see below).')) }</p>
-      ${ GD_BUILTIN_CLIENT_ID ? '' : `<details style="margin-top:6px;"><summary class="opt-help" style="cursor:pointer;">${L('Réglage du site (une seule fois, pour l\u2019hébergeur)','Site setup (one time, for the host)')}</summary>
+      <div class="sset-status ${gdConnected() ? 'ok' : ''}"><span class="sset-dot"></span><span>${ gdConnected()
+          ? L('Connecté : ton scénario est copié automatiquement','Connected: your screenplay is copied automatically') + (GD.at ? L(' · dernier envoi ',' · last sent ') + esc(timeAgo(GD.at)) : '')
+          : (gdClientId() ? L('Pas encore connecté : un clic, ton compte Google, et c\u2019est fait','Not connected yet: one click, your Google account, done') : L('Google Drive n\u2019est pas encore activé sur ce site','Google Drive isn\u2019t enabled on this site yet')) }</span></div>
+      ${ GD_BUILTIN_CLIENT_ID ? '' : `<details class="sset-more"><summary>${L('Réglage du site (une seule fois, pour l\u2019hébergeur)','Site setup (one time, for the host)')}</summary>
         <div class="field" style="margin-top:8px;"><label>${L('Identifiant client Google (OAuth)','Google client ID (OAuth)')}</label>
           <input type="text" id="gdClientId" placeholder="xxxxxxxx.apps.googleusercontent.com" value="${esc(cid)}">
         </div>
         <button class="btn btn-sm" data-act="gdSaveClientId">${L('Enregistrer l\u2019identifiant','Save the ID')}</button>
-        <p class="opt-help">${L('Pour que tes visiteurs n\u2019aient rien à régler, colle cet identifiant dans le fichier, à la ligne <code>GD_BUILTIN_CLIENT_ID</code>.','So your visitors have nothing to set up, paste this ID in the file, on the <code>GD_BUILTIN_CLIENT_ID</code> line.')}</p></details>` }
+        <p class="opt-help" style="margin-top:8px;">${L('Pour que tes visiteurs n\u2019aient rien à régler, colle cet identifiant dans le fichier, à la ligne <code>GD_BUILTIN_CLIENT_ID</code>.','So your visitors have nothing to set up, paste this ID in the file, on the <code>GD_BUILTIN_CLIENT_ID</code> line.')}</p></details>` }
+    </div>
+    <div class="panel-block"><h4>${L('Coffre-fort : fichier sur mon ordinateur','Vault: file on my computer')}</h4>
+      <p class="sset-sub">${L('Le plus sûr : ce scénario est relié à un vrai fichier <b>.smmproj</b> de ton ordinateur.','The safest option: this screenplay is linked to a real <b>.smmproj</b> file on your computer.')}</p>
+      <ul class="sset-points">
+        <li>${L('Réécrit tout seul quelques secondes après chaque modification','Rewritten automatically a few seconds after each change')}</li>
+        <li>${L('Vider ou changer de navigateur n\u2019y change rien','Clearing or switching browsers changes nothing')}</li>
+        <li>${L('Le fichier reste sur ton disque, à toi','The file stays on your disk, yours')}</li>
+      </ul>
+      ${ !FSA_OK ? `<div class="sset-status warn"><span class="sset-dot"></span><span>${L('Ce navigateur ne peut pas écrire directement dans un fichier. Utilise Chrome, Edge ou Opera sur ordinateur ; ici, garde la sauvegarde automatique ci-dessous.','This browser can\u2019t write directly to a file. Use Chrome, Edge or Opera on desktop; here, keep the automatic backup below.')}</span></div>` : `
+      <div class="sset-actions">
+        <button class="btn btn-sm ${linked?'':'btn-primary'}" data-act="vaultAttach">${icon('save')} ${linked?L('Changer de fichier','Change file'):L('Lier un fichier','Link a file')}</button>
+        ${ needPerm ? `<button class="btn btn-sm btn-primary" data-act="vaultReconnect">${L('Reconnecter le fichier','Reconnect the file')}</button>` : '' }
+        ${ linked ? `<button class="btn btn-sm" data-act="vaultForceWrite">${L('Écrire maintenant','Write now')}</button>
+                     <button class="btn btn-sm btn-ghost btn-danger" data-act="vaultDetach">${L('Détacher','Detach')}</button>` : '' }
+        <button class="btn btn-sm btn-ghost" data-act="vaultOpenFromFile">${icon('upload')} ${L('Ouvrir un .smmproj','Open a .smmproj')}</button>
+      </div>
+      <div class="sset-status ${linked ? 'ok' : (needPerm ? 'warn' : '')}"><span class="sset-dot"></span><span>${vaultStatus}</span></div>
+      ${ __storageMode !== 'idb' ? `<details class="sset-more"><summary>${L('À savoir sur cette configuration','About this setup')}</summary><p class="opt-help" style="margin-top:8px;">${L('<b>Dans cette configuration, le lien vers le fichier ne survit pas au rechargement</b> (le navigateur n\u2019autorise pas à mémoriser l\u2019autorisation ici, typiquement parce que la page est ouverte en file:// ou dans un cadre). Le fichier, lui, est bien écrit pendant toute la session ; au prochain lancement, un clic sur « Ouvrir un .smmproj » rouvre le scénario et rétablit le lien. Pour que tout devienne automatique, place le fichier sur une adresse http(s) — un hébergement gratuit suffit.','<b>In this setup, the link to the file doesn\u2019t survive a reload</b> (the browser doesn\u2019t allow remembering the permission here, typically because the page is opened over file:// or inside a frame). The file itself is written correctly throughout the session; on the next launch, clicking \u201cOpen a .smmproj\u201d reopens the screenplay and restores the link. To make everything automatic, host the file at an http(s) address — free hosting is enough.')}</p></details>` : '' }`}
     </div>`;
 }
 function vaultForceWrite(){ flushVaultWrite(); toast(L('Écriture dans le fichier demandée.','Write to the file requested.')); }
@@ -12562,7 +12790,7 @@ function sampleSetLang(id){
   S_sampleLang = id;
   document.querySelectorAll('#sampleLangChoice .fmt-opt').forEach(el=> el.classList.toggle('active', el.dataset.id === id));
 }
-/* Onglet « Aide à l'écriture » de l'éditeur. */
+/* Onglet « Aide à l'écriture » de l'éditeur : cartes par thème (v69). */
 function renderWritingHelp(){
   const rows = [
     [L('Ligne de scène','Scene heading'), L('Où et quand : INT./EXT., lieu, moment. Une par changement de lieu ou de moment.','Where and when: INT./EXT., location, time. One per change of place or time.'), L('INT. CUISINE - NUIT','INT. KITCHEN - NIGHT'), 'Ctrl+1'],
@@ -12574,13 +12802,13 @@ function renderWritingHelp(){
     [L('Plan','Shot'), L('Ce que la caméra montre, seulement quand c\u2019est l\u2019information. Une ou deux fois par scénario.','What the camera shows, only when it IS the information. Once or twice per script.'), L('GROS PLAN - LA LETTRE','CLOSE ON - THE LETTER'), 'Ctrl+7'],
     [L('Note','Note'), L('Un mot pour toi, invisible à l\u2019export.','A word to yourself, invisible in exports.'), L('À creuser : le père','To dig into: the father'), 'Ctrl+9'],
   ];
-  const rowsHtml = rows.map(r=>`<div class="wh-row"><div class="wh-row-t">${r[0]}<span class="wh-row-k">${r[3]}</span></div><div class="wh-row-d">${r[1]}</div><div class="wh-row-e">${esc(r[2])}</div></div>`).join('');
+  const elsHtml = rows.map(r=>`<div class="wh-el"><div class="wh-el-h"><span class="wh-el-t">${r[0]}</span><span class="kbd">${r[3]}</span></div><div class="wh-el-d">${r[1]}</div><span class="wh-el-e">${esc(r[2])}</span></div>`).join('');
   const acts = [
-    [L('Acte 1 \u00b7 la mise en place','Act 1 \u00b7 the setup'), L('environ le premier quart','about the first quarter'), L('On découvre le personnage, son monde et son but. Un événement (le déclencheur) bouscule tout, puis le personnage fait un choix actif qui le lance dans l\u2019histoire.','We meet the character, her world and her goal. An event (the inciting incident) shakes everything up, then the character makes an active choice that launches her into the story.')],
-    [L('Acte 2 \u00b7 la confrontation','Act 2 \u00b7 the confrontation'), L('environ la moitié du scénario','about half the script'), L('Le personnage poursuit son but et se heurte à des obstacles de plus en plus durs. Au milieu, un point médian retourne la situation. Puis tout semble perdu.','The character pursues her goal and meets harder and harder obstacles. In the middle, a midpoint turns the situation around. Then all seems lost.')],
+    [L('Acte 1 \u00b7 la mise en place','Act 1 \u00b7 the setup'), L('environ le premier quart','about the first quarter'), L('On découvre le personnage, son monde et son but. Un déclencheur bouscule tout, puis il fait un choix actif qui le lance dans l\u2019histoire.','We meet the character, her world and her goal. An inciting incident shakes everything up, then she makes an active choice that launches her into the story.')],
+    [L('Acte 2 \u00b7 la confrontation','Act 2 \u00b7 the confrontation'), L('environ la moitié du scénario','about half the script'), L('Le personnage poursuit son but et rencontre des obstacles de plus en plus durs. Au milieu, un point médian retourne la situation, puis tout semble perdu.','The character pursues her goal and meets harder and harder obstacles. In the middle, a midpoint turns the situation around, then all seems lost.')],
     [L('Acte 3 \u00b7 la résolution','Act 3 \u00b7 the resolution'), L('environ le dernier quart','about the last quarter'), L('Après le point le plus bas, le personnage trouve la solution et affronte le climax. La dernière image montre ce qui a changé.','After the lowest point, the character finds the solution and faces the climax. The final image shows what has changed.')],
   ];
-  const actsHtml = acts.map((a,i)=>`<li class="help-step"><span class="help-step-num">${i+1}</span><span class="help-step-body"><b>${a[0]}</b> <span style="color:var(--ink-soft);">\u00b7 ${a[1]}</span><br>${a[2]}</span></li>`).join('');
+  const actsHtml = acts.map((a,i)=>`<li class="wh-act"><span class="help-step-num">${i+1}</span><div class="wh-act-b"><div class="wh-act-h"><b>${a[0]}</b><span class="wh-act-k">${a[1]}</span></div><p class="wh-act-d">${a[2]}</p></div></li>`).join('');
   const checks = [
     L('Mon personnage principal veut quelque chose de précis, et je le montre dès les premières pages.','My main character wants something specific, and I show it in the first pages.'),
     L('Un événement bouscule son quotidien assez tôt (dans le premier quart).','An event upsets her routine early enough (in the first quarter).'),
@@ -12592,31 +12820,48 @@ function renderWritingHelp(){
   ];
   const where = [
     [L('Cartes','Cards'), L('Chaque scène sur une fiche, à déplacer comme au tableau de liège.','Each scene on a card, to move around like on a corkboard.')],
-    [L('Structure','Structure'), L('Les grandes étapes de l\u2019histoire ; des gabarits (Save the Cat…) pré-remplissent des cartes.','The story\u2019s big stages; templates (Save the Cat\u2026) pre-fill cards.')],
+    [L('Structure','Structure'), L('Les grandes étapes de l\u2019histoire ; des gabarits (Save the Cat\u2026) pré-remplissent des cartes.','The story\u2019s big stages; templates (Save the Cat\u2026) pre-fill cards.')],
     [L('Outline','Outline'), L('Un résumé d\u2019une phrase par scène : la colonne vertébrale de ton scénario.','A one-sentence summary per scene: the backbone of your screenplay.')],
     [L('Personnages','Characters'), L('Qui parle, combien, dans quelles scènes.','Who speaks, how much, in which scenes.')],
   ];
-  const strip = (S.project && S.project.isSample) ? `<div class="wh-sample-btns"><button class="btn" data-act="stripSampleNotes">${L('Supprimer les notes bleues de cet exemple','Remove the blue notes from this example')}</button></div>` : '';
+  const strip = (S.project && S.project.isSample) ? `<div class="sset-status wh-strip"><span class="sset-dot"></span><span class="wh-strip-t">${L('Ce scénario est une copie de l\u2019exemple.','This screenplay is a copy of the example.')}</span><button class="btn btn-sm" data-act="stripSampleNotes">${L('Supprimer les notes bleues de cet exemple','Remove the blue notes from this example')}</button></div>` : '';
   return `<div class="cards-toolbar"><div class="pane-title" style="margin:0;">${L('Aide à l\u2019écriture','Writing help')}</div></div>
   <div class="wh-wrap">
-    <div class="wh-sample">
-      <div class="wh-sample-h">${icon('book')}<span>${L('Scénario d\u2019exemple : « Dernier Rayon »','Example screenplay: \u201CLast Aisle\u201D')}</span></div>
-      <p class="help-p">${L('Un court métrage de 17 pages, annoté du début à la fin : mise en page, but du personnage, déclencheur, point médian, climax. Tu en reçois une copie à toi, que tu peux modifier librement.','A 17-page short film, annotated from start to finish: formatting, the character\u2019s goal, inciting incident, midpoint, climax. You get your own copy, free to edit.')}</p>
-      <div class="wh-sample-btns">
+    <p class="wh-lead">${L('Un exemple annoté, les éléments d\u2019un scénario, les trois actes et une checklist pour bien démarrer.','An annotated example, the elements of a screenplay, the three acts and a checklist to get you started.')}</p>
+    <div class="wh-card wh-sample">
+      <div class="wh-card-t">${icon('book')}<span>${L('Scénario d\u2019exemple : « Dernier Rayon »','Example screenplay: \u201CLast Aisle\u201D')}</span></div>
+      <p class="wh-card-s">${L('Un court métrage de 17 pages à lire pour apprendre, avec chaque étape expliquée là où elle arrive.','A 17-page short film to learn from, with each step explained right where it happens.')}</p>
+      <ul class="help-points">
+        <li>${L('Annoté de bout en bout : but du personnage, déclencheur, point médian, climax','Annotated throughout: the character\u2019s goal, inciting incident, midpoint, climax')}</li>
+        <li>${L('Tu reçois ta propre copie, à modifier librement','You get your own copy, free to edit')}</li>
+        <li>${L('Les notes bleues n\u2019apparaissent jamais à l\u2019impression ni à l\u2019export','The blue notes never appear in print or in exports')}</li>
+      </ul>
+      <div class="sset-actions">
         <button class="btn btn-primary" data-act="createSample" data-id="fr">${L('Ouvrir en français','Open in French')}</button>
         <button class="btn btn-primary" data-act="createSample" data-id="en">${L('Ouvrir en anglais','Open in English')}</button>
       </div>${strip}
     </div>
-    <div class="help-section"><div class="help-group-title">${L('Les éléments d\u2019un scénario','The elements of a screenplay')}</div>
-      <p class="help-p" style="color:var(--ink-soft);">${L('Écris une ligne, puis choisis son type avec le raccourci, ou laisse ScriptMM le deviner. Entrée passe à l\u2019élément logique suivant.','Write a line, then pick its type with the shortcut, or let ScriptMM guess it. Enter moves to the logical next element.')}</p>
-      <div class="wh-rows">${rowsHtml}</div></div>
-    <div class="help-section"><div class="help-group-title">${L('Les trois actes','The three acts')}</div>
-      <ol class="help-step-list">${actsHtml}</ol>
-      <div class="help-callout">${L('<b>Repère de longueur :</b> 1 page ≈ 1 minute de film. Sur 17 pages, le déclencheur tombe vers la page 4, le point médian vers la page 9, « tout est perdu » vers la page 13 et le climax vers la page 15.','<b>Length guide:</b> 1 page \u2248 1 minute of film. In 17 pages, the inciting incident lands around page 4, the midpoint around page 9, \u201Call is lost\u201D around page 13 and the climax around page 15.')}</div></div>
-    <div class="help-section"><div class="help-group-title">${L('Ta checklist de débutant','Your beginner\u2019s checklist')}</div>
-      <ul class="help-list">${checks.map(c=>`<li>${c}</li>`).join('')}</ul></div>
-    <div class="help-section"><div class="help-group-title">${L('Où trouver quoi dans ScriptMM','Where to find what in ScriptMM')}</div>
-      <ul class="help-list">${where.map(w=>`<li><b>${w[0]}</b> \u2014 ${w[1]}</li>`).join('')}</ul></div>
+    <div class="wh-card">
+      <div class="wh-card-t"><span>${L('Les éléments d\u2019un scénario','The elements of a screenplay')}</span></div>
+      <p class="wh-card-s">${L('Écris une ligne, puis choisis son type avec le raccourci, ou laisse ScriptMM le deviner. Entrée passe à l\u2019élément suivant.','Write a line, then pick its type with the shortcut, or let ScriptMM guess it. Enter moves to the next element.')}</p>
+      <div class="wh-els">${elsHtml}</div>
+    </div>
+    <div class="wh-card">
+      <div class="wh-card-t"><span>${L('Les trois actes','The three acts')}</span></div>
+      <p class="wh-card-s">${L('Une histoire se découpe en trois temps. Voici où chacun se place et ce qui s\u2019y passe.','A story breaks into three parts. Here is where each one sits and what happens in it.')}</p>
+      <ol class="wh-acts">${actsHtml}</ol>
+      <div class="help-callout">${L('<b>Repère de longueur :</b> 1 page ≈ 1 minute de film. Sur 17 pages, le déclencheur tombe vers la page 4, le point médian vers la page 9, « tout est perdu » vers la page 13 et le climax vers la page 15.','<b>Length guide:</b> 1 page \u2248 1 minute of film. In 17 pages, the inciting incident lands around page 4, the midpoint around page 9, \u201Call is lost\u201D around page 13 and the climax around page 15.')}</div>
+    </div>
+    <div class="wh-card">
+      <div class="wh-card-t"><span>${L('Ta checklist de débutant','Your beginner\u2019s checklist')}</span></div>
+      <p class="wh-card-s">${L('Sept questions à te poser quand ton premier jet est fini.','Seven questions to ask yourself once your first draft is done.')}</p>
+      <ul class="help-points">${checks.map(c=>`<li>${c}</li>`).join('')}</ul>
+    </div>
+    <div class="wh-card">
+      <div class="wh-card-t"><span>${L('Où trouver quoi dans ScriptMM','Where to find what in ScriptMM')}</span></div>
+      <p class="wh-card-s">${L('Les onglets qui t\u2019aident à construire l\u2019histoire, à côté de l\u2019éditeur.','The tabs that help you build the story, next to the editor.')}</p>
+      <div class="wh-where">${where.map(w=>`<div class="wh-tile"><div class="wh-tile-t">${w[0]}</div><p class="wh-tile-d">${w[1]}</p></div>`).join('')}</div>
+    </div>
   </div>`;
 }
 
@@ -12642,7 +12887,7 @@ const ACTIONS = {
   closeSampleBg: (id,e)=>{ if(e.target.id==='sampleBackdrop') closeSampleModal(); },
   openCommentEditor, closeCommentEditor, saveCommentEditor, deleteCommentEditor,
   openReplace, closeReplace, doReplaceAll,
-  toggleFocusMode, toggleAutoBackup, setBackupLevel, gdChipClick,
+  toggleFocusMode, toggleAutoBackup, setBackupLevel, gdChipClick, setSettingsSection,
   vaultAttach, vaultReconnect, vaultDetach, vaultOpenFromFile, vaultChipClick, vaultForceWrite,
   dismissStorageBanner, gdSaveClientId, gdConnect, gdDisconnect, gdPushNow, gdPull,
   setLang,
@@ -12667,26 +12912,30 @@ const ACTIONS = {
    (le fond transparent en dessous), ou par Échap.
 ===================================================================== */
 function moreMenuHtml(){
-  return `${dualBtnHtml('')}
+  const T = t => `<div class="tb-more-title">${t}</div>`;
+  return `${T(L('Écriture','Writing'))}
+    ${dualBtnHtml('')}
     <button class="btn" data-act="openReplace">${icon('findrep')} Rechercher / remplacer</button>
     <button class="btn" data-act="openSynonyms">${icon('book')} Synonymes</button>
     <button class="btn" data-act="wdOpenRename">${icon('findrep')} ${L('Renommer partout…','Rename everywhere…')}</button>
     <button class="btn" data-act="wdOpenVariants">${icon('findrep')} ${L('Variantes de noms…','Name variants…')}</button>
-    <button class="btn" data-act="wdOpenOrphans">${icon('doc')} ${L('Pages presque vides…','Nearly-empty pages…')}</button>
-    <button class="btn" data-act="wdOpenSession">${icon('doc')} ${L('Ma session d\u2019écriture…','My writing session…')}</button>
     <button class="btn" data-act="openRevisions" title="Ctrl+Alt+R">${icon('palette')} ${L('Révisions colorées','Colour revisions')}</button>
     <button class="btn" data-act="toggleRevMark" title="Ctrl+Alt+M">${icon('flag')} ${L('Marquer / démarquer la ligne','Mark / unmark line')}</button>
-    <button class="btn" data-act="gdChipClick">${icon('upload')} ${ gdConnected() ? L('Google Drive : connecté \u2713','Google Drive: connected \u2713') : L('Connecter Google Drive','Connect Google Drive') }</button>
-    <div class="tb-more-sep"></div>
+    ${T(L('Analyse','Insights'))}
+    <button class="btn" data-act="wdOpenOrphans">${icon('doc')} ${L('Pages presque vides…','Nearly-empty pages…')}</button>
+    <button class="btn" data-act="wdOpenSession">${icon('doc')} ${L('Ma session d\u2019écriture…','My writing session…')}</button>
+    ${T(L('Affichage','View'))}
     <div class="tb-font-row">${icon('font')}<span>${L('Police','Font')}</span>${scriptFontSelectHtml('')}</div>
     ${themeToggleBtnHtml('')}
-    ${typewriterBtnHtml('')}
     ${navBtnHtml('')}
     ${focusBtnHtml('')}
+    ${typewriterBtnHtml('')}
+    ${T(L('Voix','Voice'))}
     ${readAloudBtnHtml('')}
     ${dictateBtnHtml('')}
-    <div class="tb-more-sep"></div>
+    ${T(L('Général','General'))}
     <button class="btn" data-act="openCreateModal">${icon('newdoc')} Nouveau scénario</button>
+    <button class="btn" data-act="gdChipClick">${icon('upload')} ${ gdConnected() ? L('Google Drive : connecté \u2713','Google Drive: connected \u2713') : L('Connecter Google Drive','Connect Google Drive') }</button>
     <button class="btn" data-act="openShortcuts">${icon('keyboard')} Raccourcis</button>`;
 }
 function toggleMoreMenu(id, e){
