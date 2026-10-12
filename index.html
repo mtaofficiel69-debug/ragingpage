@@ -7560,7 +7560,7 @@ function onSearchKeydown(e){
 function runSearch(q, silent){
   S.search.query = q;
   const cnt = document.getElementById('searchCount');
-  document.querySelectorAll('#page .line.hl').forEach(d=>d.classList.remove('hl'));
+  clearTimeout(_matchTimer); clearMatchMarks();
   if(!q){ S.search.matches=[]; S.search.idx=-1; if(cnt) cnt.textContent=''; return; }
   S.search.matches = S.project.elements.filter(e=>e.text.toLowerCase().includes(q.toLowerCase())).map(e=>e.id);
   S.search.idx = S.search.matches.length? 0 : -1;
@@ -7641,7 +7641,7 @@ function jumpToScene(id){
   r.selectNodeContents(div); r.collapse(true);
   const sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(r);
   div.scrollIntoView({block:'center', behavior:'smooth'});
-  div.style.outline='2px solid #1F6FA0'; setTimeout(()=>{ div.style.outline=''; }, 900);
+  div.style.outline='2px solid #1F6FA0'; clearTimeout(_matchTimer); _matchTimer = setTimeout(clearMatchMarks, 900);
 }
 
 /* =====================================================================
@@ -7719,14 +7719,25 @@ function doReplaceAll(){
 }
 
 let _matchTimer = 0;
+/* v88 : le contour bleu était retiré sur l'élément gardé en mémoire ; si la ligne était entre-temps
+   redessinée (pagination, rafraîchissement), c'est sa copie qui gardait le contour pour toujours.
+   On retire maintenant le contour de TOUTES les lignes présentes à l'écran, au moment voulu. */
+function clearMatchMarks(){
+  document.querySelectorAll('#page .line').forEach(d=>{
+    if(d.classList.contains('hl') || (d.style.outline && d.style.outline.indexOf('31, 111, 160') >= 0) || (d.style.outline && d.style.outline.toLowerCase().indexOf('1f6fa0') >= 0)){
+      d.classList.remove('hl'); d.style.outline = '';
+    }
+  });
+}
+document.addEventListener('mousedown', e=>{ if(e.target && e.target.closest && e.target.closest('#page')){ clearTimeout(_matchTimer); clearMatchMarks(); } }, true);
 function scrollToMatch(){
   const id = S.search.matches[S.search.idx];
   const div = document.querySelector('#page [data-id="'+id+'"]');
   /* v87 : un seul contour à la fois. Avant, chaque Entrée laissait le contour de la ligne
      précédente allumé jusqu'à la fin de son minuteur : en spammant Entrée, ils s'empilaient. */
   clearTimeout(_matchTimer);
-  document.querySelectorAll('#page .line.hl').forEach(d=>{ d.classList.remove('hl'); d.style.outline=''; });
-  if(div){ div.scrollIntoView({block:'center', behavior:'smooth'}); div.classList.add('hl'); div.style.outline='2px solid #1F6FA0'; _matchTimer = setTimeout(()=>{ div.style.outline=''; div.classList.remove('hl'); },1200); }
+  clearMatchMarks();
+  if(div){ div.scrollIntoView({block:'center', behavior:'smooth'}); div.classList.add('hl'); div.style.outline='2px solid #1F6FA0'; _matchTimer = setTimeout(clearMatchMarks,1200); }
 }
 
 /* =====================================================================
