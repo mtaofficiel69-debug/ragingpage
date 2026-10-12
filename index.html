@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,6 +7,8 @@
 <script>
   // Applique le thème sauvegardé avant le premier rendu, pour éviter un flash clair->sombre.
   try{ if(localStorage.getItem('scriptmm_theme')==='dark') document.documentElement.setAttribute('data-theme','dark'); }catch(e){}
+  // La langue déclarée de la page suit la langue choisie (anglais par défaut).
+  try{ document.documentElement.lang = localStorage.getItem('scriptmm_lang')==='fr' ? 'fr' : 'en'; }catch(e){}
 </script>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%2016%2016%22%20shape-rendering=%22crispEdges%22%3E%3Cstyle%3E.b%7Bfill:%231F6FA0%7D.r%7Bfill:%23FCFDFE%7D%40media%20%28prefers-color-scheme:dark%29%7B.b%7Bfill:%233699D4%7D.r%7Bfill:%230E2A3D%7D%7D%3C/style%3E%3Cpath%20class=%22b%22%20d=%22M0%200h11v1h-11zM0%201h11v1h-11zM0%202h11v1h-11zM0%203h11v1h-11zM0%204h11v1h-11zM0%205h16v1h-16zM0%206h16v1h-16zM0%207h16v1h-16zM0%208h16v1h-16zM0%209h16v1h-16zM0%2010h16v1h-16zM0%2011h16v1h-16zM0%2012h16v1h-16zM0%2013h16v1h-16zM0%2014h16v1h-16zM0%2015h16v1h-16z%22/%3E%3Cpath%20fill=%22%23B7D4EC%22%20d=%22M11%200h1v1h-1zM11%201h2v1h-2zM11%202h3v1h-3zM11%203h4v1h-4zM11%204h5v1h-5z%22/%3E%3Cpath%20class=%22r%22%20d=%22M2%203h8v1h-8zM3%204h3v1h-3zM8%204h3v1h-3zM3%205h3v1h-3zM9%205h3v1h-3zM3%206h3v1h-3zM9%206h3v1h-3zM3%207h3v1h-3zM8%207h3v1h-3zM3%208h7v1h-7zM3%209h3v1h-3zM7%209h3v1h-3zM3%2010h3v1h-3zM7%2010h3v1h-3zM3%2011h3v1h-3zM8%2011h3v1h-3zM3%2012h3v1h-3zM8%2012h3v1h-3zM3%2013h3v1h-3zM9%2013h3v1h-3zM2%2014h5v1h-5zM8%2014h4v1h-4z%22/%3E%3C/svg%3E">
 <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%2064%2064%22%3E%3Cstyle%3E.b%7Bfill:%231F6FA0%7D%40media%20%28prefers-color-scheme:dark%29%7B.b%7Bfill:%233699D4%7D%7D%3C/style%3E%3Crect%20class=%22b%22%20width=%2264%22%20height=%2264%22%20rx=%2214%22%20fill=%22%231F6FA0%22/%3E%3Cpath%20d=%22M8%204H40L56%2020V60H8Z%22%20fill=%22%23FCFDFE%22%20stroke=%22%23FCFDFE%22%20stroke-width=%222.5%22%20stroke-linejoin=%22round%22/%3E%3Cpath%20d=%22M40%204V20H56Z%22%20fill=%22%23B7D4EC%22%20stroke=%22%23B7D4EC%22%20stroke-width=%221.5%22%20stroke-linejoin=%22round%22/%3E%3Cpath%20d=%22M13%2025L30%2032M51%2027L34%2032%22%20stroke=%22%2314425E%22%20stroke-width=%228%22%20stroke-linecap=%22round%22/%3E%3Ccircle%20cx=%2224%22%20cy=%2241.5%22%20r=%227.6%22%20fill=%22%2314425E%22/%3E%3Ccircle%20cx=%2226.4%22%20cy=%2239%22%20r=%222.2%22%20fill=%22%23FCFDFE%22/%3E%3Ccircle%20cx=%2242%22%20cy=%2241.5%22%20r=%227.6%22%20fill=%22%2314425E%22/%3E%3Ccircle%20cx=%2244.4%22%20cy=%2239%22%20r=%222.2%22%20fill=%22%23FCFDFE%22/%3E%3Cpath%20d=%22M18%2054H37%22%20stroke=%22%2314425E%22%20stroke-width=%225.6%22%20stroke-linecap=%22round%22/%3E%3Cg%20transform=%22translate%2837%2054%29%20rotate%28-28%29%22%3E%3Crect%20x=%22-1%22%20y=%22-4%22%20width=%226%22%20height=%228%22%20rx=%221.2%22%20fill=%22%235DB6EC%22/%3E%3Crect%20x=%225%22%20y=%22-4%22%20width=%2215%22%20height=%228%22%20fill=%22%2314425E%22/%3E%3Cpath%20d=%22M20%20-4L27%200L20%204Z%22%20fill=%22%23FCFDFE%22/%3E%3C/g%3E%3C/svg%3E">
@@ -669,6 +671,27 @@
     left:auto; right:12px; width:300px; height:auto; padding:6px 10px; overflow:visible; font-size:10.5pt; line-height:1.4;
     cursor:text; box-shadow:0 6px 18px -6px #0005; z-index:6;
   }
+  /* v83 : la note dépliée devenait transparente (la règle « .line:focus » écrasait son fond) et se mélangeait au texte du scénario.
+     Elle reste maintenant une vraie carte opaque, avec un en-tête « Note » et un contour net quand on l'édite. */
+  #page > .line--note:hover, #page > .line--note:focus{
+    background:#EAF4FC; color:#14425E; border:1px solid #A9D1EC; border-left:3px solid var(--accent-2); border-radius:8px;
+    padding:8px 12px 10px; box-shadow:0 10px 28px -8px #0006, 0 2px 6px -2px #0003;
+  }
+  #page > .line--note:hover::before, #page > .line--note:focus::before{
+    content:'\270E  NOTE'; display:block; font:700 10px/1 var(--sans); font-style:normal; letter-spacing:.09em;
+    color:var(--accent-2); margin:0 0 7px; padding-bottom:6px; border-bottom:1px solid #A9D1EC; pointer-events:none; user-select:none;
+  }
+  #page > .line--note:focus{
+    background:#fff; font-style:normal; caret-color:var(--accent-2); outline:none;
+    box-shadow:0 0 0 3px rgba(54,153,212,.28), 0 10px 28px -8px #0006, 0 2px 6px -2px #0003; border-color:var(--accent);
+    border-left-color:var(--accent-2);
+  }
+  html[data-theme="dark"] #page > .line--note:focus{background:#F6FAFD;}
+  .note-bar{position:fixed; z-index:60; display:none; align-items:center; gap:5px; height:20px; padding:0 7px; border:0; border-radius:6px;
+    background:transparent; color:#B02A2A; font:600 11px/1 var(--sans); cursor:pointer; transition:background .12s;}
+  .note-bar .icon{width:12px; height:12px;}
+  .note-bar:hover{background:rgba(214,69,69,.14);}
+  .note-bar:focus-visible{outline:none; box-shadow:0 0 0 2px rgba(214,69,69,.35);}
   /* Bloc coupé entre deux pages : un flottant pleine largeur, dont la forme (shape-outside)
      ne commence qu'à la ligne de coupe, repousse la suite du texte en haut de la feuille
      suivante SANS toucher au contenu éditable. */
@@ -1168,6 +1191,33 @@
 
   /* ---------- Scénario d'exemple et Aide à l'écriture ---------- */
   #homeView .wd-nav-sample .icon{color:var(--accent);}
+  /* v83 : menu « Scénario d'exemple » refait comme une modale WriterDuet : en-tête, trois repères courts, choix de langue, actions. */
+  #sampleBackdrop .modal{max-width:480px; padding:24px 26px 22px;}
+  #sampleBackdrop .sm-head{display:flex; align-items:center; gap:14px; margin:0 0 18px;}
+  #sampleBackdrop .sm-ico{flex:none; width:46px; height:46px; border-radius:12px; display:flex; align-items:center; justify-content:center;
+    color:var(--accent); background:color-mix(in srgb, var(--accent) 13%, var(--surface)); box-shadow:inset 0 0 0 1px color-mix(in srgb, var(--accent) 30%, var(--surface));}
+  #sampleBackdrop .sm-ico .icon{width:22px; height:22px;}
+  #sampleBackdrop .sm-head h2{margin:0; font-size:19.76px; line-height:1.2;}
+  #sampleBackdrop .sm-sub{margin:4px 0 0; font-size:13.5px; line-height:1.4; color:var(--ink-soft);}
+  #sampleBackdrop .sm-sub b{color:var(--ink); font-weight:600;}
+  #sampleBackdrop .sm-points{list-style:none; margin:0 0 20px; padding:0; border:1px solid var(--hair); border-radius:10px; background:var(--surface-soft); overflow:hidden;}
+  #sampleBackdrop .sm-points li{display:flex; gap:12px; align-items:flex-start; padding:12px 14px;}
+  #sampleBackdrop .sm-points li + li{border-top:1px solid var(--hair);}
+  #sampleBackdrop .sm-points .icon{width:16px; height:16px; margin-top:2px; color:var(--accent);}
+  #sampleBackdrop .sm-points b{display:block; font-size:14px; font-weight:600; line-height:1.35; color:var(--ink);}
+  #sampleBackdrop .sm-points small{display:block; font-size:12.75px; line-height:1.5; color:var(--ink-soft); margin-top:3px;}
+  #sampleBackdrop .sm-lbl{font-size:11.5px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-soft); margin:0 0 8px;}
+  #sampleBackdrop .fmt-choice{gap:10px;}
+  #sampleBackdrop .fmt-opt{position:relative; padding:11px 12px 11px 38px; background:var(--surface); transition:border-color .12s, background .12s, box-shadow .12s;}
+  #sampleBackdrop .fmt-opt:hover{border-color:var(--accent); background:var(--overlay-hover);}
+  #sampleBackdrop .fmt-opt::before{content:''; position:absolute; left:13px; top:14px; width:14px; height:14px; border-radius:50%; box-sizing:border-box;
+    border:1.5px solid color-mix(in srgb, var(--ink) 35%, var(--surface)); background:var(--surface); transition:border-color .12s, box-shadow .12s;}
+  #sampleBackdrop .fmt-opt.active{background:color-mix(in srgb, var(--accent) 10%, var(--surface)); box-shadow:var(--focus-ring);}
+  #sampleBackdrop .fmt-opt.active::before{border-color:var(--accent); box-shadow:inset 0 0 0 3px var(--surface); background:var(--accent);}
+  #sampleBackdrop .fmt-opt .t{font-size:14.5px;}
+  #sampleBackdrop .fmt-opt .d{font-size:12.5px; line-height:1.4;}
+  #sampleBackdrop .modal-actions{margin-top:22px;}
+  @media (max-width:520px){ #sampleBackdrop .fmt-choice{flex-direction:column;} }
   .wh-wrap{padding:16px 24px 70px; max-width:860px;}
 
   /* ---------- v32 : colonne d'accueil + stabilité de la barre du haut ---------- */
@@ -2837,7 +2887,7 @@ let S = {
   pagination:{ count:1, current:1, pageOf:{}, pending:null, zoom:1 },
   autocomplete:null,      // { id, remainder } — suggestion en cours (Tab pour l'accepter)
   extMenu:null,           // { id, sel, items, open } — menu des extensions de personnage
-  typewriterMode:true,    // Mode Machine à écrire (WriterDuet) : curseur toujours centré.
+  typewriterMode:false,   // Mode Machine à écrire (WriterDuet) : curseur toujours centré. Désactivé par défaut (v87), comme WriterDuet ; le choix de l'utilisateur est mémorisé.
                           // ACTIVÉ DE BASE — un clic sur le bouton le coupe (et le bouton
                           // devient alors invisible, fondu dans le fond de la barre).
   focusMode:false,        // Mode Focus (WriterDuet) : estompe tout sauf la ligne active
@@ -6792,8 +6842,39 @@ function ensureRectVisible(r){
 function ensureCaretVisible(){
   ensureRectVisible(caretRect());
 }
+/* v84 : cliquer sur une note n'ouvre plus de panneau à droite (il ne servait qu'à supprimer la note et prenait toute la place).
+   À la place, une petite corbeille apparaît dans l'en-tête de la carte de la note, tant qu'on la modifie (comme les bulles de commentaire de WriterDuet). */
+let noteBarEl = null, noteBarFor = null;
+function hideNoteBar(){ if(noteBarEl) noteBarEl.style.display = 'none'; noteBarFor = null; }
+function placeNoteBar(){
+  if(!noteBarEl || !noteBarFor) return;
+  const d = document.querySelector('#page [data-id="' + noteBarFor + '"]');
+  if(!d || document.activeElement !== d){ hideNoteBar(); return; }
+  const r = d.getBoundingClientRect();
+  noteBarEl.style.display = 'inline-flex';
+  noteBarEl.style.top = Math.round(r.top + 5) + 'px';
+  noteBarEl.style.left = Math.round(r.right - noteBarEl.offsetWidth - 8) + 'px';
+}
+function showNoteBar(el){
+  if(!noteBarEl){
+    noteBarEl = document.createElement('button');
+    noteBarEl.type = 'button'; noteBarEl.className = 'note-bar'; noteBarEl.setAttribute('data-act', 'deleteElement');
+    noteBarEl.addEventListener('mousedown', e=> e.preventDefault());
+    noteBarEl.addEventListener('click', ()=> setTimeout(hideNoteBar, 0));
+    document.body.appendChild(noteBarEl);
+    document.addEventListener('focusout', e=>{ if(e.target && e.target.closest && e.target.closest('.line--note')) hideNoteBar(); });
+    document.addEventListener('scroll', ()=> requestAnimationFrame(placeNoteBar), true);
+    window.addEventListener('resize', ()=> requestAnimationFrame(placeNoteBar));
+  }
+  noteBarEl.setAttribute('data-id', el.id);
+  noteBarEl.title = L('Supprimer cette note','Delete this note');
+  noteBarEl.innerHTML = icon('trash') + '<span>' + L('Supprimer','Delete') + '</span>';
+  noteBarFor = el.id;
+  placeNoteBar();
+}
 function showContextPanel(el){
   const side = document.getElementById('sidePane');
+  if(el.type === 'note'){ showNoteBar(el); if(side && side.dataset.mode === 'layout') return; } else hideNoteBar();
   if(side && side.dataset.mode === 'layout' && el.type !== 'card' && el.type !== 'note'){ side.innerHTML = layoutPanelHtml(el); bindLayoutPanel(el); return; }   // v48 : le panneau « Aligner » suit la ligne active
   // Note: scene headings used to pop this panel open on focus (outline,
   // tags, duplicate/delete). It sat right next to — and on narrow windows
@@ -6806,11 +6887,6 @@ function showContextPanel(el){
     side.classList.remove('hidden');
     side.innerHTML = cardPanelHtml(el);
     bindCardPanel(el);
-  } else if(el.type==='note'){
-    side.dataset.mode = 'note';
-    side.classList.remove('hidden');
-    side.innerHTML = `<div class="pane-title">${L('Note','Note')}</div><div class="panel-block"><p style="font-size:13.5px;color:var(--ink-soft);">${L('Cette note n\u2019apparaîtra jamais dans les exports (PDF, TXT, Fountain).','This note will never appear in exports (PDF, TXT, Fountain).')}</p>
-    <button class="btn btn-sm btn-danger" data-act="deleteElement" data-id="${el.id}">${L('Supprimer cette note','Delete this note')}</button></div>`;
   } else if(S.navOpen){
     // On sort d'une note : le navigateur reprend sa place. S'il est déjà
     // affiché, on se contente de déplacer le surlignage (reconstruire la
@@ -7642,10 +7718,15 @@ function doReplaceAll(){
   toast(n>1 ? n+' '+L('occurrences remplacées.','matches replaced.') : L('1 occurrence remplacée.','1 match replaced.'));
 }
 
+let _matchTimer = 0;
 function scrollToMatch(){
   const id = S.search.matches[S.search.idx];
   const div = document.querySelector('#page [data-id="'+id+'"]');
-  if(div){ div.scrollIntoView({block:'center', behavior:'smooth'}); div.classList.add('hl'); div.style.outline='2px solid #1F6FA0'; setTimeout(()=>{ div.style.outline=''; },1200); }
+  /* v87 : un seul contour à la fois. Avant, chaque Entrée laissait le contour de la ligne
+     précédente allumé jusqu'à la fin de son minuteur : en spammant Entrée, ils s'empilaient. */
+  clearTimeout(_matchTimer);
+  document.querySelectorAll('#page .line.hl').forEach(d=>{ d.classList.remove('hl'); d.style.outline=''; });
+  if(div){ div.scrollIntoView({block:'center', behavior:'smooth'}); div.classList.add('hl'); div.style.outline='2px solid #1F6FA0'; _matchTimer = setTimeout(()=>{ div.style.outline=''; div.classList.remove('hl'); },1200); }
 }
 
 /* =====================================================================
@@ -9039,6 +9120,13 @@ function openShortcuts(){
       [['Fusionner avec la ligne du dessus','Merge with the line above'], ['Retour arrière'], ['Quand le curseur est au tout début de la ligne.','When the cursor is at the very start of the line.']],
       [['Dialogue simultané','Simultaneous dialogue'], ['Ctrl/Cmd','Maj','D'], ['Curseur dans le DEUXIÈME bloc de dialogue : il monte à côté du précédent, les deux répliques se jouant en même temps. Même raccourci pour revenir en arrière.','Cursor in the SECOND dialogue block: it moves up next to the previous one, both lines playing at the same time. Same shortcut to undo it.']],
       [['Déplacer le curseur entre les lignes','Move the cursor between lines'], ['↑','↓'], ['','']],
+      [['Remettre la ligne en Texte','Set the line back to Text'], ['Ctrl/Cmd','0'], ['Comme Ctrl+1..9 : certains navigateurs réservent ces combinaisons (changement d\u2019onglet) et le raccourci peut alors ne pas répondre.','Like Ctrl+1..9: some browsers reserve these combinations (tab switching), and the shortcut may then not respond.']],
+      [['Fusionner avec la ligne du dessous','Merge with the line below'], ['Suppr'], ['Quand le curseur est tout à la fin de la ligne.','When the cursor is at the very end of the line.']],
+      [['Retour à la ligne dans un carton','New line inside a title card'], ['Maj','Entrée'], ['Un carton peut tenir sur plusieurs lignes.','A title card can span several lines.']],
+      [['Choisir dans le menu des extensions','Choose in the extensions menu'], ['↑','↓'], ['Extensions de personnage : (V.O.), (O.S.), (CONT\u2019D)… Entrée ou Tab pour valider, Échap pour fermer le menu.','Character extensions: (V.O.), (O.S.), (CONT\u2019D)… Enter or Tab to confirm, Esc to close the menu.']],
+      [['Effacer un passage sur plusieurs lignes','Delete a passage across several lines'], ['Retour arrière'], ['Suppr fait la même chose. Entrée remplace le passage par un saut de ligne.','Delete does the same. Enter replaces the passage with a line break.']],
+      [['Copier la sélection','Copy the selection'], ['Ctrl/Cmd','C'], ['Marche aussi sur une sélection de plusieurs lignes ou sur tout le scénario.','Also works on a selection spanning several lines or the whole screenplay.']],
+      [['Couper la sélection','Cut the selection'], ['Ctrl/Cmd','X'], ['','']],
     ]],
     [['Naviguer & chercher','Navigate & search'], [
       [['Aller à une scène','Go to a scene'], ['Ctrl/Cmd','K'], ['Liste filtrable de toutes les scènes avec leur numéro et leur page. Entrée pour sauter dedans.','Filterable list of all scenes with their number and page. Enter to jump in.']],
@@ -9049,6 +9137,11 @@ function openShortcuts(){
       [['Rechercher &amp; remplacer','Find &amp; replace'], ['Ctrl/Cmd','H'], ['Dans tout le scénario, annulable d\u2019un seul Ctrl+Z.','Across the whole screenplay, undoable with a single Ctrl+Z.']],
       [['Aller à une page','Go to a page'], ['Ctrl/Cmd','G'], ['','']],
       [['Tout sélectionner sur la page en cours','Select all on the current page'], ['Ctrl/Cmd','A'], ['Pratique pour copier le texte d\u2019une page entière.','Handy for copying the text of a whole page.']],
+      [['Résultat de recherche suivant','Next search result'], ['Entrée'], ['Dans le champ de recherche.','In the search field.']],
+      [['Résultat de recherche précédent','Previous search result'], ['Maj','Entrée'], ['Dans le champ de recherche.','In the search field.']],
+      [['Choisir dans la liste des scènes','Choose in the scene list'], ['↑','↓'], ['Dans la fenêtre « Aller à une scène » (Ctrl+K). Entrée pour sauter dans la scène, Échap pour fermer.','In the \u201cGo to a scene\u201d window (Ctrl+K). Enter to jump into the scene, Esc to close.']],
+      [['Lancer le remplacement partout','Run replace everywhere'], ['Entrée'], ['Dans le champ de remplacement de la fenêtre Rechercher &amp; remplacer.','In the replacement field of the Find &amp; replace window.']],
+      [['Synonymes','Synonyms'], ['Ctrl/Cmd','Maj','Y'], ['Ouvre ou ferme le panneau des synonymes.','Opens or closes the synonyms panel.']],
     ]],
     [['Historique & sauvegarde','History & backup'], [
       [['Annuler la dernière action','Undo the last action'], ['Ctrl/Cmd','Z'], ['','']],
@@ -9059,6 +9152,22 @@ function openShortcuts(){
       [['Commentaire sur la ligne en cours','Comment on the current line'], ['Ctrl/Cmd','Maj','M'], ['Repère 💬 discret dans la marge, n\u2019apparaît jamais dans les exports.','Discreet 💬 marker in the margin, never appears in exports.']],
       [['Révisions colorées','Colour revisions'], ['Ctrl/Cmd','Alt','R'], ['Ouvre ou ferme la fenêtre des révisions : couleur, historique, papier coloré, marques dans les exports.','Opens or closes the revisions window: colour, history, coloured paper, marks in the exports.']],
       [['Marquer / démarquer la ligne en cours','Mark / unmark the current line'], ['Ctrl/Cmd','Alt','M'], ['Ajoute ou retire à la main l\u2019astérisque de révision de la ligne où se trouve le curseur.','Adds or removes the revision asterisk of the line the cursor is on, by hand.']],
+    ]],
+    [['Cartes','Cards'], [
+      [['Déplacer la carte sélectionnée','Move the selected card'], ['Alt','←','→','↑','↓'], ['Sur la carte active, dans l\u2019onglet Cartes.','On the active card, in the Cards tab.']],
+      [['Ouvrir la scène de la carte','Open the card\u2019s scene'], ['Entrée'], ['Sur la carte active.','On the active card.']],
+    ]],
+    [['Page de titre','Title page'], [
+      [['Gras','Bold'], ['Ctrl/Cmd','B'], ['Dans les champs de la page de titre.','In the title page fields.']],
+      [['Italique','Italic'], ['Ctrl/Cmd','I'], ['Dans les champs de la page de titre.','In the title page fields.']],
+      [['Souligné','Underline'], ['Ctrl/Cmd','U'], ['Dans les champs de la page de titre.','In the title page fields.']],
+      [['Valider le titre ou l\u2019auteur','Confirm the title or the author'], ['Entrée'], ['','']],
+    ]],
+    [['Fenêtres & outils','Windows & tools'], [
+      [['Valider une boîte de dialogue','Confirm a dialog box'], ['Entrée'], ['Tab fait passer d\u2019un champ ou d\u2019un bouton à l\u2019autre.','Tab moves from one field or button to the next.']],
+      [['Fermer ou annuler','Close or cancel'], ['Échap'], ['Boîtes de dialogue, liste des scènes, révisions, synonymes, menus, aperçu d\u2019une image, éditeur de dessin, plein écran de la page de titre.','Dialog boxes, scene list, revisions, synonyms, menus, image preview, drawing editor, title page full screen.']],
+      [['Annuler le dernier trait','Undo the last stroke'], ['Ctrl/Cmd','Z'], ['Dans l\u2019éditeur de dessin du storyboard.','In the storyboard drawing editor.']],
+      [['Diagnostic de pagination','Pagination diagnostics'], ['Ctrl','Alt','D'], ['Affiche pourquoi un bloc ne tient pas sur une page, reste solidaire d\u2019un autre ou verrouille la page. Même raccourci pour le masquer.','Shows why a block doesn\u2019t fit on a page, stays together with another, or locks the page. Same shortcut to hide it.']],
     ]],
   ];
   const keysHtml = keys => keys.map(k=>`<span class="kbd">${k}</span>`)
@@ -9321,6 +9430,7 @@ function printScript(){
   });
 
   document.body.appendChild(wrap);
+  try{ rpDecoratePrint(wrap); }catch(e){}   // v85 : surlignages et soulignements
   // Révisions colorées : la zone d'impression est masquée à l'écran, on la
   // rend mesurable un instant (hors champ) pour poser les astérisques.
   try{
@@ -9468,6 +9578,131 @@ function fontMetrics(fontShorthand, fontSizePx){
   return res;
 }
 
+/* v85 : surlignages en couleur et soulignements (Ctrl+U) dans les exports.
+   Les plages sont rangées dans el.hl ([début, fin, couleur], la couleur 4 = soulignement). */
+const RP_HL_RGBA = [[255,214,10,.55],[52,211,153,.42],[244,114,182,.38],[96,165,250,.42]];
+function rpMarkFlags(el, len){
+  const rs = window.rpHlRanges ? window.rpHlRanges(el) : [];
+  if(!rs.length) return null;
+  const col = new Int8Array(len).fill(-1), ul = new Uint8Array(len);
+  rs.forEach(r => { for(let i = Math.max(0, r[0]); i < Math.min(len, r[1]); i++){ if(r[2] === 4) ul[i] = 1; else if(RP_HL_RGBA[r[2]]) col[i] = r[2]; } });
+  let any = false; for(let i = 0; i < len; i++){ if(col[i] >= 0 || ul[i]){ any = true; break; } }
+  return any ? { col, ul } : null;
+}
+function rpModelOf(id){ return (S.project && S.project.elements || []).find(x => x.id === id) || null; }
+/* Les marques d'une ligne, recalées sur le texte tel que le PDF le relit (espaces fusionnés, rognés). */
+function pdfMarksFor(node, own, finalText){
+  try{
+    if(!node.classList.contains('line') || node.classList.contains('line--card') || !node.dataset.id) return null;
+    const m = rpModelOf(node.dataset.id); if(!m || !m.text) return null;
+    if(own.length < m.text.length || own.slice(0, m.text.length) !== m.text) return null;
+    const fl = rpMarkFlags(m, own.length); if(!fl) return null;
+    let t = '', col = [], ul = [];
+    for(let i = 0; i < own.length;){
+      if(/\s/.test(own[i])){ let j = i; while(j < own.length && /\s/.test(own[j])) j++; t += ' '; col.push(fl.col[i]); ul.push(fl.ul[i]); i = j; }
+      else { t += own[i]; col.push(fl.col[i]); ul.push(fl.ul[i]); i++; }
+    }
+    let a = 0, b = t.length; while(a < b && t[a] === ' ') a++; while(b > a && t[b - 1] === ' ') b--;
+    t = t.slice(a, b); col = col.slice(a, b); ul = ul.slice(a, b);
+    if(t.length !== finalText.length || t.toLowerCase() !== finalText.toLowerCase()) return null;
+    return { col, ul };
+  }catch(e){ return null; }
+}
+function pdfPaintMarks(doc, b, lines, x){
+  const mk = b.marks; if(!mk) return;
+  const safe = pdfSafeText(b.text); if(safe.length !== b.text.length) return;
+  const fs = b.fontPt; let pos = 0;
+  lines.forEach((ln, li) => {
+    let st = safe.indexOf(ln, pos); if(st < 0) st = pos;
+    const en = Math.min(safe.length, st + ln.length); pos = en;
+    const lw = doc.getTextWidth(ln);
+    const x0 = b.align === 'right' ? x - lw : b.align === 'center' ? x - lw / 2 : x;
+    const y = b.yPt + li * b.lineHeightPt;
+    for(let i = st; i < en;){
+      const c = mk.col[i], u = mk.ul[i]; let j = i + 1;
+      while(j < en && mk.col[j] === c && mk.ul[j] === u) j++;
+      if(c >= 0 || u){
+        const xa = x0 + doc.getTextWidth(safe.slice(st, i)), w = doc.getTextWidth(safe.slice(i, j));
+        if(c >= 0){
+          const q = RP_HL_RGBA[c];
+          doc.saveGraphicsState();
+          try{ doc.setGState(new doc.GState({ opacity:q[3] })); }catch(e){}
+          doc.setFillColor(q[0], q[1], q[2]);
+          doc.rect(xa, y - fs * 0.8, w, fs * 1.02, 'F');
+          doc.restoreGraphicsState();
+        }
+        if(u){
+          doc.setDrawColor(b.color.r, b.color.g, b.color.b);
+          doc.setLineWidth(Math.max(0.5, fs * 0.055));
+          doc.line(xa, y + fs * 0.14, xa + w, y + fs * 0.14);
+        }
+      }
+      i = j;
+    }
+  });
+  doc.setTextColor(b.color.r, b.color.g, b.color.b);
+}
+/* Impression navigateur : on remplace le texte de la ligne par des segments marqués. */
+function rpDecoratePrint(root){
+  const map = new Map((S.project.elements || []).map(x => [x.id, x]));
+  root.querySelectorAll('.line[data-id]').forEach(div => {
+    if(div.classList.contains('line--card')) return;
+    const m = map.get(div.dataset.id); if(!m || !m.text) return;
+    const full = div.textContent;
+    if(full.length < m.text.length || full.slice(0, m.text.length) !== m.text) return;
+    const fl = rpMarkFlags(m, m.text.length); if(!fl) return;
+    const frag = document.createDocumentFragment(); const n = m.text.length;
+    for(let i = 0; i < n;){
+      const c = fl.col[i], u = fl.ul[i]; let j = i + 1;
+      while(j < n && fl.col[j] === c && fl.ul[j] === u) j++;
+      const txt = m.text.slice(i, j);
+      if(c < 0 && !u) frag.appendChild(document.createTextNode(txt));
+      else {
+        const sp = document.createElement('span');
+        let css = '-webkit-print-color-adjust:exact; print-color-adjust:exact;';
+        if(c >= 0){ const q = RP_HL_RGBA[c]; css += 'background-color:rgba(' + q[0] + ',' + q[1] + ',' + q[2] + ',' + q[3] + ');'; }
+        if(u) css += 'text-decoration:underline;';
+        sp.style.cssText = css; sp.textContent = txt; frag.appendChild(sp);
+      }
+      i = j;
+    }
+    if(full.length > n) frag.appendChild(document.createTextNode(full.slice(n)));
+    div.textContent = ''; div.appendChild(frag);
+  });
+}
+/* Final Draft : un <Text> par segment, avec Style="Underline" et Background (16 bits par canal). */
+function rpFdxRuns(el, t, rid){
+  const n = (el.text || '').length;
+  if(!n || t.length < n || t.slice(0, n).toLowerCase() !== el.text.toLowerCase()) return null;
+  const fl = rpMarkFlags(el, n); if(!fl) return null;
+  const hx = v => { const h = Math.round(v).toString(16).toUpperCase().padStart(2, '0'); return h + h; };
+  const bg = c => { const q = RP_HL_RGBA[c], mix = k => q[k] * q[3] + 255 * (1 - q[3]); return '#' + hx(mix(0)) + hx(mix(1)) + hx(mix(2)); };
+  const runs = [];
+  for(let i = 0; i < n;){
+    const c = fl.col[i], u = fl.ul[i]; let j = i + 1;
+    while(j < n && fl.col[j] === c && fl.ul[j] === u) j++;
+    runs.push('<Text' + rid + (u ? ' Style="Underline"' : '') + (c >= 0 ? ' Background="' + bg(c) + '"' : '') + '>' + esc(t.slice(i, j)) + '</Text>');
+    i = j;
+  }
+  if(t.length > n) runs.push('<Text' + rid + '>' + esc(t.slice(n)) + '</Text>');
+  return runs.join('');
+}
+/* Fountain : le soulignement s'écrit _texte_ (pas de norme pour le surlignage). */
+function rpFountainUnderline(el, t){
+  const n = (el.text || '').length;
+  if(!n || t.length < n || t.slice(0, n) !== el.text) return t;
+  const fl = rpMarkFlags(el, n); if(!fl) return t;
+  let out = '', last = 0;
+  for(let i = 0; i < n;){
+    if(!fl.ul[i]){ i++; continue; }
+    let j = i; while(j < n && fl.ul[j]) j++;
+    let a = i, b = j; while(a < b && /\s/.test(t[a])) a++; while(b > a && /\s/.test(t[b - 1])) b--;
+    if(b > a){ out += t.slice(last, a) + '_' + t.slice(a, b) + '_'; last = b; }
+    i = j;
+  }
+  return out + t.slice(last);
+}
+
 /* Relève sur une feuille déjà mise en page par le navigateur tout ce qu'il
    faut pour la redessiner : fond, images, et chaque bloc de texte avec sa
    position, sa largeur utile, sa police et son alignement. Rien n'est
@@ -9589,6 +9824,7 @@ function pdfReadSheet(sheet){
     // varier dynamiquement que les quelques éléments volontairement
     // discrets (mention « SUITE », etc.) qui gardent leur vraie opacité.
     if(el.classList.contains('line')){ opacity = 1; col.a = 1; }
+    const marks = pdfMarksFor(el, own, text);   // v85
 
     page.blocks.push({
       text,
@@ -9610,6 +9846,7 @@ function pdfReadSheet(sheet){
       // dans le DOM, on le repose donc à la main, aux mêmes coordonnées que
       // celles que décrit sa règle CSS (boîte de 1,7 cm calée 2,1 cm à
       // gauche du texte, alignée à droite).
+      marks,
       sceneNum: sceneNum || null
     });
   });
@@ -9731,6 +9968,7 @@ function pdfPaintPage(doc, page){
       const x = b.align === 'right' ? b.xPt + b.widthPt
               : b.align === 'center' ? b.xPt + b.widthPt / 2
               : b.xPt;
+      if(b.marks){ try{ pdfPaintMarks(doc, b, lines, x); }catch(e){} }   // v85 : surlignages et soulignements, sous le texte
       lines.forEach((ln, i)=> doc.text(ln, x, b.yPt + i * b.lineHeightPt, { align:b.align, baseline:'alphabetic' }));
     }
     doc.restoreGraphicsState();
@@ -9862,6 +10100,7 @@ function elementsToText(els, fountain){
   els.forEach(el=>{
     const startLen = out.length;
     let t = contdText(el, marks);
+    if(fountain && (el.type==='action' || el.type==='dialogue' || el.type==='text')) t = rpFountainUnderline(el, t);   // v85
     if(el.type==='scene'){ out.push(''); out.push(t.toUpperCase()); }
     else if(el.type==='action'){ out.push(''); out.push(t); }
     else if(el.type==='character'){
@@ -9958,7 +10197,8 @@ function elementsToFDX(els){
       const al = c.align === 'left' ? 'Left' : c.align === 'right' ? 'Right' : 'Center';
       return `<Paragraph Type="Action" Alignment="${al}"><Text${style ? ' Style="' + style + '"' : ''}${rid(el)} Size="${c.size}">${esc(t.replace(/\n+$/,''))}</Text></Paragraph>`;
     }
-    return `<Paragraph Type="${fdxParagraphType(el.type)}"><Text${rid(el)}>${esc(t)}</Text></Paragraph>`;
+    const runs = rpFdxRuns(el, t, rid(el));   // v85
+    return `<Paragraph Type="${fdxParagraphType(el.type)}">${runs || `<Text${rid(el)}>${esc(t)}</Text>`}</Paragraph>`;
   };
   // Final Draft note le dialogue simultané en enfermant les DEUX blocs
   // dans un <DualDialogue>. On réutilise le même découpage en unités que
@@ -11726,7 +11966,7 @@ function closeCompare(){ S.diffVerId = null; renderTabBody(); }
 ===================================================================== */
 const LANG_KEY = 'scriptmm_lang';
 function getLang(){ try{ return localStorage.getItem(LANG_KEY) || 'en'; }catch(e){ return 'en'; } }
-function setLangPref(l){ try{ localStorage.setItem(LANG_KEY, l); }catch(e){} }
+function setLangPref(l){ try{ localStorage.setItem(LANG_KEY, l); }catch(e){} try{ document.documentElement.lang = l; }catch(e){} }
 
 /* Petit raccourci pour tout ce qui échappe forcément au dictionnaire :
    les boîtes natives prompt()/confirm() ne sont pas des éléments du DOM,
@@ -13014,11 +13254,18 @@ function openSampleModal(){
   closeSampleModal();
   S_sampleLang = sampleDefaultLang();
   const html = `<div class="modal-backdrop" id="sampleBackdrop" data-act="closeSampleBg"><div class="modal" data-stop="1">
-      <h2>${L('Scénario d\u2019exemple','Example screenplay')}</h2>
-      <p class="help-p" style="margin-bottom:14px;"><b>${L('« Dernier Rayon »','\u201CLast Aisle\u201D')}</b> \u00b7 ${L('court métrage de 17 pages','17-page short film')}</p>
-      <p class="help-p">${L('Un vrai scénario, écrit pour apprendre en le lisant : des encadrés bleus expliquent chaque étape (image d\u2019ouverture, déclencheur, choix du héros, point médian, climax…) au moment où elle arrive. Les onglets Structure et Outline sont déjà remplis.','A real screenplay, written to be learned from: blue boxes explain each step (opening image, inciting incident, the hero\u2019s choice, midpoint, climax\u2026) right where it happens. The Structure and Outline tabs are already filled in.')}</p>
-      <div class="field" style="margin-top:14px;"><label>${L('Langue de l\u2019exemple','Example language')}</label>${sampleLangOptsHtml(S_sampleLang)}</div>
-      <p class="help-p" style="font-size:12.5px;color:var(--ink-soft);margin-top:12px;">${L('Tu reçois ta propre copie, que tu peux modifier librement. Les notes bleues n\u2019apparaissent jamais à l\u2019impression ni à l\u2019export.','You get your own copy, free to edit. The blue notes never appear in print or in exports.')}</p>
+      <div class="sm-head">
+        <span class="sm-ico">${icon('book')}</span>
+        <div><h2>${L('Scénario d\u2019exemple','Example screenplay')}</h2>
+          <p class="sm-sub"><b>${L('« Dernier Rayon »','\u201CLast Aisle\u201D')}</b> \u00b7 ${L('court métrage de 17 pages','17-page short film')}</p></div>
+      </div>
+      <ul class="sm-points">
+        <li>${icon('note')}<span><b>${L('Un vrai scénario, écrit pour apprendre en le lisant','A real screenplay, written to be learned from')}</b><small>${L('Des encadrés bleus expliquent chaque étape (image d\u2019ouverture, déclencheur, choix du héros, point médian, climax…) au moment où elle arrive.','Blue boxes explain each step (opening image, inciting incident, the hero\u2019s choice, midpoint, climax\u2026) right where it happens.')}</small></span></li>
+        <li>${icon('layers')}<span><b>${L('Structure et Outline déjà remplis','Structure and Outline already filled in')}</b></span></li>
+        <li>${icon('doc')}<span><b>${L('Tu reçois ta propre copie','You get your own copy')}</b><small>${L('Tu peux la modifier librement. Les notes bleues n\u2019apparaissent jamais à l\u2019impression ni à l\u2019export.','Free to edit. The blue notes never appear in print or in exports.')}</small></span></li>
+      </ul>
+      <div class="sm-lbl">${L('Langue de l\u2019exemple','Example language')}</div>
+      ${sampleLangOptsHtml(S_sampleLang)}
       <div class="modal-actions"><button class="btn btn-ghost" data-act="closeSampleModal">${L('Annuler','Cancel')}</button>
         <button class="btn btn-primary" data-act="createSample">${icon('read')} ${L('Ouvrir l\u2019exemple','Open the example')}</button></div>
     </div></div>`;
@@ -15014,6 +15261,7 @@ Object.assign(ACTIONS, { wdOpenOrphans, wdOpenSession: ()=> wdOpenSession() });
   ::highlight(rp-hl-1){background-color:rgba(52,211,153,.42);}
   ::highlight(rp-hl-2){background-color:rgba(244,114,182,.38);}
   ::highlight(rp-hl-3){background-color:rgba(96,165,250,.42);}
+  ::highlight(rp-hl-4){text-decoration:underline; text-decoration-thickness:1px; text-underline-offset:2px;}
 
   .rp-hlbar{position:fixed; z-index:120; display:none; align-items:center; gap:5px; padding:5px 8px; border-radius:999px;
     background:var(--surface); border:1px solid var(--hair); box-shadow:var(--shadow-md); font-family:var(--sans);
@@ -15022,6 +15270,7 @@ Object.assign(ACTIONS, { wdOpenOrphans, wdOpenSession: ()=> wdOpenSession() });
   .rp-hlbar button{width:20px; height:20px; padding:0; border-radius:50%; border:1px solid rgba(0,0,0,.14); cursor:pointer; transition:transform .12s ease;}
   .rp-hlbar button:hover{transform:scale(1.2);}
   .rp-hlbar .rp-hl-x{background:transparent; color:var(--ink-soft); border:1.5px solid var(--hair); display:grid; place-items:center;}
+  .rp-hlbar .rp-hl-u{background:transparent; color:var(--ink); border:1.5px solid var(--hair); font:700 11px/1 var(--sans); text-decoration:underline; display:grid; place-items:center;}
   .rp-hlbar i{width:1px; height:16px; background:var(--hair); margin:0 2px;}
   @keyframes rpPop{from{opacity:0; transform:translateY(4px) scale(.96);} to{opacity:1; transform:none;}}
 
@@ -15091,10 +15340,10 @@ Object.assign(ACTIONS, { wdOpenOrphans, wdOpenSession: ()=> wdOpenSession() });
     });
     return m;
   }
-  function hlCut(arr, s, e){
+  function hlCut(arr, s, e, ul){
     const out = [];
     arr.forEach(r => {
-      if(r[1] <= s || r[0] >= e){ out.push(r); return; }
+      if((r[2] === 4) !== !!ul || r[1] <= s || r[0] >= e){ out.push(r); return; }   // v85 : couleur et soulignement sont deux calques indépendants
       if(r[0] < s) out.push([r[0], s, r[2]]);
       if(r[1] > e) out.push([e, r[1], r[2]]);
     });
@@ -15135,11 +15384,11 @@ Object.assign(ACTIONS, { wdOpenOrphans, wdOpenSession: ()=> wdOpenSession() });
   }
   function hlPaint(){
     if(!HLAPI || HL.hold) return;
-    const sets = [[], [], [], []];
+    const sets = [[], [], [], [], []];
     if(live()){
       const page = $('page');
       S.project.elements.forEach(el => {
-        if(!el.hl) return;
+        if(!el.hl || el.type === 'note') return;
         hlSync(el);
         if(!el.hl) return;
         const div = page.querySelector('.line[data-id="' + el.id + '"]');
@@ -15159,10 +15408,11 @@ Object.assign(ACTIONS, { wdOpenOrphans, wdOpenSession: ()=> wdOpenSession() });
     pushUndo();
     for(let i = ai; i <= bi; i++){
       const el = els[i], len = (el.text || '').length;
+      if(el.type === 'note'){ delete el.hl; delete el.hlT; continue; }   // v87 : les notes ne sont jamais surlignées
       const s = i === ai ? sp.aOff : 0, e = i === bi ? sp.bOff : len;
       if(e <= s) continue;
       hlSync(el);
-      let arr = hlCut(el.hl || [], s, e);
+      let arr = hlCut(el.hl || [], s, e, color === 4 || color === -4);
       if(color >= 0) arr.push([s, e, color]);
       arr = hlNorm(arr, len);
       if(arr.length){ el.hl = arr; el.hlT = el.text || ''; } else { delete el.hl; delete el.hlT; }
@@ -15171,17 +15421,18 @@ Object.assign(ACTIONS, { wdOpenOrphans, wdOpenSession: ()=> wdOpenSession() });
     try{ flushAutosave(); }catch(err){}                 // V82 : sauvegarde immédiate, un rechargement juste après ne perd plus rien
     hlPaint();
   }
-  function hlCovered(sp){
+  function hlCovered(sp, ul){
     const els = S.project.elements, ai = findIdx(sp.a.dataset.id), bi = findIdx(sp.b.dataset.id);
     if(ai < 0 || bi < ai) return false;
     let any = false;
     for(let i = ai; i <= bi; i++){
       const el = els[i], len = (el.text || '').length;
+      if(el.type === 'note') continue;
       const s = i === ai ? sp.aOff : 0, e = i === bi ? sp.bOff : len;
       if(e <= s) continue;
       any = true;
       hlSync(el);
-      const rs = el.hl || []; let p = s;
+      const rs = (el.hl || []).filter(r => (r[2] === 4) === !!ul); let p = s;
       for(const r of rs){ if(r[1] <= p) continue; if(r[0] > p) break; p = r[1]; if(p >= e) break; }
       if(p < e) return false;
     }
@@ -15229,17 +15480,20 @@ Object.assign(ACTIONS, { wdOpenOrphans, wdOpenSession: ()=> wdOpenSession() });
     if(bar) return bar;
     bar = document.createElement('div'); bar.className = 'rp-hlbar rp-ui'; bar.id = 'rpHlBar';
     bar.innerHTML = HL.colors.map((c, i) => `<button type="button" data-c="${i}" style="background:${c}" title="${L('Surligner','Highlight')}"></button>`).join('') +
-      `<i></i><button type="button" class="rp-hl-x" data-c="-1" title="${L('Retirer le surlignage','Remove highlight')}">${svg('<path d="M4 4l8 8M12 4l-8 8"/>', 10)}</button>`;
+      `<i></i><button type="button" class="rp-hl-u" data-c="4" title="${L('Souligner (Ctrl+U)','Underline (Ctrl+U)')}">U</button><button type="button" class="rp-hl-x" data-c="-1" title="${L('Retirer le surlignage','Remove highlight')}">${svg('<path d="M4 4l8 8M12 4l-8 8"/>', 10)}</button>`;
     bar.addEventListener('mousedown', e => e.preventDefault());       // garde la sélection intacte
     bar.addEventListener('click', e => {
       const b = e.target.closest('button[data-c]'); if(!b) return;
-      hlApply(parseInt(b.dataset.c, 10));
+      let c = parseInt(b.dataset.c, 10);
+      if(c === 4){ const sp = selectionSpan(); if(sp && hlCovered(sp, true)) c = -4; }   // v85 : « U » souligne, ou retire si c'est déjà souligné
+      hlApply(c);
       hlBarHide();
     });
     document.body.appendChild(bar);
     return bar;
   }
   function hlBarHide(){ if(bar) bar.classList.remove('on'); }
+  window.rpHlRanges = el => { hlSync(el); return el.hl ? el.hl.map(r => r.slice()) : []; };   // v85 : lu par les exports
   function hlBarUpdate(){
     if(!HLAPI || !live()){ hlBarHide(); return; }
     const sel = window.getSelection();
@@ -15247,13 +15501,27 @@ Object.assign(ACTIONS, { wdOpenOrphans, wdOpenSession: ()=> wdOpenSession() });
     const ae = document.activeElement;
     if(ae && ae.closest && ae.closest('#synPanel, .modal, input, textarea')){ hlBarHide(); return; }
     const sp = selectionSpan(); if(!sp){ hlBarHide(); return; }
+    if(!sp.multi){ const e1 = S.project.elements[findIdx(sp.a.dataset.id)]; if(e1 && e1.type === 'note'){ hlBarHide(); return; } }   // v87 : pas de barre sur une note
+    /* v86 : la barre se pose sur la partie VISIBLE de la sélection (zone du scénario à l'écran),
+       pas sur sa toute première ligne — sinon, avec « tout sélectionner » depuis une page
+       plus bas, elle partait loin au-dessus de l'écran. */
     const rects = sel.getRangeAt(0).getClientRects();
-    const r = rects.length ? rects[0] : sel.getRangeAt(0).getBoundingClientRect();
-    if(!r || (!r.width && !r.height)){ hlBarHide(); return; }
+    const cpEl = document.getElementById('centerPane'), cb = cpEl ? cpEl.getBoundingClientRect() : null;
+    const vTop = Math.max(cb ? cb.top : 0, 0), vBot = Math.min(cb ? cb.bottom : window.innerHeight, window.innerHeight);
+    let r = null, big = null;
+    for(let k = 0; k < rects.length; k++){
+      const q = rects[k];
+      if(!(q.width || q.height) || q.bottom <= vTop + 4 || q.top >= vBot - 4) continue;
+      if(q.height <= 90){ r = q; break; }        // une ligne visible
+      if(!big) big = q;                           // sinon un grand bloc qui traverse l'écran
+    }
+    if(!r && big) r = { left:big.left, width:big.width, top:Math.max(big.top, vTop), bottom:Math.min(big.bottom, vBot) };
+    if(!r){ hlBarHide(); return; }
     const b = hlBar(); b.classList.add('on');
     const w = b.offsetWidth || 150;
     let x = r.left + r.width / 2 - w / 2, y = r.top - 42;
-    if(y < 8) y = r.bottom + 8;
+    if(y < vTop + 8) y = Math.max(r.bottom + 8, vTop + 8);
+    y = Math.min(y, vBot - 50);
     x = Math.max(8, Math.min(window.innerWidth - w - 8, x));
     b.style.left = Math.round(x) + 'px'; b.style.top = Math.round(y) + 'px';
   }
@@ -15529,6 +15797,14 @@ Object.assign(ACTIONS, { wdOpenOrphans, wdOpenSession: ()=> wdOpenSession() });
       hlApply(hlCovered(sp) ? -1 : 0); hlBarHide();
       return;
     }
+    if(mod && !e.altKey && !e.shiftKey && String(e.key).toLowerCase() === 'u' && e.target && e.target.closest && e.target.closest('#page')){   // v85 : Ctrl/Cmd+U = souligner, mémorisé dans le scénario
+      e.preventDefault(); e.stopPropagation();
+      if(!HLAPI){ toast(L('Le soulignement n\u2019est pas pris en charge par ce navigateur.', 'Underlining isn\u2019t supported by this browser.')); return; }
+      const sp = selectionSpan();
+      if(!sp || (!sp.multi && sp.aOff === sp.bOff)){ toast(L('Sélectionne d\u2019abord du texte à souligner.', 'First select some text to underline.')); return; }
+      hlApply(hlCovered(sp, true) ? -4 : 4); hlBarHide();
+      return;
+    }
     if(mod && e.altKey && !e.shiftKey && e.code === 'KeyY'){                 // Ctrl/Cmd+Alt+Y : musique YouTube
       e.preventDefault(); e.stopPropagation(); musicOpen(); return;
     }
@@ -15558,7 +15834,8 @@ Object.assign(ACTIONS, { wdOpenOrphans, wdOpenSession: ()=> wdOpenSession() });
       let g = null; titles.forEach(t => { if(/^(Annoter|Annotate)$/.test(t.textContent.trim())) g = t.parentElement; });
       if(g){
         g.insertAdjacentHTML('beforeend',
-          row(['Ctrl/Cmd', 'Alt', 'H'], L('Surligner / retirer le surlignage', 'Highlight / remove highlight'), L('Sur le texte sélectionné. Une petite barre de couleurs apparaît aussi au-dessus de toute sélection. Le surlignage est sauvegardé avec le scénario et n\u2019apparaît jamais dans les exports.', 'On the selected text. A small colour bar also appears above any selection. Highlights are saved with the screenplay and never appear in exports.')) +
+          row(['Ctrl/Cmd', 'Alt', 'H'], L('Surligner / retirer le surlignage', 'Highlight / remove highlight'), L('Sur le texte sélectionné. Une petite barre de couleurs apparaît aussi au-dessus de toute sélection. Le surlignage est sauvegardé avec le scénario et apparaît dans le PDF, l\u2019impression et le .fdx.', 'On the selected text. A small colour bar also appears above any selection. Highlights are saved with the screenplay and appear in the PDF, print and .fdx exports.')) +
+          row(['Ctrl/Cmd', 'U'], L('Souligner / retirer le soulignement', 'Underline / remove underline'), L('Sur le texte sélectionné. Le soulignement est sauvegardé avec le scénario et apparaît dans les exports.', 'On the selected text. Underlining is saved with the screenplay and appears in exports.')) +
           row(['Ctrl/Cmd', 'Alt', 'Y'], L('Musique YouTube sur la ligne en cours', 'YouTube music on the current line'), L('Colle un lien YouTube : un repère ♪ apparaît dans la marge, un clic ouvre un petit lecteur déplaçable.', 'Paste a YouTube link: a ♪ marker appears in the margin, one click opens a small movable player.')));
       }
     }catch(err){}
@@ -15677,7 +15954,7 @@ Object.assign(ACTIONS, { wdOpenOrphans, wdOpenSession: ()=> wdOpenSession() });
   .rp-sb-menu button{display:flex; align-items:center; gap:9px; width:100%; padding:8px 10px; border:0; border-radius:8px; background:none; color:var(--ink); font:inherit; font-size:13px; cursor:pointer; text-align:left;}
   .rp-sb-menu button:hover{background:var(--hair);}
   .rp-sb-menu svg{color:var(--accent); flex:none;}
-  .rp-sb-fab{position:fixed; z-index:41; display:none; width:38px; height:38px; place-items:center; border-radius:50%; border:1px solid var(--hair); cursor:pointer; padding:0;
+  .rp-sb-fab{position:fixed; z-index:60; pointer-events:auto; display:none; width:38px; height:38px; place-items:center; border-radius:50%; border:1px solid var(--hair); cursor:pointer; padding:0;
     background:color-mix(in srgb, var(--surface) 88%, transparent); -webkit-backdrop-filter:blur(10px); backdrop-filter:blur(10px); color:var(--ink-soft); box-shadow:var(--shadow-sm); transition:all .15s ease;}
   .rp-sb-fab.on{display:grid;}
   .rp-sb-fab:hover{color:#fff; background:var(--accent); border-color:var(--accent); transform:translateY(-1px);}
@@ -15760,18 +16037,19 @@ Object.assign(ACTIONS, { wdOpenOrphans, wdOpenSession: ()=> wdOpenSession() });
   }
   function sbFab(){
     let f = $('rpSbFab');
+    if(f){ f.remove(); f = null; }       // v87 : plus de bouton rond ; le storyboard s'ouvre par le menu ⋯ (ou Ctrl+Alt+B)
     if(!f){
       f = document.createElement('button'); f.type = 'button'; f.id = 'rpSbFab'; f.className = 'rp-sb-fab rp-ui';
       f.title = L('Storyboard en temps réel (Ctrl+Alt+B)', 'Live storyboard (Ctrl+Alt+B)');
       f.setAttribute('aria-label', f.title); f.innerHTML = svg(ICON_FRAME, 18);
-      f.addEventListener('click', () => sbToggle(true));
-      document.body.appendChild(f);
+      /* volontairement NON ajouté à la page : sbSync() continue de le manipuler sans qu'il apparaisse */
     }
     return f;
   }
   function sbToggle(v){
     const next = v == null ? !sbOn() : !!v;
     sbSetOn(next); sbSync();
+    try{ schedulePaginate(40); }catch(err){}     // v86 : la feuille se remet à la largeur restante
     if(!next){ const m = document.querySelector('.rp-sb-menu'); if(m) m.remove(); }
   }
   function laneHtml(p, list, nums){
@@ -15823,9 +16101,12 @@ Object.assign(ACTIONS, { wdOpenOrphans, wdOpenSession: ()=> wdOpenSession() });
     const fab = sbFab();
     if(!live()){ const p = $('rpSb'); if(p) p.remove(); fab.classList.remove('on'); return; }
     const cp = $('centerPane'), cr = cp.getBoundingClientRect(), enabled = sbOn();
+    if(SB.cw !== undefined && Math.abs(SB.cw - cp.clientWidth) > 1){ try{ schedulePaginate(40); }catch(err){} }   // v86
+    SB.cw = cp.clientWidth;
     fab.classList.toggle('on', !enabled);
-    fab.style.right = Math.round(window.innerWidth - cr.right + 24) + 'px';
-    fab.style.bottom = Math.round(window.innerHeight - cr.bottom + 18) + 'px';
+    /* v86 : le bouton reste toujours dans l'écran, même si la zone d'écriture dépasse la fenêtre */
+    fab.style.right = Math.max(12, Math.round(window.innerWidth - Math.min(cr.right, window.innerWidth) + 24)) + 'px';
+    fab.style.bottom = Math.max(12, Math.round(window.innerHeight - Math.min(cr.bottom, window.innerHeight) + 18)) + 'px';
     let root = $('rpSb');
     if(!enabled){ if(root) root.remove(); return; }
     if(!root){
@@ -15833,7 +16114,7 @@ Object.assign(ACTIONS, { wdOpenOrphans, wdOpenSession: ()=> wdOpenSession() });
       root.innerHTML = `<div class="rp-sb-head"><b>${svg(ICON_FRAME, 14)} Storyboard</b><em></em>
         <button type="button" data-a="close" title="${esc(L('Masquer le storyboard', 'Hide the storyboard'))}">${svg('<path d="M4 4l8 8M12 4l-8 8"/>', 13)}</button></div>
         <div class="rp-sb-scroll"><div class="rp-sb-inner"></div></div>`;
-      const row = document.querySelector('.body-row'), side = $('sidePane');
+      const row = document.querySelector('.body-row') || (cp && cp.parentNode), side = $('sidePane');
       if(!row) return;
       row.insertBefore(root, side && side.parentNode === row ? side : null);
       SB.sig = '';
@@ -16109,6 +16390,34 @@ Object.assign(ACTIONS, { wdOpenOrphans, wdOpenSession: ()=> wdOpenSession() });
   }).observe(document.body, { childList:true, subtree:true, characterData:true });
   window.addEventListener('resize', tick);
   tick();
+})();
+
+/* v86 — Menu ⋯ : une icône propre à chaque fonction (comme WriterDuet : un symbole = une action).
+   Avant, « Rechercher / remplacer », « Renommer partout » et « Variantes de noms » partageaient la
+   même loupe, « Pages presque vides » et « Ma session d'écriture » la même feuille, et Google Drive
+   reprenait la flèche d'import. Seul le dessin change ; libellés, ordre et actions sont intacts. */
+(function(){
+  const sv = p => '<svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">' + p + '</svg>';
+  const ICONS = {
+    wdOpenRename:   sv('<path d="M10.6 1.9l3.5 3.5-7.6 7.6-3.9.5.5-3.9z"/><path d="M9.2 3.3l3.5 3.5M8.8 14.5h5.4"/>'),
+    wdOpenVariants: sv('<circle cx="4" cy="3.6" r="1.6"/><circle cx="4" cy="12.4" r="1.6"/><circle cx="12" cy="6.4" r="1.6"/><path d="M4 5.2v5.6M4 9.6c0-2.2 1.6-3.2 6.4-3.2"/>'),
+    wdOpenOrphans:  sv('<path d="M3 1h7l3 3v11H3z" stroke-dasharray="2.3 1.9"/><path d="M9 1v4h4M5.6 12h2.8"/>'),
+    wdOpenSession:  sv('<circle cx="8" cy="9" r="5.2"/><path d="M8 9V6.2M6.2 1.6h3.6M12.3 3.8l1.1-1.1"/>'),
+    gdChipClick:    sv('<path d="M4.8 12.6h6.4a2.9 2.9 0 0 0 .5-5.75A4 4 0 0 0 4 6.4a3.1 3.1 0 0 0 .8 6.2z"/>')
+  };
+  const prev = moreMenuHtml;
+  moreMenuHtml = function(){
+    let h = prev.apply(this, arguments);
+    Object.keys(ICONS).forEach(k => {
+      const a = h.indexOf('data-act="' + k + '"'); if(a < 0) return;
+      const b = h.indexOf('</button>', a), s0 = h.indexOf('<svg', a);
+      if(s0 < 0 || (b >= 0 && s0 > b)) return;
+      const e0 = h.indexOf('</svg>', s0); if(e0 < 0) return;
+      h = h.slice(0, s0) + ICONS[k] + h.slice(e0 + 6);
+    });
+    return h;
+  };
+  if(typeof ACTIONS !== 'undefined' && ACTIONS.toggleMoreMenu) { /* le menu relit moreMenuHtml à l'ouverture */ }
 })();
 
 init();
