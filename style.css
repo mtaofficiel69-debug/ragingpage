@@ -1,0 +1,1918 @@
+  :root{
+    --paper:#FCFDFE;
+    --ink:#23262E;
+    --ink-soft:#5C6270;
+    --studio:#262535;
+    --studio-2:#2F2E44;
+    --studio-text:#EDEEF5;
+    --studio-text-dim:#9A99B0;
+    --accent:#3699D4;
+    --accent-2:#1F6FA0;
+    --hair:#DADFE6;
+    --hair-dark:#3B3A52;
+    --backdrop:#EEF1F5;
+    --danger:#D64545;
+    --ok:#2F9E44;
+    --radius:3px;
+    --sans:'Archivo',system-ui,sans-serif;
+    --display:'Fraunces',var(--sans);
+    --mono:'Courier Prime','Courier New',monospace;
+
+    /* Couleurs "chrome" (interface) — distinctes de --ink/--paper qui
+       habillent la page de scénario elle-même et ne changent jamais,
+       comme dans la plupart des logiciels d'écriture de scénario. */
+    --paper-ink:var(--ink);
+    --paper-ink-soft:var(--ink-soft);
+    --surface:#fff;
+    --surface-soft:#F7F9FB;
+    --surface-soft-2:#F2F5F8;
+    --row-hover:#ffffff80;
+    --chip-bg:#00000009;
+    --overlay-hover:#00000008;
+    --overlay-hover-soft:#00000005;
+    --tag-chip-bg:#1F6FA01c;
+    --tag-chip-text:#145073;
+  }
+  html[data-theme="dark"]{
+    --backdrop:#14141C;
+    --ink:#E8EAF2;
+    --ink-soft:#A7ACC0;
+    --hair:#363548;
+    --surface:#262535;
+    --surface-soft:#2B2A3D;
+    --surface-soft-2:#2B2A3D;
+    --row-hover:#ffffff0d;
+    --chip-bg:#ffffff14;
+    --overlay-hover:#ffffff12;
+    --overlay-hover-soft:#ffffff0a;
+    --tag-chip-bg:#3699D433;
+    --tag-chip-text:#A9D8F5;
+    /* La feuille de scénario, elle, reste claire en thème sombre (comme
+       dans la plupart des logiciels d'écriture) : on repique donc l'encre
+       du papier sur les valeurs claires, sinon le texte deviendrait clair
+       sur papier clair. */
+    --paper-ink:#1A1D22;
+    --paper-ink-soft:#5A5F68;
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    margin:0; background:var(--backdrop); color:var(--ink); font-family:var(--sans);
+    -webkit-font-smoothing:antialiased;
+  }
+  button{font-family:inherit; cursor:pointer;}
+  input,textarea,select{font-family:inherit;}
+  ::selection{background:#BFE3FA;}
+  /* CORRECTIF (export PDF). Le lissage "antialiased" allège nettement le
+     tracé du texte à l'écran (surtout sur macOS/WebKit) par rapport à un
+     rendu de police par défaut. La page du scénario, elle, doit garder un
+     poids d'encre proche de ce que rendra le PDF final (dessiné en
+     vectoriel plein, sans ce lissage) — sinon l'écriture semble "changer
+     d'opacité" entre l'écran et l'export alors que c'est exactement la
+     même couleur des deux côtés. Le chrome de l'appli garde le lissage
+     léger ; seule la feuille elle-même en sort.
+  */
+  .sheet, .print-page, .titlepage{-webkit-font-smoothing:auto;}
+  #app{height:100vh; display:flex; flex-direction:column; overflow:hidden;}
+  .hidden{display:none !important;}
+
+  /* ---------- HOME ---------- */
+  #homeView, #seriesHubView{flex:1; overflow:auto; display:flex; justify-content:center; padding:56px 24px;}
+  .home-wrap{width:100%; max-width:760px;}
+  /* La page d'accueil garde la hauteur de l'écran : seule la liste des
+     scénarios défile (dans .home-list-scroll), le pied de page reste
+     toujours visible à sa place, jamais superposé à la liste. */
+  #homeView{overflow:hidden;}
+  #homeView .home-wrap{height:100%; display:flex; flex-direction:column; min-height:0;}
+  #homeView .home-brand, #homeView .home-sub, #homeView .home-actions, #homeView .home-formats, #homeView .home-foot{flex:none;}
+  #homeView .home-list-scroll{
+    flex:1; min-height:0; overflow-y:auto; padding-bottom:4px;
+    /* Aucun scénario ne doit apparaître à moitié coupé en bas du cadre :
+       le défilement se cale toujours sur le haut d'une ligne entière. */
+    scroll-snap-type:y proximity;
+  }
+  .home-brand{display:flex; align-items:baseline; gap:10px; margin-bottom:4px;}
+  .home-brand .mark{font-family:var(--display); font-weight:700; font-size:30px; letter-spacing:-0.01em;}
+  .home-brand .mark em{font-style:normal; color:var(--accent);}
+  .home-sub{color:var(--ink-soft); font-size:14.5px; margin-bottom:40px;}
+  .home-actions{display:flex; gap:10px; margin-bottom:36px; flex-wrap:wrap;}
+  .btn{
+    border:1px solid var(--hair); background:var(--surface); color:var(--ink); padding:10px 16px;
+    border-radius:var(--radius); font-size:14px; font-weight:600; display:inline-flex; align-items:center; gap:8px;
+    transition:border-color .15s, background .15s;
+  }
+  .btn:hover{border-color:#A9CBE8;}
+  .btn-primary{background:var(--accent); border-color:var(--accent); color:#fff;}
+  .btn-primary:hover{background:#2C7FB0;}
+  .btn-ghost{background:transparent; border-color:transparent;}
+  .btn-ghost:hover{background:var(--overlay-hover);}
+  .btn-danger{color:var(--danger); border-color:#EFC6C6;}
+  .btn-sm{padding:6px 10px; font-size:13.5px;}
+  /* Bouton "Machine à écrire" : toujours lisible, jamais coloré — il prend
+     l'encre de l'interface (donc noir en thème clair, blanc en thème
+     sombre), exactement comme les autres boutons discrets de la barre.
+     C'est la petite pastille à sa droite qui dit si le mode tourne ou non :
+     verte quand il est actif, rouge quand il est coupé, dans les mêmes
+     verts/rouges que le reste de l'appli (--ok / --danger) et en opacité
+     réduite pour rester un signal de coin d'œil, pas une alarme. */
+  .btn-tw{color:var(--ink); background:transparent; border-color:transparent;}
+  .btn-tw:hover{background:var(--overlay-hover); border-color:transparent;}
+  .tw-dot{
+    width:6px; height:6px; border-radius:50%; flex:none;
+    background:var(--danger); opacity:.5; transition:background .15s, opacity .15s;
+  }
+  .tw-dot.on{background:var(--ok); opacity:.9;}
+  .icon{width:15px; height:15px; flex:none;}
+  .proj-list{display:flex; flex-direction:column; gap:1px; border-top:1px solid var(--hair);}
+  .proj-row{
+    display:flex; align-items:center; justify-content:space-between; padding:16px 4px;
+    border-bottom:1px solid var(--hair); cursor:pointer;
+    scroll-snap-align:start; scroll-snap-stop:always;
+  }
+  .proj-row:hover{background:var(--row-hover);}
+  .proj-name{font-weight:600; font-size:15px;}
+  .proj-meta{color:var(--ink-soft); font-size:12.5px; margin-top:3px;}
+  .proj-badge{
+    font-size:10.5px; font-weight:700; letter-spacing:.04em; text-transform:uppercase;
+    padding:3px 7px; border-radius:2px; background:var(--chip-bg); color:var(--ink-soft); margin-right:8px;
+  }
+  .proj-row-actions{display:flex; gap:6px; opacity:0; transition:opacity .1s;}
+  .proj-row:hover .proj-row-actions{opacity:1;}
+  .empty-state{padding:40px 4px; color:var(--ink-soft); font-size:14px; border-top:1px solid var(--hair);}
+  /* Pied de page de l'accueil : une vraie signature de produit, centrée
+     sous la liste des scénarios. Pas de gras dans le texte, pas de tirets
+     cabossés — de la prose calme, une largeur de lecture confortable. */
+  .home-foot{
+    position:relative;
+    margin:84px auto 8px; padding-top:34px; border-top:1px solid var(--hair);
+    max-width:600px; text-align:center;
+  }
+  /* Élément décoratif : un petit repère circulaire posé au centre du
+     filet, façon marque de montage / amorce de pellicule. Un seul trait,
+     ton sur ton, sans couleur ni icône — juste assez pour signer la page
+     sans peser sur la sobriété générale. */
+  .home-foot::before{
+    content:''; position:absolute; top:-4.5px; left:50%; transform:translateX(-50%);
+    width:9px; height:9px; border-radius:50%;
+    background:var(--backdrop); border:1.2px solid var(--hair);
+  }
+  .home-foot .foot-mark{
+    font-family:var(--display); font-weight:700; font-size:17px; letter-spacing:-0.01em;
+    color:var(--ink); margin-bottom:12px;
+  }
+  .home-foot .foot-mark em{font-style:normal; color:var(--accent);}
+  .home-foot p{
+    color:var(--ink-soft); font-size:15px; line-height:1.75; margin:0 0 10px;
+  }
+  /* Les quatre pastilles (Gratuit / Sans compte / Sans publicité / Tes
+     fichiers restent chez toi) sont retirées : leur contenu reste dans la
+     phrase ci-dessus, simplement mise en retrait — plus petite, plus
+     légère, dernière dans l'ordre de lecture — pour ne plus rivaliser
+     visuellement avec la phrase de mission juste au-dessus. */
+  .home-foot p.foot-p-soft{
+    font-size:13px; line-height:1.65; opacity:.78; margin-bottom:0;
+  }
+  /* Ligne discrète sous les boutons d'accueil : indique aux nouveaux venus que
+     le .fdx (Final Draft) circule dans LES DEUX SENS, import comme export. */
+  .home-formats{color:var(--ink-soft); font-size:13px; line-height:1.5; margin:-24px 0 34px; max-width:620px;}
+
+  /* Textes de l'accueil légèrement agrandis (+3,7% puis +2,5% puis +4% puis +3%) pour la lisibilité */
+  #homeView .home-sub{font-size:16.52px;}
+  #homeView .home-actions .btn{font-size:15.94px;}
+  #homeView .proj-name{font-size:17.09px;}
+  #homeView .proj-meta{font-size:14.22px;}
+  #homeView .proj-badge{font-size:11.96px;}
+  #homeView .proj-row-actions .btn{font-size:14.22px;}
+  #homeView .empty-state{font-size:15.94px;}
+
+  /* ---------- ACCUEIL, façon tableau de bord (liste de scripts + volet latéral) ----------
+     Habillage seul : mêmes actions (data-act), mêmes données. Tout est limité à
+     #homeView, le hub de série et le reste de l'appli ne bougent pas. */
+  #homeView{flex-direction:column; justify-content:flex-start; align-items:stretch; padding:0; overflow:hidden;}
+  #homeView .wd-top{
+    flex:none; display:flex; align-items:center; justify-content:space-between; gap:16px;
+    height:56px; padding:0 24px; background:var(--surface); border-bottom:1px solid var(--hair);
+  }
+  #homeView .wd-brand{display:flex; align-items:center; gap:11px; font-family:var(--sans); font-weight:700; font-size:19px; letter-spacing:-.01em; color:var(--ink);}
+  #homeView .wd-brand em{font-style:normal; color:var(--accent);}
+  #homeView .wd-logo{width:40px; height:40px; flex:none; display:block; border-radius:7px;}
+  #homeView .wd-top-r{display:flex; align-items:center; gap:10px;}
+  #homeView .wd-body{flex:1; min-height:0; display:flex; align-items:stretch; width:100%; max-width:1180px; margin:0 auto; padding:28px 24px 24px; gap:28px;}
+  #homeView .wd-side{flex:none; width:268px; display:flex; flex-direction:column; gap:4px; overflow-y:auto; min-height:0;}
+  #homeView .wd-new{width:100%; justify-content:center; padding:12px 16px; font-size:15.5px; border-radius:6px; margin-bottom:14px; box-shadow:0 1px 2px #1F6FA044;}
+  #homeView .wd-navs{display:flex; flex-direction:column; gap:4px;}
+  #homeView .wd-nav{
+    width:100%; display:flex; align-items:center; gap:12px; padding:10px 12px; border:0; border-radius:6px;
+    background:transparent; color:var(--ink); font-size:15px; font-weight:500; text-align:left; transition:background .12s;
+  }
+  #homeView .wd-nav:hover{background:var(--overlay-hover);}
+  #homeView .wd-nav .icon{width:17px; height:17px; color:var(--ink-soft);}
+  #homeView .wd-nav small{display:block; font-size:12.5px; font-weight:400; color:var(--ink-soft); margin-top:1px; line-height:1.35;}
+  #homeView .wd-rule{height:1px; background:var(--hair); margin:12px 4px;}
+  #homeView .wd-note{font-size:13px; line-height:1.55; color:var(--ink-soft); padding:0 12px;}
+  #homeView .wd-about{margin-top:auto; padding:22px 12px 0; font-size:13px; line-height:1.6; color:var(--ink-soft);}
+  #homeView .wd-about b{display:block; font-weight:600; color:var(--ink); font-size:14px; margin-bottom:6px;}
+  #homeView .wd-about p{margin:0 0 8px;}
+  #homeView .wd-main{flex:1; min-width:0; min-height:0; display:flex; flex-direction:column;}
+  #homeView .wd-main-h{flex:none; display:flex; align-items:baseline; gap:12px; margin:2px 2px 16px;}
+  #homeView .wd-main-h h1{margin:0; font-family:var(--sans); font-size:26px; font-weight:700; letter-spacing:-.015em;}
+  #homeView .wd-count{font-size:14px; color:var(--ink-soft);}
+  #homeView .wd-table{flex:1; min-height:0; display:flex; flex-direction:column; background:var(--surface); border:1px solid var(--hair); border-radius:8px; overflow:hidden;}
+  #homeView .wd-thead, #homeView .proj-row{display:grid; grid-template-columns:minmax(0,1fr) 210px 130px; align-items:center; column-gap:16px;}
+  #homeView .wd-thead{flex:none; padding:11px 20px; background:var(--surface-soft); border-bottom:1px solid var(--hair); font-size:13px; font-weight:600; color:var(--ink-soft);}
+  #homeView .wd-thead{padding-right:20px;}
+  #homeView .proj-row{position:relative; padding-right:20px;}
+  #homeView .home-list-scroll{flex:1; min-height:0; overflow-y:auto; padding:0; scroll-snap-type:y proximity;}
+  #homeView .proj-list{border-top:0; gap:0;}
+  #homeView .proj-row{padding:14px 20px; border-bottom:1px solid var(--hair);}
+  #homeView .proj-row:last-child{border-bottom:0;}
+  #homeView .proj-row:hover{background:var(--surface-soft);}
+  #homeView .wd-title{display:flex; align-items:center; gap:14px; min-width:0;}
+  #homeView .wd-ico{
+    flex:none; width:34px; height:42px; border:1px solid var(--hair); border-radius:3px; background:#fff; position:relative;
+    box-shadow:0 1px 2px #0000000d; transition:border-color .12s;
+  }
+  #homeView .wd-ico::before, #homeView .wd-ico::after{content:''; position:absolute; left:6px; right:6px; height:2px; background:#C9D1DB; border-radius:1px;}
+  #homeView .wd-ico::before{top:11px; box-shadow:0 5px 0 #C9D1DB, 0 10px 0 #C9D1DB;}
+  #homeView .wd-ico::after{top:7px; width:12px; right:auto; background:var(--accent); opacity:.85;}
+  #homeView .proj-row:hover .wd-ico{border-color:var(--accent);}
+  #homeView .wd-title .proj-name{font-size:16.5px; font-weight:600; line-height:1.3; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  #homeView .wd-title .proj-meta{font-size:13.5px; margin-top:2px;}
+  #homeView .wd-cell{font-size:14.5px; color:var(--ink-soft); white-space:nowrap;}
+  #homeView .wd-cell .proj-badge{margin:0; font-size:12px; text-transform:none; letter-spacing:0; font-weight:600; padding:3px 9px; border-radius:10px;}
+  #homeView .proj-row-actions{position:absolute; right:12px; top:50%; transform:translateY(-50%); padding-left:28px; background:linear-gradient(90deg, transparent, var(--surface-soft) 28px); justify-content:flex-end; opacity:0;}
+  #homeView .proj-row:hover .proj-row-actions, #homeView .proj-row:focus-within .proj-row-actions{opacity:1;}
+  #homeView .proj-row-actions .btn{font-size:13.5px; padding:5px 10px;}
+  #homeView .wd-empty{flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; gap:14px; padding:48px 24px; border:0;}
+  #homeView .wd-empty .wd-ico{width:54px; height:68px; border-radius:4px;}
+  #homeView .wd-empty .wd-ico::before{left:10px; right:10px; top:18px; box-shadow:0 8px 0 #C9D1DB, 0 16px 0 #C9D1DB;}
+  #homeView .wd-empty .wd-ico::after{left:10px; top:11px; width:18px;}
+  #homeView .wd-empty p{margin:0; max-width:380px; font-size:15.5px; line-height:1.55; color:var(--ink-soft);}
+  #homeView button:focus-visible{outline:2px solid var(--accent); outline-offset:2px;}
+  @media (hover:none){ #homeView .proj-row-actions{opacity:1;} }
+  @media (max-width:900px){
+    #homeView{overflow:auto;}
+    #homeView .wd-body{flex-direction:column; padding:20px 16px 28px; gap:20px; min-height:auto;}
+    #homeView .wd-side{display:contents;}
+    #homeView .wd-new{order:-2; width:100%; margin-bottom:0;}
+    #homeView .wd-navs{order:-1; flex-direction:row; flex-wrap:wrap; gap:6px; margin-top:-8px;}
+    #homeView .wd-nav{width:auto; flex:1 1 auto; padding:9px 12px;}
+    #homeView .wd-nav small, #homeView .wd-rule, #homeView .wd-note{display:none;}
+    #homeView .wd-about{order:3; margin:0; padding:0 4px;}
+    #homeView .wd-main{flex:none;}
+    #homeView .wd-table{flex:none; overflow:visible;}
+    #homeView .home-list-scroll{overflow:visible;}
+    #homeView .wd-thead{display:none;}
+    #homeView .proj-row{grid-template-columns:minmax(0,1fr); row-gap:6px; padding:14px 16px;}
+    #homeView .wd-fmt{display:none;}
+    #homeView .wd-date{padding-left:48px; font-size:13px;}
+    #homeView .proj-row-actions{position:static; transform:none; padding:0 0 0 48px; background:none; grid-column:1 / -1; justify-content:flex-start;}
+    #homeView .wd-top{padding:0 16px;}
+  }
+  @media (prefers-reduced-motion:reduce){ #homeView *{transition:none !important;} }
+
+  /* ---------- create modal ---------- */
+  .modal-backdrop{
+    position:fixed; inset:0; background:#14141Eaa; display:flex; align-items:center; justify-content:center;
+    z-index:200; padding:20px;
+  }
+  .modal{background:var(--surface); border-radius:6px; width:100%; max-width:440px; padding:28px; box-shadow:0 20px 60px #0004;}
+  .modal h2{font-family:var(--display); font-size:19px; margin:0 0 18px;}
+  .field{margin-bottom:16px;}
+  .field label{display:block; font-size:13.5px; font-weight:600; color:var(--ink-soft); margin-bottom:6px;}
+  .field input[type=text], .field input[type=date], .field input[type=number], .field textarea, .field select{
+    width:100%; padding:9px 10px; border:1px solid var(--hair); border-radius:var(--radius); font-size:14px; background:var(--surface-soft); color:var(--ink);
+  }
+  .field textarea{resize:vertical; min-height:70px;}
+  .fmt-choice{display:flex; gap:8px;}
+  .fmt-opt{
+    flex:1; border:1.5px solid var(--hair); border-radius:var(--radius); padding:12px 10px; cursor:pointer; text-align:left;
+  }
+  .fmt-opt.active{border-color:var(--accent); background:#3699D40d;}
+  .fmt-opt .t{font-weight:700; font-size:14.5px;}
+  .fmt-opt .d{font-size:12.5px; color:var(--ink-soft); margin-top:2px;}
+  .modal-actions{display:flex; justify-content:flex-end; gap:8px; margin-top:22px;}
+
+  /* ---------- boîtes de dialogue Raging Page (remplacent confirm()/prompt()) ---------- */
+  .mmd-backdrop{position:fixed; inset:0; z-index:500; display:flex; align-items:center; justify-content:center; padding:20px; background:rgba(20,20,30,.52); animation:mmdFade .14s ease-out;}
+  .mmd{width:100%; max-width:410px; background:var(--surface); color:var(--ink); border-radius:12px; padding:24px 24px 18px; box-shadow:0 0 0 1px var(--hair), 0 24px 64px rgba(10,10,20,.38); animation:mmdPop .17s cubic-bezier(.2,.8,.3,1);}
+  .mmd-head{display:flex; gap:14px; align-items:flex-start;}
+  .mmd-ico{flex:none; width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center; background:rgba(54,153,212,.14); color:var(--accent);}
+  .mmd.danger .mmd-ico{background:rgba(214,69,69,.14); color:var(--danger);}
+  .mmd-ico svg{width:20px; height:20px; fill:none; stroke:currentColor; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round;}
+  .mmd-text{min-width:0; flex:1;}
+  .mmd-title{margin:2px 0 0; font-family:var(--sans); font-size:17px; font-weight:700; letter-spacing:-.01em; line-height:1.3;}
+  .mmd-msg{margin:6px 0 0; font-size:14.5px; line-height:1.5; color:var(--ink-soft); white-space:pre-line; overflow-wrap:anywhere;}
+  .mmd-input{display:block; width:100%; margin-top:14px; padding:10px 12px; font:inherit; font-size:15px; color:var(--ink); background:var(--surface-soft); border:1px solid var(--hair); border-radius:8px;}
+  .mmd-input:focus{outline:none; border-color:var(--accent); box-shadow:0 0 0 3px rgba(54,153,212,.22);}
+  .mmd-actions{display:flex; justify-content:flex-end; gap:8px; margin-top:22px;}
+  .mmd-actions .btn{min-width:92px; justify-content:center; padding:8px 16px; font-size:14.5px;}
+  .mmd.danger .mmd-ok{background:var(--danger); border-color:var(--danger); color:#fff;}
+  .mmd.danger .mmd-ok:hover{background:#B93838; border-color:#B93838;}
+  .mmd .btn:focus-visible{outline:2px solid var(--accent); outline-offset:2px;}
+  .mmd.danger .mmd-ok:focus-visible{outline-color:var(--danger);}
+  @keyframes mmdFade{from{opacity:0}to{opacity:1}}
+  @keyframes mmdPop{from{opacity:0; transform:translateY(8px) scale(.97)}to{opacity:1; transform:none}}
+  @media (prefers-reduced-motion:reduce){ .mmd-backdrop, .mmd{animation:none;} }
+  @media (max-width:480px){ .mmd{padding:20px 18px 14px;} .mmd-actions{flex-direction:column-reverse;} .mmd-actions .btn{width:100%;} }
+
+  /* Textes des modales de création (nouveau scénario / nouvel épisode /
+     nouvelle saison) légèrement agrandis (+4%) pour la lisibilité — même
+     logique que les tailles de l'accueil, mais volontairement limité à
+     ces deux modales (#createBackdrop, #epBackdrop) pour ne pas toucher
+     aux Paramètres, à la Page de titre ou aux autres endroits qui
+     partagent les mêmes classes .field/.fmt-opt/.btn. */
+  #createBackdrop .modal h2, #epBackdrop .modal h2{font-size:19.76px;}
+  #createBackdrop .field label, #epBackdrop .field label{font-size:14.04px;}
+  #createBackdrop .field input[type=text], #createBackdrop .field input[type=number], #createBackdrop .field select,
+  #epBackdrop .field input[type=text], #epBackdrop .field input[type=number]{font-size:14.56px;}
+  #createBackdrop .fmt-opt .t, #epBackdrop .fmt-opt .t{font-size:15.08px;}
+  #createBackdrop .fmt-opt .d, #epBackdrop .fmt-opt .d{font-size:13px;}
+  #createBackdrop .btn, #epBackdrop .btn{font-size:14.56px;}
+
+  /* ---------- EDITOR SHELL ---------- */
+  #editorView{flex:1; display:flex; overflow:hidden;}
+  .rail{
+    width:200px; flex:none; background:var(--studio); color:var(--studio-text); display:flex; flex-direction:column;
+    border-right:1px solid var(--hair-dark);
+  }
+  .rail-top{padding:16px 16px 10px;}
+  .rail-brand{font-family:var(--display); font-weight:700; font-size:16px; cursor:pointer; display:flex; align-items:center; gap:7px;}
+  .rail-brand:hover{opacity:.85;}
+  .rail-logo{flex:none; display:block; border-radius:6px;}
+  .rail-project{font-size:12.5px; color:var(--studio-text-dim); margin-top:8px; line-height:1.4; word-break:break-word;}
+  .rail-nav{flex:1; overflow-y:auto; padding:6px 8px;}
+  /* Boutons de la colonne de gauche (Éditeur, Cartes, Outline, Page de
+     titre, Note, Paramètres, etc.) légèrement agrandis (+15%) pour la
+     lisibilité — même logique que les tailles de l'accueil ci-dessus. */
+  .rail-item{
+    display:flex; align-items:center; gap:10px; padding:8px 10px; border-radius:var(--radius); font-size:14.95px;
+    color:var(--studio-text-dim); margin-bottom:1px;
+  }
+  .rail-item:hover{background:#ffffff0d; color:var(--studio-text);}
+  .rail-item.active{background:#ffffff17; color:#fff;}
+  .rail-item .icon{width:14px; height:14px;}
+  .rail-sep{height:1px; background:var(--hair-dark); margin:8px 6px;}
+  .rail-bottom{padding:10px 14px 14px; font-size:12px; color:var(--studio-text-dim); border-top:1px solid var(--hair-dark);}
+
+  .main-col{flex:1; display:flex; flex-direction:column; min-width:0;}
+  .topbar{
+    height:52px; flex:none; display:flex; align-items:center; justify-content:space-between; gap:14px;
+    padding:0 18px; border-bottom:1px solid var(--hair); background:var(--surface);
+  }
+  .topbar-left, .topbar-right{display:flex; align-items:center; gap:8px;}
+  /* ---------- « PLUS D'OPTIONS » (trois petits points) ----------
+     La barre de l'éditeur a fini par porter trop de boutons pour une
+     largeur d'écran normale — la solution WriterDuet/Google Docs : ne
+     garder en clair que les gestes fréquents, et ranger le reste dans un
+     petit panneau qui se déroule sous les trois points, sans jamais
+     recouvrir le texte ni forcer la barre à passer à la ligne. */
+  .tb-more-backdrop{position:fixed; inset:0; z-index:150; background:transparent;}
+  .tb-more-menu{
+    position:fixed; z-index:151; background:var(--surface); border:1px solid var(--hair);
+    border-radius:var(--radius); box-shadow:0 14px 34px #0003; padding:6px;
+    min-width:236px; max-width:280px; max-height:min(72vh,540px); overflow-y:auto;
+    display:flex; flex-direction:column; gap:2px;
+  }
+  .tb-more-menu .btn{width:100%; justify-content:flex-start; text-align:left; background:transparent; border-color:transparent;}
+  .tb-more-menu .btn:hover{background:var(--overlay-hover);}
+  .tb-more-menu .btn.btn-primary{background:var(--accent); color:#fff;}
+  .tb-more-menu .btn.btn-primary:hover{background:#2C7FB0;}
+  .tb-more-sep{height:1px; background:var(--hair); margin:6px 4px;}
+  .save-status{font-size:12.5px; color:var(--ink-soft); display:flex; align-items:center; gap:6px;}
+  /* Pastille d'etat du coffre-fort (fichier local), a cote de "Sauvegarde" */
+  /* Comparaison de versions */
+  .diff-panel{margin:18px 0 60px; border:1px solid var(--hair); border-radius:6px; background:var(--surface); overflow:hidden;}
+  .diff-head{display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;
+    padding:12px 14px; border-bottom:1px solid var(--hair); font-size:13.5px;}
+  .diff-legend{display:flex; align-items:center; gap:10px; flex-wrap:wrap; padding:10px 14px; border-bottom:1px solid var(--hair);}
+  .diff-badge{font-size:12px; padding:3px 9px; border-radius:999px; white-space:nowrap;}
+  .diff-badge.add{color:#127a4b; background:rgba(18,122,75,.12);}
+  .diff-badge.del{color:#a3312a; background:rgba(163,49,42,.12);}
+  .diff-note{font-size:12px; color:var(--ink-soft); flex:1 1 240px;}
+  .diff-body{max-height:60vh; overflow:auto; padding:6px 0;}
+  .diff-line{display:flex; align-items:flex-start; gap:10px; padding:3px 14px; font-size:13.5px; line-height:1.45;}
+  .diff-sign{width:12px; flex:0 0 12px; font-weight:700; text-align:center;}
+  .diff-type{flex:0 0 96px; font-size:11px; text-transform:uppercase; letter-spacing:.04em; color:var(--ink-soft); padding-top:2px;}
+  .diff-text{flex:1; white-space:pre-wrap; word-break:break-word;}
+  .diff-add{background:rgba(18,122,75,.10); color:#0f5f3b;}
+  .diff-del{background:rgba(163,49,42,.10); color:#8d2c26; text-decoration:line-through; text-decoration-color:rgba(141,44,38,.45);}
+  .diff-ctx{color:var(--ink-soft); opacity:.8;}
+  .diff-gap{padding:2px 14px 2px 36px; color:var(--ink-soft); opacity:.55; letter-spacing:.3em;}
+  .diff-same{padding:16px 14px; color:var(--ink-soft);}
+  .lang-flags{display:flex; gap:2px; padding:2px; border-radius:999px; background:var(--chip-bg,rgba(0,0,0,.04));}
+  .lang-flag{font-family:var(--sans); font-size:11.5px; font-weight:700; letter-spacing:.03em; line-height:1;
+    padding:6px 11px; border-radius:999px; border:1px solid transparent;
+    background:transparent; cursor:pointer; color:var(--ink-soft);}
+  .lang-flag:hover{color:var(--ink);}
+  .lang-flag.active{color:#fff; background:var(--accent,#3699D4); border-color:var(--accent,#3699D4);}
+  .vault-chip{font-size:11.5px; line-height:1; padding:4px 8px; border-radius:999px; cursor:pointer;
+    border:1px solid var(--line); color:var(--ink-soft); background:transparent; white-space:nowrap; user-select:none;}
+  .vault-chip:hover{filter:brightness(.97);}
+  .vault-chip.ok{color:#127a4b; border-color:#9ad3b6; background:rgba(18,122,75,.08);}
+  .vault-chip.warn{color:#9a5b00; border-color:#e3b778; background:rgba(154,91,0,.10);}
+  .vault-chip.off{opacity:.75;}
+  /* Bandeau d'alerte quand le navigateur ne conserve rien du tout */
+  .storage-banner{position:fixed; left:16px; right:16px; bottom:16px; z-index:9999; display:flex; gap:14px;
+    align-items:center; justify-content:space-between; flex-wrap:wrap;
+    background:var(--panel,#fff); color:var(--ink,#23262E); border:1px solid #e3b778;
+    border-left:4px solid #d98b1f; border-radius:12px; padding:12px 14px;
+    box-shadow:0 12px 32px rgba(0,0,0,.18); font-size:13px; max-width:920px; margin:0 auto;}
+  .storage-banner .sb-text{flex:1 1 320px; line-height:1.45;}
+  .storage-banner .sb-actions{display:flex; gap:8px; flex-wrap:wrap;}
+  .dot{width:6px; height:6px; border-radius:50%; background:var(--ok);}
+  .dot.saving{background:var(--accent-2); animation:pulse 1s infinite;}
+  @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.35;}}
+  .search-box{display:flex; align-items:center; gap:6px; border:1px solid var(--hair); border-radius:var(--radius); padding:5px 9px; background:var(--surface-soft-2);}
+  .search-box input{border:none; outline:none; background:transparent; font-size:13.5px; width:130px; color:var(--ink);}
+  .search-count{font-size:12px; color:var(--ink-soft); white-space:nowrap;}
+
+  .body-row{flex:1; display:flex; min-height:0;}
+  .center-pane{flex:1; overflow-y:auto; min-width:0;}
+  .side-pane{
+    width:280px; flex:none; border-left:1px solid var(--hair); background:var(--surface); overflow-y:auto;
+    padding:18px;
+  }
+  .pane-title{font-family:var(--display); font-weight:600; font-size:20px; letter-spacing:-0.01em; color:var(--ink); margin:0 0 14px; padding-bottom:10px; border-bottom:1px solid var(--hair);}
+
+  /* ---------- NAVIGATEUR DE SCÈNES ----------
+     Le panneau latéral de l'éditeur : la liste de toutes les scènes,
+     toujours visible à côté du texte. Volontairement sobre — il doit se
+     lire d'un coup d'œil sans jamais tirer l'œil hors de la page. */
+  .nav-pane-head{display:flex; align-items:baseline; justify-content:space-between; gap:8px; margin:0 0 10px; padding-bottom:10px; border-bottom:1px solid var(--hair);}
+  .nav-pane-head .t{font-family:var(--display); font-weight:600; font-size:19px; letter-spacing:-0.01em; color:var(--ink);}
+  .nav-pane-head .c{font-size:12px; color:var(--ink-soft); white-space:nowrap;}
+  .nav-filter{margin:0 0 10px;}
+  .nav-filter input{width:100%; box-sizing:border-box; border:1px solid var(--hair); border-radius:var(--radius); padding:6px 9px; font-size:13px; background:var(--surface-soft-2); color:var(--ink); outline:none;}
+  .nav-filter input:focus{border-color:var(--accent);}
+  .nav-list{display:flex; flex-direction:column; gap:2px;}
+  .nav-item{display:flex; align-items:baseline; gap:8px; padding:7px 8px; border-radius:var(--radius); cursor:pointer; border:1px solid transparent; line-height:1.35;}
+  .nav-item:hover{background:var(--surface-soft-2);}
+  .nav-item.active{background:var(--surface-soft-2); border-color:var(--accent);}
+  .nav-item .nav-num{flex:none; min-width:22px; font-size:11.5px; font-weight:600; color:var(--ink-soft); font-variant-numeric:tabular-nums;}
+  .nav-item.active .nav-num{color:var(--accent);}
+  .nav-item .nav-txt{flex:1; min-width:0; font-size:12.5px; color:var(--ink); text-transform:uppercase; letter-spacing:.01em;
+    overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .nav-item .nav-page{flex:none; font-size:11px; color:var(--ink-soft); font-variant-numeric:tabular-nums;}
+  .nav-empty{padding:14px 2px; font-size:13px; color:var(--ink-soft);}
+
+  /* ---------- PAGE / EDITOR ---------- */
+  .page-scroll{display:flex; justify-content:center; padding:44px 24px 200px;}
+
+  /* PAGINATION
+     ----------
+     Le texte reste un seul flux continu (#page) : c'est indispensable, car
+     chaque ligne est un contentEditable indépendant et découper le flux dans
+     N conteneurs casserait la sélection, le caret et la navigation clavier.
+     Les « feuilles » sont donc dessinées derrière le texte (#sheets), et le
+     moteur de pagination pousse chaque bloc qui déborde vers le haut de la
+     feuille suivante en lui ajoutant une marge haute calculée. Résultat :
+     WYSIWYG, sans jamais toucher au contenu éditable. */
+  /* #pageStack garde TOUJOURS les dimensions réelles du papier (sinon les
+     marges, qui sont en centimètres, ne seraient plus proportionnelles au
+     texte et la pagination inventerait des pages). Quand la fenêtre est
+     trop étroite, c'est #pageZoom qui réduit l'ensemble à l'échelle. */
+  #pageZoom{position:relative;}
+  #pageStack{position:relative; width:var(--page-w,21cm); transform-origin:top left;}
+  #sheets{position:absolute; inset:0; z-index:0; pointer-events:none;}
+  .sheet{
+    position:absolute; left:0; width:100%;
+    background:var(--paper); box-shadow:0 1px 3px #0002, 0 18px 40px -18px #0004;
+  }
+  .sheet-num{
+    position:absolute; top:var(--pn-top,1.2cm); right:var(--pm-right,2.5cm);
+    font-family:var(--script-font,var(--mono)); font-size:11pt; color:var(--paper-ink-soft);
+    -webkit-user-select:none; user-select:none;
+  }
+  .sheet-cont{
+    position:absolute; font-family:var(--script-font,var(--mono)); font-size:10.5pt; letter-spacing:.04em;
+    color:var(--paper-ink-soft); opacity:.75; -webkit-user-select:none; user-select:none;
+  }
+  .sheet-cont.is-bottom{bottom:calc(var(--pm-bottom,2.5cm) * .35); right:var(--pm-right,2.5cm);}
+  .sheet-cont.is-top{top:calc(var(--pn-top,1.2cm) + 1.1em); left:var(--pm-left,3cm);}
+  .sheet-tab{
+    position:absolute; left:0; right:0; text-align:center; font-family:var(--sans); font-size:9.5px;
+    font-weight:700; letter-spacing:.09em; text-transform:uppercase; color:var(--ink-soft); opacity:.55;
+    -webkit-user-select:none; user-select:none;
+  }
+  #page{
+    position:relative; z-index:1; width:100%; background:transparent;
+    font-family:var(--script-font,var(--mono)); font-size:12pt; line-height:1.5; color:var(--paper-ink);
+    padding: var(--pm-top,2.5cm) var(--pm-right,2.5cm) var(--pm-bottom,2.5cm) var(--pm-left,3cm);
+  }
+
+  .topbar select.tb-font{height:32px; width:104px; border:1px solid var(--hair); border-radius:10px; background:var(--surface); color:var(--ink); font-size:12.5px; font-weight:600; padding:0 8px; cursor:pointer;}
+  .topbar select.tb-font:focus{outline:none; border-color:var(--accent); box-shadow:0 0 0 3px #3699D433;}
+  @media (max-width:1560px){ .topbar select.tb-font, .topbar select.tb-font + .tb-div{display:none;} }
+  .tb-more-menu .tb-font-row .icon{width:16px; height:16px; flex:none;}
+  .tb-more-menu .tb-font-row{display:flex; align-items:center; gap:8px; padding:6px 10px; font-size:12.5px; font-weight:600; color:var(--ink-soft);}
+  .tb-more-menu .tb-font-row select{flex:1; height:30px; border:1px solid var(--hair); border-radius:8px; background:var(--surface); color:var(--ink); font-size:12.5px; padding:0 6px;}
+  /* Repère discret sur la 1re ligne rejetée en haut d'une nouvelle feuille. */
+  /* v49 : le point « haut de page » n'est plus un ::after posé SUR la ligne. Ajouté après la mesure, il suffisait à
+     faire passer une ligne limite de 2 à 3 rangées (quirk de white-space:pre-wrap) : la pagination décalait alors
+     toute la page de 16 px. Il est maintenant dessiné dans la feuille (voir paginateEditor) : rien dans le texte
+     ne change plus après la mesure. */
+  .pg-dot{position:absolute; left:calc(var(--pm-left,3cm) - 1.1cm); width:5px; height:5px; border-radius:50%;
+    background:var(--accent-2); opacity:.55; pointer-events:none;}
+  .pg-indicator{
+    display:flex; align-items:center; gap:6px; font-family:var(--sans); font-size:12.5px; font-weight:600;
+    color:var(--ink-soft); background:var(--chip-bg); border:1px solid var(--hair); border-radius:var(--radius);
+    padding:4px 9px; cursor:pointer; white-space:nowrap;
+  }
+  .pg-indicator:hover{color:var(--ink);}
+  .pg-indicator b{font-weight:700; color:var(--ink);}
+  .line{
+    outline:none; white-space:pre-wrap; word-wrap:break-word; position:relative; min-height:1.5em;
+    padding:1px 3px; margin:0 -3px;
+  }
+  .line:focus{background:#3699D40c;}
+  .line[data-empty="1"]:focus:before{content: attr(data-placeholder); color:#00000030; pointer-events:none;}
+  .line--scene{font-weight:var(--scene-weight,700); text-transform:uppercase; margin-top:1.6em; margin-left:var(--scene-indent,0);}
+  /* v59 : sur un en-tête de scène vide et numéroté, le numéro reste dans la marge et l'exemple s'affiche dans la ligne (il passait sous le bouton de la scène). */
+  .line--scene[data-scene-num][data-empty="1"]:focus:before{content:attr(data-scene-num); color:var(--paper-ink-soft);}
+  .line--scene[data-scene-num][data-empty="1"]:focus:not([data-comment]):after{content:attr(data-placeholder); color:#00000030; pointer-events:none; white-space:nowrap;}
+  /* v60 : nouveau scénario — la toute première ligne, encore vide, se repère d'un coup d'œil : un exemple en filigrane et un léger fond, sans rien de lourd. Ça disparaît dès qu'on écrit. */
+  #page > .line--scene[data-empty="1"]:first-child:not(:focus){background:#3699D40a; border-radius:2px; box-shadow:inset 2px 0 0 #3699D455;}
+  #page > .line--scene[data-empty="1"]:first-child:not(:focus):not([data-comment]):after{content:attr(data-placeholder); color:#00000026; pointer-events:none; white-space:nowrap;}
+  /* Scene number is drawn as a ::before pseudo-element (like the placeholder
+     text below), never as a real DOM node inside the editable line. A real
+     contenteditable="false" node used to sit here; as long as the line had
+     no other text yet, that node was the line's *only* content and browsers
+     refuse to place an editable caret inside a contentEditable element whose
+     entire content is non-editable — so typing into a brand-new scene
+     heading silently did nothing. A ::before never enters the DOM as a
+     child, so it can never block the caret and is automatically excluded
+     from textContent/copy-paste. */
+  .line--scene[data-scene-num]:before{
+    content: attr(data-scene-num);
+    position:absolute; left:calc(-1.7cm - var(--sn-gap,.4cm)); width:1.7cm; text-align:right; color:var(--paper-ink-soft); font-weight:400; font-size:10.5pt;
+    text-transform:none; -webkit-user-select:none; user-select:none;
+  }
+  /* Repère de commentaire (fonctionnalité inspirée de WriterDuet) : une
+     ligne qui porte une remarque (Ctrl/Cmd+Maj+M) affiche cette petite
+     pastille dans la marge de droite, avec le texte du commentaire en
+     info-bulle native (attribut title posé sur la ligne elle-même) — sans
+     jamais toucher au contenu éditable ni apparaître dans les exports. */
+  .line[data-comment]:after{
+    content:'💬'; position:absolute; right:-1.9cm; top:0; width:1.5cm; font-size:9.5pt;
+    text-transform:none; -webkit-user-select:none; user-select:none; opacity:.75;
+  }
+  /* Un paragraphe d'action est toujours précédé d'une ligne vide dans un
+     scénario — c'est d'ailleurs déjà ce que produit l'export .txt/.fountain
+     (une ligne vide avant chaque action). Sans cette marge, deux
+     paragraphes d'action qui se suivent, ou une action juste après une
+     réplique, se retrouvaient collés à l'écran comme à l'impression. */
+  .line--action{margin-top:1em; margin-left:var(--action-indent,0);}
+  .line--character{margin-top:1em; font-weight:var(--char-weight,400); text-transform:uppercase; margin-left:var(--char-indent,0);}
+  .line--parenthetical{font-style:italic; margin-left:var(--paren-indent,1.2cm); margin-right:2cm; color:#3a352c;}
+  .line--dialogue{margin-left:var(--dlg-indent,1.2cm); margin-right:var(--dlg-right,1cm); max-width:var(--dlg-width,none);}
+  /* Deux blocs de dialogue qui se suivent = une réplique en deux
+     paragraphes (le seul cas où ça arrive) : ligne vide entre les deux. */
+  .line--dialogue + .line--dialogue{margin-top:1em;}
+
+  /* ---------- DIALOGUE SIMULTANÉ (dual dialogue) ----------
+     Deux répliques qui se parlent EN MÊME TEMPS, côte à côte, comme dans
+     WriterDuet et Final Draft. Le bloc entier (les deux colonnes) est un
+     seul enfant de #page portant la classe .line : le moteur de
+     pagination le mesure donc comme un bloc unique et ne coupe JAMAIS
+     une colonne en deux — c'est exactement la règle du métier.
+     Les colonnes reprennent les mêmes proportions que les logiciels du
+     métier : nom du personnage centré au-dessus de sa colonne, réplique
+     en dessous, les deux colonnes se partageant la largeur du texte. */
+  .line--dual{
+    display:flex; align-items:flex-start; gap:var(--dual-gap,1cm);
+    margin:1.2em 0 0; padding:1px 3px; margin-left:-3px; margin-right:-3px;
+  }
+  .dual-col{flex:1 1 0; min-width:0;}
+  .dual-col > .line{margin-left:0; margin-right:0; max-width:none;}
+  .dual-col > .line--character{
+    margin-top:0; margin-left:var(--dual-char-indent,1.2cm); margin-right:0;
+  }
+  .dual-col > .line--dialogue{margin-top:.25em; margin-left:0; margin-right:0;}
+  .dual-col > .line--dialogue + .line--dialogue{margin-top:1em;}
+  .dual-col > .line--parenthetical{
+    margin-top:0; margin-left:var(--dual-paren-indent,.7cm); margin-right:0;
+  }
+  /* Le bloc étant lui-même une .line, le Mode Focus l'estomperait deux
+     fois (le conteneur ET la réplique dedans) : on ne laisse agir que
+     l'estompage des lignes réelles. */
+  #page.focus-mode .line--dual{opacity:1;}
+  .line--transition{text-transform:uppercase; text-align:var(--trans-align,right); margin-top:1.2em;}
+  .line--shot{font-weight:var(--shot-weight,700); text-transform:uppercase; margin-top:1em; margin-left:0;}
+  .line--text{margin-top:1em; margin-left:0;}
+  /* ---------- CARTON : texte placé librement (carton de titre, d'époque, de fin…) ----------
+     Tout le style vient de variables CSS posées sur la ligne par applyCardStyle() à partir
+     de el.card (taille, alignement, largeur, police, gras/italique/majuscules, espacement)
+     et de deux attributs (data-frame : cadre ; data-full : carton plein page, centré au
+     milieu de la feuille). Les marges passent par des variables pour que la pagination,
+     qui réécrit margin-top en ligne, puisse toujours revenir à la valeur de la classe. */
+  /* v48 : MISE EN PAGE LIBRE d'une ligne (bouton « Aligner »). Fonctionne sur n'importe quel type de ligne (action,
+     dialogue, scène…), sans passer par un carton. Les retraits se mesurent depuis les bords de la colonne de texte ;
+     0 cm = exactement comme une ligne d'action. Les variables sont posées par applyLayoutStyle(). */
+  .line[data-lay-a]{text-align:var(--lay-a);}
+  .line[data-lay-l]{margin-left:var(--lay-l);}
+  .line[data-lay-r]{margin-right:var(--lay-r);}
+  .line[data-lay-l], .line[data-lay-r]{max-width:none; min-width:3cm;}
+  .line--card{
+    font-size:var(--card-size,22pt); line-height:1.35; text-align:var(--card-align,center);
+    font-weight:var(--card-weight,700); font-style:var(--card-style,normal);
+    text-transform:var(--card-case,uppercase); font-family:var(--card-font,var(--mono));
+    width:var(--card-width,auto); margin-left:var(--card-ml,-3px); margin-right:var(--card-mr,-3px);
+    margin-top:var(--card-sp,36pt); margin-bottom:var(--card-sp,36pt);
+  }
+  .line--card[data-frame="lines"]{border-top:1.5px solid currentColor; border-bottom:1.5px solid currentColor; padding:.4em 3px;}
+  .line--card[data-frame="box"]{border:1.5px solid currentColor; padding:.5em .8em;}
+  .line--card[data-frame="double"]{border:4px double currentColor; padding:.5em .8em;}
+  .line--card[data-full="1"]{display:flex; flex-direction:column; justify-content:center; margin-top:0; margin-bottom:0;}
+  .card-panel .cp-row{margin-bottom:12px;}
+  .card-panel .cp-lbl{font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:var(--ink-soft); margin-bottom:5px;}
+  .card-panel .cp-seg{display:flex; flex-wrap:wrap; gap:4px;}
+  .card-panel .cp-seg .btn{min-width:34px; justify-content:center;}
+  .card-panel input[type=range]{width:100%;}
+  .line--note{
+    background:#DCEEFB; border-left:3px solid var(--accent-2); padding:6px 10px; font-style:italic; font-size:10.5pt;
+    margin:8px 0; color:#14425E; font-family:var(--sans);
+  }
+  /* v49 : une note n'est jamais imprimée ni exportée, donc elle ne doit JAMAIS occuper de place dans la page.
+     Elle flotte dans la marge de droite, à la hauteur où elle a été écrite : la pagination de l'éditeur est
+     ainsi exactement celle de l'export. (Marge négative = boîte de marge de largeur nulle : aucun texte ne
+     la contourne et aucune ligne n'est décalée.) */
+  #page > .line--note{
+    position:absolute; left:calc(100% - 58px); top:auto; width:24px; height:24px; margin:0; padding:0; overflow:hidden;
+    font-size:0; line-height:0; box-sizing:border-box; z-index:3; cursor:pointer; border-radius:6px;
+  }
+  #page > .line--note:not(:hover):not(:focus)::before{
+    content:'\270E'; display:block; font:14px/22px var(--sans); font-style:normal; text-align:center; color:#14425E;
+  }
+  /* survol / édition : la note se déplie par-dessus le texte (aucune place prise dans la page) */
+  #page > .line--note:hover, #page > .line--note:focus{
+    left:auto; right:12px; width:300px; height:auto; padding:6px 10px; overflow:visible; font-size:10.5pt; line-height:1.4;
+    cursor:text; box-shadow:0 6px 18px -6px #0005; z-index:6;
+  }
+  /* v83 : la note dépliée devenait transparente (la règle « .line:focus » écrasait son fond) et se mélangeait au texte du scénario.
+     Elle reste maintenant une vraie carte opaque, avec un en-tête « Note » et un contour net quand on l'édite. */
+  #page > .line--note:hover, #page > .line--note:focus{
+    background:#EAF4FC; color:#14425E; border:1px solid #A9D1EC; border-left:3px solid var(--accent-2); border-radius:8px;
+    padding:8px 12px 10px; box-shadow:0 10px 28px -8px #0006, 0 2px 6px -2px #0003;
+  }
+  #page > .line--note:hover::before, #page > .line--note:focus::before{
+    content:'\270E  NOTE'; display:block; font:700 10px/1 var(--sans); font-style:normal; letter-spacing:.09em;
+    color:var(--accent-2); margin:0 0 7px; padding-bottom:6px; border-bottom:1px solid #A9D1EC; pointer-events:none; user-select:none;
+  }
+  #page > .line--note:focus{
+    background:#fff; font-style:normal; caret-color:var(--accent-2); outline:none;
+    box-shadow:0 0 0 3px rgba(54,153,212,.28), 0 10px 28px -8px #0006, 0 2px 6px -2px #0003; border-color:var(--accent);
+    border-left-color:var(--accent-2);
+  }
+  html[data-theme="dark"] #page > .line--note:focus{background:#F6FAFD;}
+  .note-bar{position:fixed; z-index:60; display:none; align-items:center; gap:5px; height:20px; padding:0 7px; border:0; border-radius:6px;
+    background:transparent; color:#B02A2A; font:600 11px/1 var(--sans); cursor:pointer; transition:background .12s;}
+  .note-bar .icon{width:12px; height:12px;}
+  .note-bar:hover{background:rgba(214,69,69,.14);}
+  .note-bar:focus-visible{outline:none; box-shadow:0 0 0 2px rgba(214,69,69,.35);}
+  /* Bloc coupé entre deux pages : un flottant pleine largeur, dont la forme (shape-outside)
+     ne commence qu'à la ligne de coupe, repousse la suite du texte en haut de la feuille
+     suivante SANS toucher au contenu éditable. */
+  .line.is-split{display:flow-root;}
+  .line.is-split::before{content:""; float:left; width:100%;
+    height:calc(var(--sp-top,0px) + var(--sp-h,0px)); shape-outside:inset(var(--sp-top,0px) 0 0 0); pointer-events:none;}
+  /* Coupe au milieu d'une ligne (juste après une fin de phrase) : le flotteur passe à droite et sa forme
+     « mord » seulement sur la fin de la ligne de coupe, puis sur tout ce qui suit. */
+  .line.is-split-mid::before{float:right; shape-outside:polygon(var(--sp-x,0px) var(--sp-y1,0px), 100% var(--sp-y1,0px), 100% 100%, 0 100%, 0 var(--sp-top,0px), var(--sp-x,0px) var(--sp-top,0px));}
+  .pg-mark-lbl{position:absolute; font-family:var(--script-font,var(--mono)); font-size:12pt; line-height:1.5; color:var(--paper-ink,#111);
+    text-transform:uppercase; white-space:pre; pointer-events:none; user-select:none;}
+  /* Mention de continuité — (CONT'D)/(SUITE) — rendue en ::after à partir de
+     data-contd. Elle n'appartient donc PAS au contenu éditable : le curseur
+     ne peut pas entrer dedans, Retour arrière ne peut pas l'effacer, et elle
+     ne remonte jamais dans el.text via textContent. */
+  .line--character[data-contd]::after{ content:" " attr(data-contd); }
+  /* Menu des extensions, ouvert en tapant « ( » après un nom de personnage. */
+  .ext-menu{
+    position:fixed; z-index:70; background:var(--surface); border:1px solid var(--hair);
+    border-radius:var(--radius); box-shadow:0 10px 30px -10px #0005; padding:4px;
+    max-height:260px; overflow:auto; min-width:250px; font-family:var(--sans);
+  }
+  .ext-item{
+    display:block; width:100%; text-align:left; border:0; background:none; cursor:pointer;
+    padding:6px 9px; border-radius:calc(var(--radius) - 2px); color:var(--ink); font-size:13px;
+  }
+  .ext-item .ext-code{font-family:var(--mono); font-weight:700;}
+  .ext-item .ext-desc{display:block; font-size:11.5px; color:var(--ink-soft); margin-top:1px;}
+  .ext-item.sel{background:var(--accent); color:#fff;}
+  .ext-item.sel .ext-desc{color:#ffffffcc;}
+  .ext-hint{font-size:11px; color:var(--ink-soft); padding:5px 9px 3px; border-top:1px solid var(--hair); margin-top:4px;}
+  .type-badge{
+    position:absolute; right:-1.55cm; top:0; font-family:var(--sans); font-size:9px; font-weight:700; text-transform:uppercase;
+    letter-spacing:.03em; color:#00000000; width:1.4cm; -webkit-user-select:none; user-select:none;
+  }
+  .line:focus .type-badge{color:var(--accent);}
+  /* Les variables de format sont posées sur le CONTENEUR (et non sur #page)
+     pour que les feuilles, les numéros de page et les pages d'impression
+     héritent exactement des mêmes marges que le texte. */
+  .format-us{--page-w:8.5in; --page-h:11in; --pn-top:.5in;
+    --pm-top:1in; --pm-bottom:1in; --pm-left:1.5in; --pm-right:1in;
+    --char-indent:2.2in; --paren-indent:1.6in; --dlg-indent:1in; --dlg-width:3.5in; --dlg-right:auto;
+    --dual-gap:.4in; --dual-char-indent:.6in; --dual-paren-indent:.3in;}
+  .format-fr{--page-w:21cm; --page-h:29.7cm; --pn-top:1.2cm;
+    --pm-top:2.5cm; --pm-bottom:2.5cm; --pm-left:calc(1.5in - 3px); --pm-right:calc(21cm - 7.5in);
+    --char-indent:2in; --paren-indent:2.08in; --dlg-indent:1in; --dlg-width:calc(3.5in + 6px); --dlg-right:auto;
+    --sn-gap:.544in;
+    /* v46 : gabarit calé sur WriterDuet (A4) : texte de 1,5 po à 7,5 po (432 pt), personnage à 3,5 po, réplique à 2,5 po sur 3,5 po,
+       didascalie à ≈3,58 po, numéro de scène à 0,75 po. Les 3 px retirés à la marge gauche compensent le padding des lignes. */
+    --dual-gap:1cm; --dual-char-indent:1.3cm; --dual-paren-indent:.7cm;}
+  .titlepage{
+    width:var(--page-w,21cm); min-height:var(--page-h,29.7cm); background:var(--tp-bg,var(--paper)); box-shadow:0 1px 3px #0002; margin-bottom:24px;
+    font-family:var(--tp-font,var(--mono)); color:var(--tp-color,var(--paper-ink));
+    display:flex; flex-direction:column; align-items:var(--tp-align-items,center); justify-content:center;
+    text-align:var(--tp-text-align,center); gap:6px; padding:3cm; position:relative; overflow:hidden;
+    background-image:var(--tp-pattern-image,none); background-size:var(--tp-pattern-size,auto);
+    -webkit-print-color-adjust:exact; print-color-adjust:exact; color-adjust:exact;
+  }
+  .titlepage .tp-bg-image{position:absolute; inset:0; width:100%; height:100%; object-fit:cover; opacity:var(--tp-img-opacity,1); z-index:0;}
+  .titlepage .tp-drawing-layer{position:absolute; inset:0; width:100%; height:100%; z-index:1; pointer-events:none;}
+  /* Image libre de la page de titre : posée où l'on veut, à la taille voulue (valeurs en % de la page). */
+  .titlepage .tp-title.tp-title-off{visibility:hidden;}
+  .titlepage .tp-free-img{position:absolute; z-index:2; margin:0; padding:0; line-height:0; box-sizing:border-box;}
+  .titlepage .tp-free-img > img{display:block; width:100%; height:100%; object-fit:fill; pointer-events:none; -webkit-user-drag:none; user-select:none;}
+  .tp-editing .tp-free-img{cursor:move; touch-action:none; outline:2px solid transparent; outline-offset:0; transition:outline-color .12s;}
+  .tp-editing .tp-free-img:hover{outline-color:#3699D470;}
+  .tp-editing .tp-free-img.tp-sel{outline-color:var(--accent);}
+  .tp-free-h{position:absolute; width:calc(13px * var(--tp-hs,1)); height:calc(13px * var(--tp-hs,1)); margin:calc(-6.5px * var(--tp-hs,1)); background:#fff; border:calc(2px * var(--tp-hs,1)) solid var(--accent); border-radius:50%; box-sizing:border-box; z-index:5; touch-action:none;}
+  .tp-free-h[data-h="nw"]{left:0; top:0; cursor:nwse-resize;} .tp-free-h[data-h="ne"]{left:100%; top:0; cursor:nesw-resize;}
+  .tp-free-h[data-h="sw"]{left:0; top:100%; cursor:nesw-resize;} .tp-free-h[data-h="se"]{left:100%; top:100%; cursor:nwse-resize;}
+  .tp-free-h[data-h="n"]{left:50%; top:0; cursor:ns-resize; border-radius:3px;} .tp-free-h[data-h="s"]{left:50%; top:100%; cursor:ns-resize; border-radius:3px;}
+  .tp-free-h[data-h="w"]{left:0; top:50%; cursor:ew-resize; border-radius:3px;} .tp-free-h[data-h="e"]{left:100%; top:50%; cursor:ew-resize; border-radius:3px;}
+  .tp-drawing-on .tp-free-img{pointer-events:none;}
+  .tp-checkrow{display:flex; align-items:center; gap:9px; font-size:13.5px; color:var(--ink); cursor:pointer; margin-top:10px;}
+  .tp-checkrow input{accent-color:var(--accent); width:16px; height:16px;}
+  .titlepage .tp-content{position:relative; z-index:2; display:flex; flex-direction:column; align-items:var(--tp-align-items,center); gap:6px; width:100%;}
+  .titlepage .tp-title{font-size:var(--tp-title-size,20pt); font-weight:700; text-transform:uppercase; margin-bottom:30px;}
+  .titlepage .tp-sub{font-size:var(--tp-sub-size,12pt); margin-bottom:60px;}
+  .titlepage .tp-author{font-size:var(--tp-author-size,12pt);}
+  .titlepage .tp-author-label{margin-bottom:4px;}
+  .titlepage .tp-author-name{}
+  .titlepage .tp-extra-wrap{display:flex; flex-direction:column; gap:5px; margin:16px 0 0;}
+  .titlepage .tp-extra-line{font-size:var(--tp-sub-size,12pt); opacity:.85;}
+  .titlepage .tp-foot{margin-top:auto; font-size:var(--tp-foot-size,10pt); opacity:.7;}
+  /* v51 : chaque élément de la page de titre a sa propre police, taille, couleur, alignement, gras / italique / souligné.
+     Sans réglage, chaque variable retombe sur la valeur d'avant : rendu strictement identique. */
+  .titlepage .tp-title{font-family:var(--tp-title-font,inherit); font-weight:var(--tp-title-weight,700); font-style:var(--tp-title-style,inherit); text-decoration:var(--tp-title-deco,none); color:var(--tp-title-color,inherit); align-self:var(--tp-title-self,auto); text-align:var(--tp-title-ta,inherit);}
+  .titlepage .tp-sub{font-family:var(--tp-sub-font,inherit); font-weight:var(--tp-sub-weight,inherit); font-style:var(--tp-sub-style,inherit); text-decoration:var(--tp-sub-deco,none); color:var(--tp-sub-color,inherit); align-self:var(--tp-sub-self,auto); text-align:var(--tp-sub-ta,inherit);}
+  .titlepage .tp-author{align-self:var(--tp-author-box,auto);}
+  .titlepage .tp-author-label{font-family:var(--tp-by-font,inherit); font-size:var(--tp-by-size,inherit); font-weight:var(--tp-by-weight,inherit); font-style:var(--tp-by-style,inherit); text-decoration:var(--tp-by-deco,none); color:var(--tp-by-color,inherit); text-align:var(--tp-by-ta,inherit);}
+  .titlepage .tp-author-name{font-family:var(--tp-author-font,inherit); font-weight:var(--tp-author-weight,inherit); font-style:var(--tp-author-style,inherit); text-decoration:var(--tp-author-deco,none); color:var(--tp-author-color,inherit); text-align:var(--tp-author-ta,inherit);}
+  .titlepage .tp-extra-wrap{align-self:var(--tp-extra-self,auto);}
+  .titlepage .tp-extra-line{font-size:var(--tp-extra-size,var(--tp-sub-size,12pt)); font-family:var(--tp-extra-font,inherit); font-weight:var(--tp-extra-weight,inherit); font-style:var(--tp-extra-style,inherit); text-decoration:var(--tp-extra-deco,none); color:var(--tp-extra-color,inherit); text-align:var(--tp-extra-ta,inherit);}
+  .titlepage .tp-foot{font-family:var(--tp-foot-font,inherit); font-weight:var(--tp-foot-weight,inherit); font-style:var(--tp-foot-style,inherit); text-decoration:var(--tp-foot-deco,none); color:var(--tp-foot-color,inherit); align-self:var(--tp-foot-self,auto); text-align:var(--tp-foot-ta,inherit);}
+
+  /* ---------- TITLE PAGE DESIGN TAB ---------- */
+  .tp-design-wrap{
+    display:flex; gap:32px; padding:22px 24px 70px; align-items:flex-start; flex-wrap:wrap;
+    max-width:1500px; margin:0 auto; justify-content:center;
+  }
+  .tp-preview-col{
+    flex:none; position:sticky; top:18px; display:flex; flex-direction:column; align-items:center; gap:12px;
+  }
+  .tp-preview-mat{
+    padding:26px 22px; border-radius:10px;
+    background:
+      radial-gradient(circle at 30% 20%, #0000000a, transparent 55%),
+      var(--surface-soft);
+    border:1px solid var(--hair);
+  }
+  .tp-preview-shell{
+    width:14.3cm; height:20.2cm; overflow:hidden; position:relative; flex:none;
+    box-shadow:0 1px 2px #0003, 0 24px 46px -20px #00000040; background:var(--surface);
+  }
+  .tp-preview-shell .titlepage{
+    width:21cm; min-height:29.7cm; transform:scale(.68); transform-origin:top left; margin-bottom:0; box-shadow:none;
+  }
+  .tp-preview-caption{
+    font-size:13px; color:var(--ink-soft); text-align:center; max-width:14.3cm; line-height:1.55;
+  }
+  .tp-preview-caption b{color:var(--ink); font-weight:600;}
+  .tp-controls-col{
+    flex:1 1 560px; min-width:300px; max-width:820px;
+    display:grid; grid-template-columns:repeat(auto-fit, minmax(280px,1fr)); gap:18px; align-content:start;
+  }
+  .tp-panel{
+    background:var(--surface); border:1px solid var(--hair); border-radius:10px; padding:18px 20px;
+    box-shadow:0 1px 2px #00000008, 0 10px 24px -18px #00000030;
+  }
+  .tp-panel-head{
+    display:flex; align-items:center; gap:10px; margin-bottom:10px; padding-bottom:10px;
+    border-bottom:1px solid var(--hair);
+  }
+  .tp-panel-icon{
+    width:26px; height:26px; border-radius:7px; background:#3699D41a; color:var(--accent-2);
+    display:flex; align-items:center; justify-content:center; flex:none;
+  }
+  .tp-panel-icon svg{width:14px; height:14px;}
+  .tp-panel-icon.tp-mono{font-family:var(--mono); font-size:12px; font-weight:700; background:#3699D41a; color:var(--accent-2);}
+  .tp-panel-head h4{margin:0; font-size:14.5px; font-weight:700; color:var(--ink);}
+  .tp-field{padding:14px 0;}
+  .tp-field:first-of-type{padding-top:10px;}
+  .tp-field + .tp-field{border-top:1px solid var(--hair);}
+  .tp-field-label{font-size:13.5px; font-weight:600; color:var(--ink-soft); margin-bottom:7px; display:block;}
+  .tp-field-help{font-size:13px; color:var(--ink-soft); margin:6px 0 0; line-height:1.5;}
+  /* Onglet Paramètres : mêmes tailles que l'onglet Page de titre
+     (.tp-field-label / .tp-field-help ci-dessus) pour une lecture
+     uniforme d'un onglet à l'autre — libellés à case à cocher un peu
+     plus grands, paragraphes d'explication remontés au même corps que
+     le reste de la D.A., avec le même interlignage confortable. */
+  .panel-block .opt-label{display:flex; gap:8px; align-items:center; font-size:13.5px; font-weight:600; color:var(--ink); margin-bottom:10px;}
+  .panel-block .opt-help{font-size:13px; color:var(--ink-soft); margin:0; line-height:1.5;}
+  .tp-field input[type=text], .tp-field textarea{
+    width:100%; box-sizing:border-box; padding:9px 10px; border:1px solid var(--hair); border-radius:var(--radius);
+    font-size:14.5px; background:var(--surface-soft); color:var(--ink); resize:vertical;
+  }
+  .tp-field input[type=text]:focus, .tp-field textarea:focus{outline:none; border-color:var(--accent);}
+  .tp-swatches{display:flex; gap:8px; flex-wrap:wrap; margin-top:4px;}
+  .tp-swatch{
+    width:23px; height:23px; border-radius:50%; border:1.5px solid #0000001a; cursor:pointer; padding:0; flex:none;
+  }
+  .tp-swatch.active{box-shadow:0 0 0 2px var(--surface), 0 0 0 4px var(--accent);}
+  .tp-color-row{display:flex; align-items:center; gap:10px;}
+  .tp-color-row input[type=color]{width:34px; height:28px; border:1px solid var(--hair); border-radius:6px; padding:2px; background:var(--surface);}
+  .tp-range-row{display:flex; align-items:center; gap:10px;}
+  .tp-range-row + .tp-range-row{margin-top:9px;}
+  .tp-range-row label{width:82px; font-size:13px; color:var(--ink-soft); flex:none;}
+  .tp-range-row input[type=range]{flex:1; accent-color:var(--accent);}
+  .tp-range-row .val{font-size:12.5px; color:var(--ink-soft); width:42px; text-align:right; flex:none;}
+  .tp-font-grid{display:grid; grid-template-columns:1fr 1fr; gap:8px;}
+  .tp-font-opt{
+    border:1.5px solid var(--hair); border-radius:8px; padding:10px 8px; cursor:pointer; text-align:center; font-size:14px; background:var(--surface-soft);
+    transition:border-color .12s, background .12s;
+  }
+  .tp-font-opt:hover{border-color:#3699D466;}
+  .tp-font-opt.active{border-color:var(--accent); background:#3699D414;}
+  .tp-pattern-grid{display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px;}
+  .tp-pattern-opt{
+    border:1.5px solid var(--hair); border-radius:8px; padding:8px 4px; cursor:pointer; text-align:center; font-size:12.5px; background:var(--surface-soft);
+    transition:border-color .12s, background .12s;
+  }
+  .tp-pattern-opt:hover{border-color:#3699D466;}
+  .tp-pattern-opt.active{border-color:var(--accent); background:#3699D414;}
+  .tp-pattern-swatch{width:100%; height:26px; border-radius:5px; margin-bottom:5px; border:1px solid var(--hair);}
+  .tp-align-choice{display:flex; gap:8px;}
+  .tp-align-opt{
+    flex:1; border:1.5px solid var(--hair); border-radius:8px; padding:9px 8px; text-align:center; font-size:13.5px; cursor:pointer;
+    background:var(--surface-soft); transition:border-color .12s, background .12s; color:var(--ink);
+  }
+  .tp-align-opt:hover{border-color:#3699D466;}
+  .tp-align-opt.active{border-color:var(--accent); background:#3699D414; color:var(--accent-2); font-weight:600;}
+  .tp-draw-toolbar{display:flex; align-items:center; gap:8px; flex-wrap:wrap;}
+  .tp-draw-toolbar + .tp-draw-toolbar{margin-top:10px;}
+  .tp-pen-size{width:18px; height:18px; border-radius:50%; border:1.5px solid var(--hair); background:var(--surface); cursor:pointer; padding:0;}
+  .tp-pen-size.active{border-color:var(--accent); box-shadow:0 0 0 2px #3699D433;}
+  /* v51 : section Page de titre façon WriterDuet × Apple — barre d'outils flottante au-dessus d'une page qu'on édite directement. */
+  .tp-tb-wrap{position:sticky; top:8px; z-index:45; display:flex; justify-content:center; padding:10px 24px 0; pointer-events:none;}
+  .tp-tb{pointer-events:auto; display:flex; align-items:center; justify-content:center; flex-wrap:wrap; gap:3px; padding:6px 8px; max-width:100%;
+    border-radius:14px; background:var(--surface); background:color-mix(in srgb, var(--surface) 84%, transparent);
+    -webkit-backdrop-filter:saturate(180%) blur(18px); backdrop-filter:saturate(180%) blur(18px);
+    border:1px solid var(--hair); box-shadow:0 1px 2px #0000000d, 0 14px 34px -14px #00000052; font-family:var(--sans);}
+  .tp-tb-chip{font-size:12px; font-weight:600; color:var(--accent-2); background:#3699D41a; border-radius:8px; padding:6px 11px; margin-right:3px; white-space:nowrap;}
+  .tp-tb-sep{width:1px; height:22px; background:var(--hair); margin:0 6px; flex:none;}
+  .tp-tb-btn{height:32px; min-width:32px; padding:0 8px; border:0; background:transparent; border-radius:8px; cursor:pointer; color:var(--ink); display:inline-flex; align-items:center; justify-content:center; gap:6px; font-size:14px; font-family:var(--sans); line-height:1; transition:background .1s;}
+  .tp-tb-btn:hover{background:#3699D414;}
+  .tp-tb-btn.on{background:#3699D424; color:var(--accent-2);}
+  .tp-tb-btn.txt{font-size:13px; color:var(--ink-soft);}
+  .tp-tb-btn svg{display:block;}
+  .tp-tb-font{width:190px; justify-content:space-between; border:1px solid var(--hair); background:var(--surface-soft); padding:0 10px;}
+  .tp-tb-font.open{border-color:var(--accent);}
+  .tp-tb-size{display:inline-flex; align-items:center; border:1px solid var(--hair); border-radius:8px; background:var(--surface-soft);}
+  .tp-tb-size .tp-tb-btn{height:30px; min-width:28px; padding:0; font-size:16px; color:var(--ink-soft);}
+  .tp-tb-size input{width:36px; height:30px; border:0; background:transparent; text-align:center; font-size:14px; color:var(--ink); font-family:var(--sans); font-variant-numeric:tabular-nums; padding:0; outline:none;}
+  .tp-tb-fmt{width:32px; font-size:15px;}
+  .tp-tb-dot{width:18px; height:18px; border-radius:50%; border:1.5px solid #00000030; box-shadow:inset 0 0 0 2px var(--surface); flex:none;}
+  .tp-col-wrap{position:relative;}
+  .tp-tb-pop{position:absolute; z-index:70; right:0; top:calc(100% + 8px); width:222px; padding:12px; background:var(--surface); border:1px solid var(--hair); border-radius:12px; box-shadow:0 18px 44px -14px #00000066;}
+  .tp-tb-swatches{display:grid; grid-template-columns:repeat(6,1fr); gap:8px;}
+  .tp-tb-swatches .tp-swatch{width:24px; height:24px;}
+  .tp-tb-pop-row{display:flex; align-items:center; justify-content:space-between; gap:8px; margin-top:12px; padding-top:10px; border-top:1px solid var(--hair); font-size:13px; color:var(--ink-soft); font-family:var(--sans);}
+  .tp-tb-pop-row input[type=color]{width:38px; height:28px; border:1px solid var(--hair); border-radius:6px; padding:2px; background:var(--surface);}
+  .tp-tb-auto{border:1px solid var(--hair); background:var(--surface-soft); color:var(--ink); border-radius:8px; padding:5px 10px; font-size:12.5px; cursor:pointer; font-family:var(--sans);}
+  .tp-tb-auto:hover{border-color:#3699D466;}
+  .tp-preview-col{top:84px;}
+  .tp-controls-col{flex:1 1 300px; min-width:280px;}
+  .tp-preview-shell{width:15.5cm; height:21.9cm;}
+  .tp-preview-shell .titlepage{transform:scale(.738);}
+  .tp-preview-caption{max-width:15.5cm;}
+  .tp-preview-shell.tp-page-sel{box-shadow:0 0 0 3px var(--accent), 0 24px 46px -20px #00000040;}
+  .tp-editing [data-tpk]{outline:2px solid transparent; outline-offset:6px; border-radius:2px; transition:outline-color .12s; cursor:text;}
+  .tp-editing [data-tpk="sub"], .tp-editing [data-tpk="by"], .tp-editing [data-tpk="foot"]{cursor:pointer;}
+  .tp-editing [data-tpk]:hover{outline-color:#3699D470;}
+  .tp-editing [data-tpk].tp-sel, .tp-editing [data-tpk]:focus{outline-color:var(--accent);}
+  .tp-editing [data-tpk][contenteditable]:focus{outline-color:var(--accent);}
+  .tp-editing .tp-extra-wrap:empty{min-height:1.5em; min-width:9em;}
+  .tp-editing .tp-extra-wrap:empty::before, .tp-editing .tp-author-name:empty::before{content:attr(data-ph); opacity:.32;}
+  .tp-editing .tp-author-name:empty{min-width:7em; min-height:1.3em;}
+  .tp-editing .tp-ph-grp{opacity:.4;}
+  /* menu de polices : chaque nom est écrit dans sa propre police */
+  .tp-fm-wrap{position:relative;}
+  .tp-fm-name{overflow:hidden; text-overflow:ellipsis; white-space:nowrap; min-width:0; font-size:15px;}
+  .tp-fm-caret{flex:none; font-size:10px; color:var(--ink-soft); font-family:var(--sans);}
+  .tp-fm-pop{position:absolute; z-index:70; left:0; top:calc(100% + 8px); width:310px; max-width:calc(100vw - 24px); max-height:400px; display:flex; flex-direction:column; overflow:hidden;
+    background:var(--surface); border:1px solid var(--hair); border-radius:12px; box-shadow:0 18px 44px -14px #00000066;}
+  .tp-fm-search{margin:10px 10px 8px; padding:8px 10px; border:1px solid var(--hair); border-radius:8px; background:var(--surface-soft); color:var(--ink); font-size:14px; font-family:var(--sans); box-sizing:border-box; width:calc(100% - 20px);}
+  .tp-fm-search:focus{outline:none; border-color:var(--accent);}
+  .tp-fm-cats{display:flex; flex-wrap:wrap; gap:5px; padding:0 10px 9px;}
+  .tp-fm-cat{font-family:var(--sans); font-size:12px; padding:4px 9px; border:1px solid var(--hair); border-radius:99px; cursor:pointer; background:var(--surface-soft); color:var(--ink-soft);}
+  .tp-fm-cat.active{border-color:var(--accent); color:var(--accent-2); background:#3699D414; font-weight:600;}
+  .tp-fm-list{overflow-y:auto; flex:1; padding:0 5px 6px; border-top:1px solid var(--hair);}
+  .tp-fm-grp{position:sticky; top:0; z-index:1; font-family:var(--sans); font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:var(--ink-soft); padding:9px 10px 4px; background:var(--surface);}
+  .tp-fm-item{display:flex; align-items:baseline; justify-content:space-between; gap:8px; padding:7px 10px; border-radius:7px; cursor:pointer; font-size:17px; line-height:1.25; color:var(--ink); content-visibility:auto; contain-intrinsic-size:auto 34px;}
+  .tp-fm-item:hover{background:#3699D40f;}
+  .tp-fm-item.active{background:#3699D41f; color:var(--accent-2);}
+  .tp-fm-item small{font-family:var(--sans); font-size:11px; color:var(--ink-soft); flex:none;}
+  .tp-fm-item.follow{font-family:var(--sans); font-size:13.5px; color:var(--ink-soft);}
+  .tp-fm-empty{font-family:var(--sans); font-size:13px; color:var(--ink-soft); padding:14px 10px; text-align:center;}
+  /* v52 : section Page de titre plus compacte et plus claire — page ajustée à l'écran, éléments à choisir en un clic,
+     réglages rangés en onglets, menu de polices qui reste ouvert (favoris, récentes, recherche, flèches du clavier). */
+  .tp-tb-wrap{flex-direction:column; align-items:center; gap:8px; padding:8px 24px 0;}
+  .tp-tb{flex-wrap:nowrap; gap:2px;}
+  @media (max-width:980px){ .tp-tb{flex-wrap:wrap; justify-content:center;} }
+  .tp-tb-font{width:178px;}
+  .tp-tb-btn[disabled]{opacity:.36; cursor:default;}
+  .tp-tb-btn[disabled]:hover{background:transparent;}
+  .tp-tb-size input:disabled{opacity:.36;}
+  .tp-pills{pointer-events:auto; display:flex; align-items:center; flex-wrap:wrap; justify-content:center; gap:6px; max-width:100%; font-family:var(--sans);}
+  .tp-pills-lbl{font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.07em; color:var(--ink-soft); margin-right:3px;}
+  .tp-pill{font-family:var(--sans); font-size:12.5px; line-height:1; padding:7px 12px; border-radius:99px; border:1px solid var(--hair); background:var(--surface); color:var(--ink-soft); cursor:pointer; transition:border-color .12s, color .12s, background .12s;}
+  .tp-pill:hover{border-color:#3699D466; color:var(--ink);}
+  .tp-pill.on{border-color:var(--accent); background:#3699D41f; color:var(--accent-2); font-weight:600;}
+  .tp-design-wrap{gap:30px; padding:14px 24px 60px; max-width:1100px; align-items:flex-start;}
+  .tp-preview-col{top:calc(var(--tp-head-h,118px) + 14px); gap:9px;}
+  .tp-preview-mat{padding:12px;}
+  .tp-preview-shell{width:11cm; height:15.5cm;}
+  .tp-preview-shell .titlepage{transform:scale(.52);}
+  .tp-preview-caption{font-size:12.5px;}
+  .tp-controls-col{display:block; flex:1 1 380px; min-width:300px; max-width:520px;}
+  .tp-seg{display:flex; gap:2px; padding:3px; margin-bottom:14px; background:var(--surface-soft); border:1px solid var(--hair); border-radius:10px;}
+  .tp-seg-b{flex:1; display:inline-flex; align-items:center; justify-content:center; gap:7px; height:32px; border:0; border-radius:8px; background:transparent; color:var(--ink-soft); font-family:var(--sans); font-size:13px; font-weight:600; cursor:pointer;}
+  .tp-seg-b svg{width:15px; height:15px; flex:none;}
+  .tp-seg-b:hover{color:var(--ink);}
+  .tp-seg-b.on{background:var(--surface); color:var(--ink); box-shadow:0 1px 2px #0000001a, 0 0 0 1px var(--hair);}
+  .tp-panes > .tp-panel{display:none;}
+  .tp-panes[data-pane="content"] > .tp-panel:nth-child(1), .tp-panes[data-pane="bg"] > .tp-panel:nth-child(2), .tp-panes[data-pane="draw"] > .tp-panel:nth-child(3){display:block;}
+  .tp-controls-col .tp-panel-head{display:none;}
+  .tp-tip{margin:0 0 4px; padding:10px 12px; font-size:13px; line-height:1.5; color:var(--ink-soft); background:#3699D40d; border:1px solid #3699D426; border-radius:8px;}
+  .tp-fm-pop{width:360px; max-height:min(480px, calc(100vh - 190px));}
+  .tp-fm-list{position:relative;}
+  .tp-fm-cat i{font-style:normal; font-size:10.5px; opacity:.6; margin-left:5px;}
+  .tp-fm-item{align-items:center; padding:6px 6px 6px 10px;}
+  .tp-fm-nm{flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .tp-fm-item.active .tp-fm-nm::after{content:" ✓"; font-family:var(--sans); font-size:12px; color:var(--accent-2);}
+  .tp-fm-item.kb{background:#3699D41a; box-shadow:inset 0 0 0 1.5px #3699D455;}
+  .tp-fm-star{flex:none; border:0; background:transparent; cursor:pointer; font-family:var(--sans); font-size:15px; line-height:1; padding:4px 5px; border-radius:6px; color:var(--ink-soft); opacity:0; transition:opacity .1s;}
+  .tp-fm-item:hover .tp-fm-star, .tp-fm-item.kb .tp-fm-star, .tp-fm-star.on{opacity:1;}
+  .tp-fm-star.on{color:#D9A521;}
+  .tp-fm-star:hover{background:#3699D41a;}
+  @media (hover:none){ .tp-fm-star{opacity:.65;} }
+  .tp-fm-foot{flex:none; display:flex; gap:14px; padding:7px 12px; border-top:1px solid var(--hair); background:var(--surface-soft); font-family:var(--sans); font-size:11.5px; color:var(--ink-soft);}
+  /* v52b : section de la hauteur de l'écran, sans défilement de page ; seul le panneau de droite défile au besoin. */
+  .tp-root{display:flex; flex-direction:column; min-height:0;}
+  .tp-root > .cards-toolbar, .tp-root > .tp-tb-wrap{flex:none;}
+  .tp-tb-wrap{position:relative; top:auto; z-index:45;}
+  .tp-design-wrap{flex:1 1 0; min-height:0; align-items:stretch; padding:14px 24px 16px; flex-wrap:nowrap;}
+  .tp-preview-col{position:static; align-self:flex-start;}
+  .tp-controls-col{min-height:0; overflow-y:auto; align-self:stretch; padding-right:4px;}
+  @media (max-width:820px){ .tp-root{height:auto !important;} .tp-design-wrap{flex-wrap:wrap; flex:none;} .tp-controls-col{overflow:visible;} }
+  /* v54 : section remontée, moins de vide autour, page de titre seule en plein écran. */
+  .tp-root > .cards-toolbar{padding:8px 24px 0;}
+  .tp-root .pane-title{padding-bottom:5px; margin-bottom:6px;}
+  .tp-hd-r{display:flex; align-items:center; gap:14px;}
+  .tp-tb-wrap{padding:2px 24px 0; gap:6px;}
+  .tp-design-wrap{max-width:1380px; gap:22px; padding:8px 24px 12px;}
+  .tp-preview-mat{padding:10px;}
+  .tp-controls-col{flex:1 1 420px; max-width:760px;}
+  .tp-fs{position:fixed; inset:0; z-index:10000; display:flex; align-items:center; justify-content:center; background:var(--backdrop,#e9edf2);}
+  .tp-fs-page{position:relative; flex:none; overflow:hidden; background:#fff; box-shadow:0 30px 80px -24px #00000066, 0 2px 6px #00000026;}
+  .tp-fs-exit{position:fixed; top:14px; right:14px; z-index:2; display:inline-flex; align-items:center; gap:6px; padding:9px 15px; border-radius:10px; border:1px solid var(--hair); background:var(--surface); color:var(--ink); font-family:var(--sans); font-size:13px; font-weight:600; cursor:pointer; box-shadow:0 8px 24px -10px #00000055;}
+  .tp-fs-exit:hover{border-color:var(--accent); color:var(--accent-2);}
+  #tpDrawCanvas{position:absolute; inset:0; width:100%; height:100%; z-index:3; cursor:crosshair;}
+  @media (max-width:820px){ .tp-preview-col{position:static;} }
+
+  /* v55 : légende de l'aperçu sous la page, titre de section redescendu, clic hors du texte = page / désélection. */
+  .tp-root .pane-title{position:relative; top:19px;}
+  .tp-preview-col{align-items:center;}
+  .tp-preview-caption{max-width:none !important; width:100%; box-sizing:border-box; display:flex; flex-direction:column; align-items:center; gap:1px; margin:1px 0 0; padding:0 4px; font-size:12px; line-height:1.4; text-align:center;}
+  .tp-preview-caption > span{display:block; white-space:nowrap;}
+  .tp-preview-caption > span + span{font-size:11.5px; opacity:.85;}
+
+  /* v57 : accueil — petites scènes de tournage animées dans les marges (zone morte), derrière rien : le contenu reste exactement comme avant. */
+  #homeView{position:relative;}
+  #homeView .wd-set{display:none; position:absolute; left:0; right:0; top:60px; bottom:0; pointer-events:none; overflow:hidden; color:var(--ink-soft);}
+  @media (min-width:1500px){
+    #homeView .wd-set-col{position:absolute; top:0; bottom:0; width:calc((100% - 1180px) / 2); display:flex; flex-direction:column; justify-content:space-around; align-items:center; padding:34px 0 34px;}
+    #homeView .wd-set-l{left:0; padding-left:62px; padding-right:16px;}
+    #homeView .wd-set-r{right:0; padding-right:62px; padding-left:16px;}
+  }
+  #homeView .wd-set svg{display:block; width:100%; max-width:124px; height:auto; overflow:visible; opacity:.62;}
+  #homeView .wd-set .st{fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round;}
+  #homeView .wd-set .ac{stroke:var(--accent);}
+  #homeView .wd-set .fl{fill:var(--accent); stroke:none;}
+  #homeView .wd-set text{fill:currentColor; stroke:none; font-family:var(--sans); font-weight:700; letter-spacing:.04em;}
+  /* pellicule qui défile sur le bord extérieur */
+  #homeView .wd-strip{position:absolute; top:0; bottom:0; width:30px; opacity:.5;
+    background:
+      repeating-linear-gradient(180deg, transparent 0 9px, var(--backdrop) 9px 17px) 4px 0/6px 100% no-repeat,
+      repeating-linear-gradient(180deg, transparent 0 9px, var(--backdrop) 9px 17px) 20px 0/6px 100% no-repeat,
+      var(--hair);
+    border-radius:3px; animation:wdStrip 2.6s linear infinite;
+    -webkit-mask-image:linear-gradient(180deg, transparent, #000 12%, #000 88%, transparent); mask-image:linear-gradient(180deg, transparent, #000 12%, #000 88%, transparent);}
+  #homeView .wd-set-l .wd-strip{left:18px;}
+  #homeView .wd-set-r .wd-strip{right:18px;}
+  #homeView .wd-strip::after{content:''; position:absolute; inset:0 9px; background:repeating-linear-gradient(180deg, transparent 0 40px, var(--surface) 40px 42px); opacity:.9;}
+  @keyframes wdStrip{to{background-position-y:17px,17px,0;}}
+  #homeView .wd-set .fs{fill:var(--surface);}
+  #homeView .wd-set .sh{fill:currentColor; stroke:none; opacity:.1;}
+  #homeView .wd-set svg{stroke-width:1.75;}
+  #homeView .wd-set .st{stroke-width:1.75;}
+  #homeView .wd-set .fl2{fill:var(--accent); stroke:none; opacity:.9;}
+  /* claquette */
+  #homeView .wd-clap{transform-origin:14px 43px; animation:wdClap 6s cubic-bezier(.45,0,.2,1) infinite;}
+  @keyframes wdClap{0%,62%{transform:rotate(-26deg);} 70%{transform:rotate(0);} 73%{transform:rotate(-5deg);} 77%,88%{transform:rotate(0);} 96%,100%{transform:rotate(-26deg);}}
+  /* caméra : bobines, voyant REC et halo */
+  #homeView .wd-reel{transform-box:fill-box; transform-origin:center; animation:wdSpin 3.6s linear infinite;}
+  #homeView .wd-reel.r2{animation-duration:2.7s; animation-direction:reverse;}
+  @keyframes wdSpin{to{transform:rotate(360deg);}}
+  #homeView .wd-rec{fill:#E5484D; stroke:none; animation:wdRec 1.8s ease-in-out infinite;}
+  #homeView .wd-rec-h{fill:#E5484D; stroke:none; transform-box:fill-box; transform-origin:center; animation:wdRecH 1.8s ease-out infinite;}
+  @keyframes wdRec{0%,50%{opacity:1;} 62%,100%{opacity:.25;}}
+  @keyframes wdRecH{0%{transform:scale(.6); opacity:.35;} 60%,100%{transform:scale(1.9); opacity:0;}}
+  /* projecteur : le faisceau balaie doucement */
+  #homeView .wd-lamp{transform-origin:30px 38px; animation:wdLamp 8s ease-in-out infinite;}
+  @keyframes wdLamp{0%,100%{transform:rotate(-10deg);} 50%{transform:rotate(9deg);}}
+  #homeView .wd-beam-i{animation:wdBeamO 8s ease-in-out infinite;}
+  @keyframes wdBeamO{0%,100%{opacity:.7;} 50%{opacity:1;}}
+  /* perche micro */
+  #homeView .wd-boom{transform-origin:24px 100px; animation:wdBoom 7s ease-in-out infinite;}
+  @keyframes wdBoom{0%,100%{transform:rotate(-3.5deg);} 50%{transform:rotate(4deg);}}
+  /* « Action ! » */
+  #homeView .wd-act{transform-origin:70px 34px; animation:wdAct 7s cubic-bezier(.3,.9,.3,1.2) infinite;}
+  @keyframes wdAct{0%,8%{opacity:0; transform:scale(.4);} 14%{opacity:1; transform:scale(1.06);} 18%,38%{opacity:1; transform:scale(1);} 46%,100%{opacity:0; transform:scale(.92);}}
+  /* bobine de film : elle tourne, la pellicule défile */
+  #homeView .wd-spool{transform-box:fill-box; transform-origin:center; animation:wdSpin 14s linear infinite;}
+  #homeView .wd-tail{animation:wdTail 1.4s linear infinite;}
+  @keyframes wdTail{to{stroke-dashoffset:-10.5;}}
+  @media (prefers-reduced-motion:reduce){ #homeView .wd-set *{animation:none !important;} #homeView .wd-act{opacity:1 !important;} }
+
+  /* ---------- CARDS ---------- */
+  .cards-toolbar{display:flex; align-items:center; justify-content:space-between; padding:16px 24px 0;}
+  .cards-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(230px,1fr)); gap:14px; padding:16px 24px 60px;}
+  .card{
+    background:var(--surface); border:1px solid var(--hair); border-left:3px solid var(--sc-color,var(--hair)); border-radius:2px; padding:12px 13px 12px 11px; cursor:grab;
+    display:flex; flex-direction:column; gap:6px; transition:border-left-color .12s, background .12s;
+  }
+  .card:not([style*="--sc-color"]):hover{border-left-color:var(--accent-2);}
+  .card:hover{background:var(--surface-soft);}
+  .card.dragging{opacity:.35; transform:scale(.97);}
+  /* Tableau de cartes : repère d'insertion, atterrissage, focus clavier */
+  .card{position:relative;}
+  .card:focus-visible{outline:2px solid var(--accent); outline-offset:2px;}
+  .cards-hint{padding:6px 24px 0; font-size:12.5px; color:var(--ink-soft);}
+  .card.drop-before::before, .card.drop-after::after{
+    content:''; position:absolute; top:-3px; bottom:-3px; width:4px; background:var(--accent); border-radius:2px; pointer-events:none;}
+  .card.drop-before::before{left:-9px;}
+  .card.drop-after::after{right:-9px;}
+  .card.drop-h.drop-before::before, .card.drop-h.drop-after::after{left:-3px; right:-3px; width:auto; height:4px; top:auto; bottom:auto;}
+  .card.drop-h.drop-before::before{top:-9px;}
+  .card.drop-h.drop-after::after{bottom:-9px;}
+  @keyframes cardLanded{from{box-shadow:0 0 0 3px var(--accent);} to{box-shadow:0 0 0 0 transparent;}}
+  .card.just-moved{animation:cardLanded .9s ease-out;}
+  @media (prefers-reduced-motion:reduce){ .card.just-moved{animation:none;} .card.dragging{transform:none;} }
+  .card-head{display:flex; align-items:baseline; gap:8px;}
+  /* Longueur de scène en huitièmes de page — volontairement discrète : on la
+     consulte en balayant la vue, elle ne doit pas concurrencer le titre. */
+  .scene-len{margin-left:auto; flex:none; font-family:var(--display); font-size:11.5px;
+    color:var(--ink-soft); background:var(--hair); border-radius:20px; padding:2px 8px; white-space:nowrap;}
+  .flat-row-head .flat-row-title{flex:1 1 auto; min-width:0;}
+  .flat-row-head .scene-len{margin-left:0;}
+  .card-num{font-family:var(--display); font-weight:700; color:var(--accent); font-size:13px;}
+  .card-heading{font-family:var(--mono); font-weight:700; font-size:12.5px; text-transform:uppercase; line-height:1.35;}
+  .card-syn{font-size:13.5px; color:var(--ink-soft); line-height:1.4; min-height:32px;}
+  .card-tags{display:flex; flex-wrap:wrap; gap:4px;}
+  .tag-chip{
+    font-size:11px; font-weight:600; background:var(--tag-chip-bg); color:var(--tag-chip-text); padding:2px 7px; border-radius:10px;
+  }
+  .card-chars{font-size:12px; color:var(--ink-soft);}
+  .card-foot{display:flex; justify-content:space-between; align-items:center; margin-top:2px;}
+
+  /* ---------- STRUCTURE (squelette du film, avant l'écriture) ---------- */
+  .structure-help{font-size:13px; color:var(--ink-soft); line-height:1.5; max-width:640px; margin:0 0 14px;}
+  /* Liste verticale, illimitée : la première scène tout en haut, on en
+     ajoute en dessous. Pas de colonnes — juste l'ordre du film. */
+  .structure-list{display:flex; flex-direction:column; gap:10px; padding:0 24px 18px; max-width:720px;}
+  .structure-card{
+    background:var(--surface); border:1px solid var(--hair); border-left:4px solid var(--sc-color,var(--hair));
+    border-radius:3px; padding:10px 12px; display:flex; gap:10px; cursor:grab; position:relative;
+  }
+  .structure-card.dragging{opacity:.35;}
+  .structure-card.drop-before{box-shadow:inset 0 3px 0 -1px var(--accent);}
+  .structure-card.drop-after{box-shadow:inset 0 -3px 0 -1px var(--accent);}
+  .structure-card-num{
+    flex:none; width:24px; padding-top:2px; font-family:var(--display); font-weight:700; font-size:13px;
+    color:var(--ink-soft); text-align:right; user-select:none;
+  }
+  .structure-card-body{flex:1 1 auto; min-width:0; display:flex; flex-direction:column; gap:7px;}
+  .structure-card-body.is-linked{opacity:.72;}
+  .structure-card input[type=text]{
+    border:none; background:transparent; font-family:var(--display); font-weight:600; font-size:13.5px;
+    color:var(--ink); padding:1px 0; width:100%;
+  }
+  .structure-card input[type=text]:focus{outline:none; border-bottom:1px solid var(--accent);}
+  .structure-card textarea{
+    border:1px solid var(--hair); border-radius:3px; padding:6px 8px; font-size:12.5px; min-height:44px;
+    background:var(--surface-soft); color:var(--ink-soft); resize:vertical; font-family:var(--sans);
+  }
+  .structure-swatches{display:flex; gap:5px; flex-wrap:wrap; align-items:center;}
+  .structure-swatch{width:15px; height:15px; border-radius:50%; border:1.5px solid #0002; cursor:pointer; padding:0;}
+  .structure-swatch.active{box-shadow:0 0 0 2px var(--surface),0 0 0 3.5px var(--ink);}
+  .structure-card-foot{display:flex; justify-content:space-between; align-items:center; gap:6px; flex-wrap:wrap;}
+  .structure-card-foot-btns{display:flex; align-items:center; gap:6px;}
+  .structure-linked-badge{font-size:11px; color:var(--ok); font-weight:600;}
+  .structure-add{border:1px dashed var(--hair); background:transparent; color:var(--ink-soft); border-radius:3px; padding:10px; font-size:13px; cursor:pointer; text-align:center; max-width:720px; width:calc(100% - 48px); margin-left:24px;}
+  .structure-add:hover{border-color:var(--accent-2); color:var(--accent-2);}
+
+  /* ---------- generic list rows for outline/reports/graveyard/history ---------- */
+  .flat-list{padding:16px 24px 60px; display:flex; flex-direction:column; gap:10px;}
+  .flat-row{border:1px solid var(--hair); border-radius:4px; padding:12px 14px; background:var(--surface);}
+  .flat-row-head{display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:6px;}
+  .flat-row-title{font-family:var(--mono); font-weight:700; font-size:13.5px; text-transform:uppercase;}
+  .flat-row textarea{width:100%; border:1px solid var(--hair); border-radius:3px; padding:7px 9px; font-size:13.5px; min-height:52px; background:var(--surface-soft); color:var(--ink);}
+  .flat-row input[type=text]{border:1px solid var(--hair); border-radius:3px; padding:6px 8px; font-size:13px; width:100%; background:var(--surface-soft); color:var(--ink);}
+  .row-tags-edit{display:flex; gap:6px; flex-wrap:wrap; align-items:center; margin-top:6px;}
+
+  .panel-block{margin-bottom:22px;}
+  .panel-block h4{font-family:var(--display); font-size:15px; color:var(--ink); margin:0 0 8px; font-weight:600;}
+
+  /* ---------- modale Aide (« Comment faire ») ----------
+     Des onglets par situation (démarrer / séries / sauvegarde & export /
+     éditeur), chacun court et scannable : étapes numérotées, listes à
+     puces, et un encart distinct pour ce qui a le plus de conséquences
+     (la sauvegarde complète). Le gras reste réservé aux tout premiers
+     repères de chaque bloc (le titre exact d\u2019un bouton, un nom de
+     fichier) plutôt qu\u2019étalé sur toute la phrase, pour que l\u2019œil
+     sache où regarder au lieu d\u2019avoir tout en évidence à la fois.
+     Tailles de texte du panneau agrandies de 2% par rapport au reste
+     de l\u2019interface. */
+  .help-modal{max-width:600px;}
+  .help-tabs{display:flex; flex-wrap:wrap; gap:7px; margin:0 0 18px; padding-bottom:16px; border-bottom:1px solid var(--hair);}
+  .help-tab{
+    display:inline-flex; align-items:center; gap:6px; border:1px solid var(--hair); background:var(--surface);
+    color:var(--ink-soft); padding:7px 13px; border-radius:20px; font-size:12.75px; font-weight:600; cursor:pointer;
+  }
+  .help-tab .icon{width:13px; height:13px;}
+  .help-tab:hover{border-color:var(--accent); color:var(--ink);}
+  .help-tab.active{border-color:var(--accent); background:#3699D40d; color:var(--accent-2);}
+
+  /* ---------- Scénario d'exemple et Aide à l'écriture ---------- */
+  #homeView .wd-nav-sample .icon{color:var(--accent);}
+  /* v83 : menu « Scénario d'exemple » refait comme une modale WriterDuet : en-tête, trois repères courts, choix de langue, actions. */
+  #sampleBackdrop .modal{max-width:480px; padding:24px 26px 22px;}
+  #sampleBackdrop .sm-head{display:flex; align-items:center; gap:14px; margin:0 0 18px;}
+  #sampleBackdrop .sm-ico{flex:none; width:46px; height:46px; border-radius:12px; display:flex; align-items:center; justify-content:center;
+    color:var(--accent); background:color-mix(in srgb, var(--accent) 13%, var(--surface)); box-shadow:inset 0 0 0 1px color-mix(in srgb, var(--accent) 30%, var(--surface));}
+  #sampleBackdrop .sm-ico .icon{width:22px; height:22px;}
+  #sampleBackdrop .sm-head h2{margin:0; font-size:19.76px; line-height:1.2;}
+  #sampleBackdrop .sm-sub{margin:4px 0 0; font-size:13.5px; line-height:1.4; color:var(--ink-soft);}
+  #sampleBackdrop .sm-sub b{color:var(--ink); font-weight:600;}
+  #sampleBackdrop .sm-points{list-style:none; margin:0 0 20px; padding:0; border:1px solid var(--hair); border-radius:10px; background:var(--surface-soft); overflow:hidden;}
+  #sampleBackdrop .sm-points li{display:flex; gap:12px; align-items:flex-start; padding:12px 14px;}
+  #sampleBackdrop .sm-points li + li{border-top:1px solid var(--hair);}
+  #sampleBackdrop .sm-points .icon{width:16px; height:16px; margin-top:2px; color:var(--accent);}
+  #sampleBackdrop .sm-points b{display:block; font-size:14px; font-weight:600; line-height:1.35; color:var(--ink);}
+  #sampleBackdrop .sm-points small{display:block; font-size:12.75px; line-height:1.5; color:var(--ink-soft); margin-top:3px;}
+  #sampleBackdrop .sm-lbl{font-size:11.5px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-soft); margin:0 0 8px;}
+  #sampleBackdrop .fmt-choice{gap:10px;}
+  #sampleBackdrop .fmt-opt{position:relative; padding:11px 12px 11px 38px; background:var(--surface); transition:border-color .12s, background .12s, box-shadow .12s;}
+  #sampleBackdrop .fmt-opt:hover{border-color:var(--accent); background:var(--overlay-hover);}
+  #sampleBackdrop .fmt-opt::before{content:''; position:absolute; left:13px; top:14px; width:14px; height:14px; border-radius:50%; box-sizing:border-box;
+    border:1.5px solid color-mix(in srgb, var(--ink) 35%, var(--surface)); background:var(--surface); transition:border-color .12s, box-shadow .12s;}
+  #sampleBackdrop .fmt-opt.active{background:color-mix(in srgb, var(--accent) 10%, var(--surface)); box-shadow:var(--focus-ring);}
+  #sampleBackdrop .fmt-opt.active::before{border-color:var(--accent); box-shadow:inset 0 0 0 3px var(--surface); background:var(--accent);}
+  #sampleBackdrop .fmt-opt .t{font-size:14.5px;}
+  #sampleBackdrop .fmt-opt .d{font-size:12.5px; line-height:1.4;}
+  #sampleBackdrop .modal-actions{margin-top:22px;}
+  @media (max-width:520px){ #sampleBackdrop .fmt-choice{flex-direction:column;} }
+  .wh-wrap{padding:16px 24px 70px; max-width:860px;}
+
+  /* ---------- v32 : colonne d'accueil + stabilité de la barre du haut ---------- */
+  #homeView .wd-about{border-top:1px solid var(--hair); margin-top:auto; padding:18px 12px 4px;}
+  #homeView .wd-about .wd-tag{font-size:13.5px; line-height:1.45; color:var(--ink); margin:0 0 12px;}
+  #homeView .wd-points{list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:9px;}
+  #homeView .wd-points li{display:flex; gap:9px; align-items:flex-start; font-size:12.5px; line-height:1.4; color:var(--ink-soft);}
+  #homeView .wd-points .icon{flex:none; width:14px; height:14px; margin-top:1px; color:var(--accent);}
+  @media (max-width:900px){ #homeView .wd-points{display:none;} #homeView .wd-about{border-top:0; padding:0 4px;} }
+  /* Largeurs fixes : quand « Sauvegardé » devient « Sauvegarde… », rien ne se décale sous la souris. */
+  .save-status{display:inline-flex; align-items:center; justify-content:flex-start; min-width:112px; box-sizing:border-box; white-space:nowrap;}
+  .vault-chip{display:inline-block; min-width:92px; box-sizing:border-box; text-align:center; white-space:nowrap;}
+  .pg-indicator{min-width:118px; box-sizing:border-box; justify-content:center;}
+  .search-count{min-width:34px; text-align:right;}
+
+  /* v33 : colonne de navigation stable (comme WriterDuet) : surbrillance immédiate, repère animé, pas de décalage de la page */
+  .center-pane{scrollbar-gutter:stable;}
+  .rail-item{user-select:none; -webkit-tap-highlight-color:transparent; outline:none; transition:background .12s ease, color .12s ease;}
+  .rail-item::before{content:''; position:absolute; left:-10px; top:7px; bottom:7px; width:3px; border-radius:0 3px 3px 0; background:#5DB6EC; opacity:0; transform:scaleY(.35); transition:opacity .15s ease, transform .15s ease; pointer-events:none;}
+  .rail-item.active::before{opacity:1; transform:scaleY(1);}
+  .rail-item.active:hover{background:rgba(54,153,212,.26);}
+  .topbar .btn, .topbar .pg-indicator, .topbar .save-status{user-select:none;}
+  .help-body{max-height:54vh; overflow:auto; padding-right:6px;}
+  .help-intro{font-size:13.26px; color:var(--ink-soft); line-height:1.6; margin:0 0 18px;}
+  .help-group-title{
+    font-family:var(--display); font-size:13.26px; font-weight:600;
+    color:var(--ink); padding-bottom:7px; border-bottom:1px solid var(--hair); margin:0 0 12px;
+  }
+  .help-section{margin-bottom:24px;}
+  .help-section:last-child{margin-bottom:4px;}
+  .help-step-list{list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:16px;}
+  .help-step{display:flex; gap:12px; align-items:flex-start;}
+  .help-step-num{
+    flex:none; width:22px; height:22px; border-radius:50%; background:var(--accent); color:#fff;
+    font-size:12.24px; font-weight:700; display:flex; align-items:center; justify-content:center; margin-top:1px;
+  }
+  .help-step-body{font-size:13.77px; line-height:1.62; color:var(--ink);}
+  .help-step-body b{color:var(--ink); font-weight:600;}
+  .help-list{margin:0; padding:0; list-style:none; display:flex; flex-direction:column; gap:10px;}
+  .help-list li{font-size:13.77px; line-height:1.62; color:var(--ink); padding-left:16px; position:relative;}
+  .help-list li::before{content:''; position:absolute; left:0; top:8px; width:5px; height:5px; border-radius:50%; background:var(--accent);}
+  .help-callout{
+    background:var(--surface-soft); border-left:3px solid var(--accent); border-radius:0 var(--radius) var(--radius) 0;
+    padding:13px 15px; margin-top:16px; font-size:13.26px; line-height:1.6; color:var(--ink);
+  }
+  .help-callout b{color:var(--ink); font-weight:600;}
+  .help-p{font-size:13.77px; line-height:1.62; color:var(--ink); margin:0 0 10px;}
+  .help-p:last-child{margin-bottom:0;}
+  .help-kbd-row{display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin-top:4px;}
+
+  .char-row{display:flex; align-items:center; justify-content:space-between; padding:10px 0; border-bottom:1px solid var(--hair); cursor:pointer;}
+  .char-row:hover{background:var(--overlay-hover-soft);}
+  .char-name{font-weight:600; font-size:13px;}
+  .char-stats{font-size:12.5px; color:var(--ink-soft);}
+
+  .stat-grid{display:grid; grid-template-columns:1fr 1fr; gap:12px; padding:20px 24px;}
+  .stat-card{border:1px solid var(--hair); border-radius:4px; padding:16px; background:var(--surface);}
+  .stat-num{font-family:var(--display); font-size:26px; font-weight:700; color:var(--accent);}
+  .stat-label{font-size:13px; color:var(--ink-soft); margin-top:2px;}
+
+  .kbd{
+    display:inline-block; border:1px solid var(--hair); border-bottom-width:2px; border-radius:3px; padding:3px 7px;
+    font-size:12.5px; font-family:var(--mono); background:var(--surface-soft-2); white-space:nowrap;
+  }
+  .shortcuts-table{width:100%; border-collapse:collapse; font-size:13px;}
+  .shortcuts-table td{padding:7px 4px; border-bottom:1px solid var(--hair);}
+
+  /* ---------- modale Raccourcis ----------
+     Avant : un seul tableau de 14 lignes dans le désordre, en 13px, où il
+     fallait lire toute la liste pour trouver une touche. Maintenant :
+     quatre groupes par moment d'usage (écrire / naviguer / historique /
+     annoter), colonne de touches alignée à gauche, textes agrandis, et
+     l'explication longue passe en sous-ligne grise pour que l'œil puisse
+     ne lire que les libellés courts. */
+  .sc-modal{max-width:660px; max-height:84vh; overflow:auto;}
+  .sc-intro{font-size:13.5px; color:var(--ink-soft); margin:-10px 0 20px;}
+  .sc-group{margin-bottom:24px;}
+  .sc-group:last-of-type{margin-bottom:6px;}
+  .sc-group-title{
+    font-size:11.5px; font-weight:700; letter-spacing:.1em; text-transform:uppercase;
+    color:var(--ink-soft); padding-bottom:8px; border-bottom:1px solid var(--hair); margin-bottom:2px;
+  }
+  .sc-row{display:flex; gap:20px; align-items:baseline; padding:10px 2px;}
+  .sc-row + .sc-row{border-top:1px solid var(--overlay-hover);}
+  .sc-keys{flex:none; width:186px; display:flex; flex-wrap:wrap; gap:5px; align-items:center;}
+  .sc-keys .sc-plus{font-size:11.5px; color:var(--ink-soft);}
+  .sc-desc{font-size:14.5px; line-height:1.45;}
+  .sc-note{display:block; font-size:12.5px; color:var(--ink-soft); line-height:1.45; margin-top:3px;}
+
+  /* ---------- Aller à la scène (Ctrl+K) ----------
+     Emprunté à WriterDuet : sauter à n'importe quelle scène sans quitter
+     l'éditeur ni faire défiler à la main. Liste filtrable au clavier. */
+  .jump-modal{max-width:560px; padding:20px;}
+  .jump-input{
+    width:100%; padding:11px 12px; border:1px solid var(--hair); border-radius:var(--radius);
+    font-size:15px; background:var(--surface-soft); color:var(--ink); outline:none;
+  }
+  .jump-input:focus{border-color:var(--accent);}
+  .jump-list{margin-top:12px; max-height:52vh; overflow:auto;}
+  .jump-item{
+    display:flex; align-items:baseline; gap:12px; padding:9px 10px; border-radius:var(--radius);
+    cursor:pointer; font-size:14px;
+  }
+  .jump-item:hover{background:var(--overlay-hover);}
+  .jump-item.sel{background:var(--tag-chip-bg);}
+  .jump-num{flex:none; width:34px; font-family:var(--mono); font-size:13px; color:var(--ink-soft);}
+  .jump-head{flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .jump-page{flex:none; font-size:12.5px; color:var(--ink-soft);}
+  .jump-empty{padding:16px 10px; font-size:13.5px; color:var(--ink-soft);}
+
+  /* ---------- Mode Focus (Ctrl+Maj+F) ----------
+     Emprunté à WriterDuet (son "Focus Mode" / surlignage de la ligne
+     active) : estompe tout le texte sauf la ligne où est le curseur, pour
+     écrire sans que l'œil soit distrait par le reste de la page. Purement
+     visuel — une seule classe posée sur #page, rien dans les données ni
+     dans les exports. */
+  #page.focus-mode .line{opacity:.32; transition:opacity .12s;}
+  #page.focus-mode .line.line-active{opacity:1;}
+
+  /* ---------- Lire à voix haute (Ctrl+Maj+L) ----------
+     Emprunté à WriterDuet ("Read Aloud") : entendre une scène plutôt que
+     la relire des yeux fait ressortir des lourdeurs de dialogue qu'on ne
+     voit plus à force de relecture silencieuse. Purement transitoire —
+     rien n'est stocké, l'icône change juste pendant la lecture. */
+  .btn-tw.reading{color:var(--accent);}
+
+  textarea.notes-area{width:100%; min-height:60vh; border:1px solid var(--hair); border-radius:4px; padding:16px; font-size:13.5px; line-height:1.6; background:var(--surface-soft); color:var(--ink);}
+
+  .toolbar-row{display:flex; align-items:center; gap:8px; padding:14px 24px 0; flex-wrap:wrap;}
+  .chip-toggle{
+    border:1px solid var(--hair); background:var(--surface); padding:5px 11px; border-radius:14px; font-size:13px; font-weight:600; color:var(--ink-soft);
+  }
+  .chip-toggle.on{background:var(--accent); border-color:var(--accent); color:#fff;}
+
+  /* ---------- IMPRESSION / PDF ---------- */
+  /* Une vraie page imprimée par feuille de l'éditeur : mêmes dimensions,
+     mêmes marges, mêmes sauts. Ce que l'on voit est ce que l'on imprime. */
+  .print-page{
+    position:relative; width:var(--page-w,21cm); height:var(--page-h,29.7cm); overflow:hidden;
+    background:var(--paper); color:var(--paper-ink);
+    font-family:var(--script-font,var(--mono)); font-size:12pt; line-height:1.5;
+    padding: var(--pm-top,2.5cm) var(--pm-right,2.5cm) var(--pm-bottom,2.5cm) var(--pm-left,3cm);
+    break-after:page; page-break-after:always;
+  }
+  .print-page:last-child{break-after:auto; page-break-after:auto;}
+  /* v47 : encre IDENTIQUE à WriterDuet à l'export PDF et à l'impression. WriterDuet imprime tout le texte
+     (courant, gras, italique, numéros de scène et de page, marques de continuité) en noir 0/0/0, sans
+     transparence ; Raging Page utilisait un gris bleuté (#23262E), un gris moyen pour les numéros et un brun
+     pour les didascalies. Le gras reste un vrai gras (graisse de police), donc toujours distinct du reste.
+     L'affichage à l'écran (éditeur) n'est pas modifié. */
+  .print-page{ --paper-ink:#000; --paper-ink-soft:#000; color:#000; }
+  .print-page .line--parenthetical{ color:#000; }
+  .print-page .sheet-cont{ opacity:1; }
+  /* Filigrane (PDF & impression) : texte discret en diagonale, au centre de
+     chaque page, réglable dans Paramètres. Inspiré des logiciels du métier
+     (Final Draft, WriterDuet) : sert à marquer une copie de lecture
+     ("CONFIDENTIEL", le nom du destinataire…) pour repérer d'où vient une
+     fuite si le scénario circule avant sa sortie. N'apparaît jamais dans
+     l'éditeur lui-même, seulement à l'export/impression — exactement comme
+     les numéros de page, ajoutés au même endroit du code. */
+  .sheet-watermark{
+    position:absolute; top:50%; left:50%; width:200%;
+    transform:translate(-50%,-50%) rotate(-38deg);
+    text-align:center; white-space:nowrap; pointer-events:none; user-select:none;
+    font-family:var(--script-font,var(--mono)); font-size:52pt; font-weight:700; letter-spacing:.06em;
+    text-transform:uppercase; color:rgba(0,0,0,.08); z-index:0;
+  }
+  /* La première ligne d'une page commence au ras de la marge : sa marge
+     haute d'origine (1,6em pour une entête de scène par ex.) n'a de sens
+     qu'entre deux blocs, pas en tête de page. */
+  .print-page > .line:first-of-type{margin-top:0 !important;}
+  /* v26 : :first-of-type compte aussi le numéro de page (.sheet-num, un <div>) : la règle ci-dessus ne touchait donc
+     JAMAIS la première ligne des pages numérotées, qui descendait de sa marge haute (16 à 26 px) et débordait en bas. */
+  .print-page > .line.pg-first{margin-top:0 !important;}
+  /* v26 : (MORE) / NOM (CONT'D) sont réservés sur exactement 1 ligne (24 px) : sans padding, ils ne dépassent plus. */
+  .line.pg-mark{padding-top:0; padding-bottom:0; min-height:0;}
+  #printArea .titlepage{break-after:page; page-break-after:always; margin-bottom:0;}
+  /* Conteneur invisible servant à mesurer la pagination de l'export
+     (les notes en sont exclues, la pagination y est donc différente). */
+  #pageMeasure{
+    position:fixed; left:-10000px; top:0; visibility:hidden; pointer-events:none;
+    width:var(--page-w,21cm); font-family:var(--script-font,var(--mono)); font-size:12pt; line-height:1.5;
+    padding: var(--pm-top,2.5cm) var(--pm-right,2.5cm) var(--pm-bottom,2.5cm) var(--pm-left,3cm);
+  }
+
+  /* La zone d'impression n'est jamais visible à l'écran : elle n'existe que
+     le temps d'un export. L'ancienne version la laissait affichée en clair
+     pendant l'impression, et surtout dépendait d'un nettoyage à retardement
+     pour la faire disparaître — si ce nettoyage ne tombait pas au bon
+     moment, tout le scénario restait plaqué par-dessus l'éditeur. */
+  #printArea{display:none;}
+
+  @media print{
+    /* CORRECTIF. L'ancienne règle masquait l'interface avec
+       visibility:hidden. Un élément « invisible » de cette façon occupe
+       toujours toute sa place : l'éditeur, qui fait la hauteur du scénario
+       entier, restait donc dans le flux et le navigateur imprimait le
+       scénario PUIS autant de pages blanches que l'éditeur en occupait —
+       des documents à rallonge, parfois impossibles à rouvrir. display:none
+       les retire réellement du flux. */
+    body > *{display:none !important;}
+    #printArea{display:block !important; position:static; width:auto; margin:0;}
+    /* CORRECTIF. Une feuille exactement aussi haute que la page physique
+       (29,7 cm sur 29,7 cm) la dépasse d'une fraction de pixel une fois
+       arrondie par le navigateur — qui glisse alors une page blanche entre
+       CHAQUE feuille. Le millimètre retiré ici est pris tout en bas de la
+       marge basse, là où aucun texte ne descend jamais : la pagination,
+       elle, ne change pas d'un iota. */
+    .print-page{box-shadow:none; margin:0; height:calc(var(--page-h,29.7cm) - 1mm);}
+    #printArea .titlepage{height:calc(var(--page-h,29.7cm) - 1mm); min-height:0;}
+  }
+
+  /* ---------- INTERLIGNE « STANDARD » (comme WriterDuet / Final Draft) ----------
+     12 pt sur 12 pt = 6 lignes au pouce, soit ~54 lignes par page : une page
+     = environ une minute d'écran. Le mode « confortable » garde l'ancien 1,5.
+     Les marges entre blocs sont en em : elles restent des lignes vides entières. */
+  html.ls-std #page, html.ls-std .print-page, html.ls-std #pageMeasure, html.ls-std .pg-mark-lbl{line-height:1;}
+  html.ls-std .line{min-height:1em;}
+  html.ls-std .line:not(.line--card):not(.line--dual){padding-top:0; padding-bottom:0;}
+  /* CORRECTIF PAGINATION (v38). Sans padding vertical, une ligne VIDE éditable est une boîte « creuse » :
+     le navigateur laisse alors fuiter la marge posée par la pagination sur la première ligne d'une
+     feuille (jusqu'à ~235 px) dans toutes les lignes vides qui suivent. Chaque Entrée repoussait donc
+     la ligne de ~250 px, les feuilles se multipliaient et le texte sortait des pages. Un contexte de
+     mise en page propre à chaque ligne (flow-root) arrête cette fuite sans rien changer d'autre :
+     les marges entre lignes voisines fusionnent comme avant. Le mode « confortable » n'est pas
+     concerné (ses lignes gardent 1 px de padding, comme en v25). */
+  html.ls-std .line:not(.line--card):not(.line--dual){display:flow-root;}
+  html.ls-std .line--scene{margin-top:2em;}
+  /* v45 : deux lignes d'action qui se suivent sont deux LIGNES de texte (comme PageRenderer.js) : plus de
+     ligne vide automatique entre elles. Une page contient ~54 lignes de texte au lieu de ~29. Une ligne
+     vide s'obtient en laissant une ligne d'action vide. */
+  html.ls-std .line--action + .line--action{margin-top:0;}
+  /* v40 : alignement sur le gabarit Final Draft / WriterDuet. En interligne standard, tout espace entre blocs
+     est un nombre ENTIER de lignes vides (1 ligne = 12 pt). Les anciennes marges fractionnaires (1,2 em pour une
+     transition ou un dialogue simultané, 0,25 em sous le nom d'une colonne) ajoutaient 3 à 4 px parasites qui
+     décalaient la grille des lignes : une page ne retombait pas sur les mêmes lignes qu'un logiciel du métier. */
+  html.ls-std .line--transition{margin-top:1em;}
+  html.ls-std .line--dual{margin-top:1em;}
+  html.ls-std .dual-col > .line--dialogue{margin-top:0;}
+
+  @media (max-width:880px){
+    .rail{width:64px;}
+    .rail-item span.lbl{display:none;}
+    .rail-project, .rail-bottom{display:none;}
+    .side-pane{position:fixed; right:0; top:52px; bottom:0; z-index:50; box-shadow:-8px 0 20px #0002;}
+    .page-scroll{padding:20px 10px 160px;}
+  }
+  /* ---------- SÉLECTION EXPRESS (v12) : une pastille par scène, dans la marge ----------
+     Une petite pastille discrète à côté du numéro de chaque scène (jamais
+     sur le texte). Au survol elle se déplie en deux choix :
+         ▢ Scène   → sélectionne cette scène
+         ▤ Tout    → sélectionne tout le scénario
+     En même temps, un fin trait de couleur longe la scène concernée et le
+     texte prend une très légère teinte, pour voir d'avance ce qui sera pris.
+     Au repos : seulement la pastille, discrète mais visible. Elles vivent
+     dans une couche à part (#sceneTools), jamais dans les lignes éditables :
+     aucun effet sur le curseur, la pagination ou les exports. */
+  #sceneTools{position:absolute; inset:0; z-index:2; pointer-events:none;}
+  #sceneTools .st-chip{
+    position:absolute; left:calc(var(--pm-left,3cm) - 2.7cm); width:1.75cm; min-height:20px;
+    pointer-events:none; z-index:3; display:flex; flex-direction:column;
+  }
+  #sceneTools .st-chip:hover{pointer-events:auto;}
+  #sceneTools .st-seg{
+    display:flex; align-items:center; gap:5px; box-sizing:border-box; height:20px; padding:0 6px;
+    border-radius:10px; cursor:pointer; pointer-events:auto; user-select:none; -webkit-tap-highlight-color:transparent;
+    font-family:var(--sans); font-size:10px; font-weight:600; line-height:1; white-space:nowrap;
+    color:var(--accent-2); background:rgba(255,255,255,.94); border:1px solid rgba(31,111,160,.28);
+    box-shadow:0 1px 3px rgba(20,30,50,.10);
+    transition:background .14s ease, color .14s ease, border-color .14s ease, box-shadow .14s ease, opacity .14s ease, width .14s ease;
+  }
+  #sceneTools .st-seg svg{flex:none; width:12px; height:12px; stroke:currentColor; fill:none; stroke-width:1.5; stroke-linecap:round; stroke-linejoin:round;}
+  #sceneTools .st-seg .st-t{display:none;}
+  /* au repos : pastille ronde, discrète */
+  #sceneTools .st-seg.st-one{width:20px; padding:0; justify-content:center; opacity:.7;}
+  #sceneTools .st-seg.st-all{display:none; margin-top:4px;}
+  /* au survol : elle se déplie */
+  #sceneTools .st-chip:hover .st-seg.st-one,
+  #sceneTools .st-chip.st-open .st-seg.st-one{width:100%; padding:0 6px; justify-content:flex-start; opacity:1;}
+  #sceneTools .st-chip:hover .st-seg .st-t,
+  #sceneTools .st-chip.st-open .st-seg .st-t{display:inline;}
+  #sceneTools .st-chip:hover .st-seg.st-all,
+  #sceneTools .st-chip.st-open .st-seg.st-all{display:flex; width:100%; opacity:1;}
+  #sceneTools .st-seg.st-hot{background:var(--accent-2); color:#fff; border-color:var(--accent-2); box-shadow:0 2px 6px rgba(31,111,160,.35);}
+  #sceneTools .st-seg.st-pop{animation:stPop .35s ease-out;}
+  @keyframes stPop{0%{transform:scale(1)} 40%{transform:scale(1.14)} 100%{transform:scale(1)}}
+  /* le fin trait qui longe la scène (visible seulement au survol) */
+  #sceneTools .st-rail{
+    position:absolute; left:calc(var(--pm-left,3cm) - 2.9cm + 1px); width:3px; border-radius:3px;
+    background:var(--accent-2); opacity:0; transform:scaleY(.96); transition:opacity .15s ease, transform .15s ease;
+    pointer-events:none;
+  }
+  #sceneTools .st-rail.st-hot{opacity:.8; transform:none;}
+  .line.st-hint{background:rgba(54,153,212,.06);}
+  #page.st-hint-all .line:not(.line--dual){background:rgba(54,153,212,.06);}
+  @keyframes stFlash{0%{background:rgba(54,153,212,.28)} 100%{background:rgba(54,153,212,0)}}
+  .line.st-flash{animation:stFlash .85s ease-out;}
+  #page.st-flash-all .line{animation:stFlash .85s ease-out;}
+  @media print{ #sceneTools{display:none !important;} }
+
+  /* =====================================================================
+     v24 — HABILLAGE « WriterDuet » : même fonctionnement, autre peau.
+     Placée EN DERNIER : ne surcharge que l'interface. La feuille de
+     scénario (.sheet, .line, .titlepage, impression, exports) n'est
+     volontairement jamais touchée.
+     ===================================================================== */
+  :root{
+    --sans:'Inter',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+    --display:var(--sans);
+    --radius:6px;
+    --shadow-sm:0 1px 2px rgba(16,24,40,.05), 0 1px 3px rgba(16,24,40,.07);
+    --shadow-md:0 2px 4px rgba(16,24,40,.05), 0 8px 20px -6px rgba(16,24,40,.14);
+    --focus-ring:0 0 0 3px rgba(54,153,212,.22);
+  }
+  html[data-theme="dark"]{ --shadow-sm:0 1px 2px rgba(0,0,0,.35); --shadow-md:0 8px 22px -6px rgba(0,0,0,.55); }
+  body{font-feature-settings:'cv11','ss01'; letter-spacing:-.003em;}
+
+  /* Le nom « Raging Page » */
+  .mm-word{display:inline-flex; align-items:center; line-height:0; white-space:nowrap; user-select:none;}
+  .mm-word svg{display:block; height:1em; width:4.836em;}
+  .mm-word .w1{fill:var(--ink);}
+  .mm-word .w2{fill:var(--accent);}
+  .mmlb{fill:#1F6FA0;}
+  html[data-theme="dark"] .mmlb, .rail .mmlb{fill:#3699D4;}
+  /* Fumée du crayon : uniquement sur le logo de l'accueil (mmLogo(..., true)) */
+  .mm-logo-smoke{overflow:visible;}
+  .mm-smoke .sp{fill:#FCFDFE; stroke:#14425E; stroke-width:1.8; transform-box:fill-box; transform-origin:center; opacity:0; animation:mmSmoke 4.2s ease-out infinite;}
+  .mm-smoke .sp2{animation-delay:1.4s;}
+  .mm-smoke .sp3{animation-delay:2.8s;}
+  @keyframes mmSmoke{0%{opacity:0; transform:translate(0,2px) scale(.45);} 18%{opacity:1;} 65%{opacity:.9;} 100%{opacity:0; transform:translate(9px,-38px) scale(1.6);}}
+  @media (prefers-reduced-motion:reduce){
+    .mm-smoke .sp{animation:none; opacity:.95;}
+    .mm-smoke .sp1{transform:translate(0,-3px) scale(.8);}
+    .mm-smoke .sp2{transform:translate(4px,-16px) scale(1.1);}
+    .mm-smoke .sp3{transform:translate(8px,-30px) scale(1.4); opacity:.7;}
+  }
+  #homeView .wd-brand{font-size:inherit; gap:12px;}
+  #homeView .wd-brand .mm-word{font-size:37.5px;}
+  #homeView .wd-about b{display:block; margin-bottom:8px;}
+  #homeView .wd-about b .mm-word{font-size:26.6px;}
+  .mm-word-sm{font-size:31.5px;}
+  .hub-sep{width:1px; height:20px; background:var(--hair); margin:0 4px; flex:none;}
+  .rail .mm-word{font-size:29.4px;}
+  .rail .mm-word .w1{fill:#fff;}
+  .rail .mm-word .w2{fill:#6DBCEB;}
+
+  /* Accueil : compteur de scénarios */
+  #homeView .wd-main-h{align-items:center; gap:14px; margin:2px 2px 18px;}
+  #homeView .wd-main-h h1{font-size:28px; letter-spacing:-.025em;}
+  #homeView .wd-count{
+    display:inline-flex; align-items:center; justify-content:center; min-width:34px; height:34px; padding:0 12px;
+    border-radius:999px; background:var(--tag-chip-bg); color:var(--tag-chip-text);
+    font-size:18px; font-weight:700; line-height:1; letter-spacing:-.01em; font-variant-numeric:tabular-nums;
+    box-shadow:inset 0 0 0 1px rgba(54,153,212,.22);
+  }
+  #homeView .wd-top{height:60px; box-shadow:0 1px 0 var(--hair);}
+  #homeView .wd-table{border-radius:12px; box-shadow:var(--shadow-sm);}
+  #homeView .wd-new{border-radius:8px; font-weight:600;}
+
+  /* Boutons et champs */
+  .btn{border-radius:6px; font-weight:500; transition:background .12s, border-color .12s, box-shadow .12s, color .12s;}
+  .btn:hover{border-color:#B7D4EC;}
+  .btn-primary{font-weight:600; box-shadow:0 1px 2px rgba(31,111,160,.35);}
+  .btn-primary:hover{border-color:#2C7FB0;}
+  .btn:focus-visible{outline:none; box-shadow:var(--focus-ring);}
+  .field input[type=text], .field input[type=date], .field input[type=number], .field textarea, .field select,
+  .flat-row textarea, .flat-row input[type=text], .structure-card textarea{
+    border-radius:6px; transition:border-color .12s, box-shadow .12s, background .12s;
+  }
+  .field input:focus, .field textarea:focus, .field select:focus, .flat-row textarea:focus, .flat-row input:focus, .structure-card textarea:focus{
+    outline:none; border-color:var(--accent); box-shadow:var(--focus-ring); background:var(--surface);
+  }
+  .field label{font-weight:600; letter-spacing:0;}
+  .modal-backdrop{backdrop-filter:blur(2px);}
+  .modal{border-radius:12px; box-shadow:0 0 0 1px var(--hair), 0 24px 64px rgba(10,10,20,.32);}
+  .modal h2{font-family:var(--sans); font-weight:700; letter-spacing:-.015em;}
+  .fmt-opt{border-radius:8px;}
+  .tag-chip, .chip-toggle{border-radius:999px;}
+  .center-pane, .rail-nav, .side-pane, #homeView .home-list-scroll{scrollbar-width:thin; scrollbar-color:rgba(120,128,150,.4) transparent;}
+  /* v26 : barre de défilement de l'éditeur plus large (comme WriterDuet), plus facile à saisir pour parcourir les pages. */
+  .center-pane{scrollbar-width:auto; scrollbar-color:rgba(110,118,140,.55) rgba(120,128,150,.12);}
+  .center-pane::-webkit-scrollbar{width:16px; height:16px;}
+  .center-pane::-webkit-scrollbar-track{background:rgba(120,128,150,.12);}
+  .center-pane::-webkit-scrollbar-thumb{background:rgba(110,118,140,.55); border-radius:8px; border:3px solid transparent; background-clip:content-box; min-height:48px;}
+  .center-pane::-webkit-scrollbar-thumb:hover{background:rgba(110,118,140,.85); background-clip:content-box;}
+
+  /* Colonne de gauche */
+  .rail{width:240px; border-right:0; box-shadow:inset -1px 0 0 rgba(0,0,0,.28);}
+  .rail-top{padding:0;}
+  .rail-brand{height:60px; padding:0 18px; gap:11px; border-bottom:1px solid var(--hair-dark);}
+  .rail-logo{border-radius:7px;}
+  .rail-project{
+    margin:14px 12px 4px; padding:10px 12px 11px; border-radius:10px; background:rgba(255,255,255,.055);
+    border:1px solid rgba(255,255,255,.08); color:#fff; font-size:14px; font-weight:600; line-height:1.35;
+  }
+  .rail-project::before{content:attr(data-label); display:block; margin-bottom:3px; font-size:10.5px; font-weight:600; letter-spacing:.09em; text-transform:uppercase; color:var(--studio-text-dim);}
+  .rail-nav{padding:2px 10px 12px;}
+  .rail-group{padding:16px 12px 6px; font-size:10.5px; font-weight:600; letter-spacing:.09em; text-transform:uppercase; color:var(--studio-text-dim); opacity:.85;}
+  .rail-item{position:relative; gap:12px; padding:8px 12px; margin:1px 0; border-radius:8px; font-size:14px; font-weight:500; cursor:pointer; transition:background .12s, color .12s;}
+  .rail-item .icon{width:16px; height:16px; opacity:.85;}
+  .rail-item:hover{background:rgba(255,255,255,.07);}
+  .rail-item.active{background:rgba(54,153,212,.2); color:#fff;}
+  .rail-item.active .icon{opacity:1; color:#7CC6F2;}
+  .rail-item.active::before{content:''; position:absolute; left:-10px; top:7px; bottom:7px; width:3px; border-radius:0 3px 3px 0; background:#5DB6EC;}
+  /* v34 : colonne de gauche façon WriterDuet — survol net, sans saut, sans clignotement. */
+  .rail-nav{scrollbar-gutter:stable; overscroll-behavior:contain;}
+  .rail-item{transition:none; touch-action:manipulation; -webkit-user-drag:none;}
+  .rail-item::before{transition:opacity .12s ease, transform .12s ease;}
+  .rail-item > *{pointer-events:none;}
+  @media (hover:hover){
+    .rail-item:hover{background:rgba(255,255,255,.07); color:#fff;}
+    .rail-item:hover .icon{opacity:1;}
+    .rail-item.active:hover{background:rgba(54,153,212,.26);}
+  }
+  .rail-item:active{background:rgba(255,255,255,.11);}
+  /* v36 : barre du haut qui se compacte par paliers (comme WriterDuet) — plus aucun chevauchement.
+     Ordre : police → libellés des boutons → statut en pastille → recherche réduite → indicateur de page raccourci. */
+  .topbar{min-width:0; overflow:hidden;}
+  .topbar-left{flex:1 1 auto; overflow:hidden;}
+  .topbar-right{flex:none;}
+  .topbar-left > *, .topbar-right > *{flex:none;}
+  @media (max-width:1720px){ .topbar select.tb-font, .topbar select.tb-font + .tb-div{display:none;} }
+  @media (max-width:1560px){
+    .topbar .btn[data-act="goHome"] .tb-lbl{display:none;}
+    .topbar .btn[data-act="goHome"]{padding:7px 9px;}
+    .search-box input{width:110px;}
+  }
+  @media (max-width:1420px){
+    .topbar .btn[data-act="insertCard"] .tb-lbl, .topbar .btn[data-act="openLayout"] .tb-lbl{display:none;}
+  }
+  @media (max-width:1300px){
+    .topbar .btn .tb-lbl{display:none;}
+    .topbar .btn{padding:7px 9px;}
+    .topbar .btn.btn-primary{padding:8px 11px;}
+  }
+  @media (max-width:1460px){
+    .save-status{min-width:0; padding:5px 9px;}
+    .save-status #saveLabel{display:none;}
+    .vault-chip{min-width:0; width:14px; height:14px; padding:0; font-size:0; background:currentColor; border-color:transparent; align-self:center;}
+    .vault-chip.ok{color:#127a4b;} .vault-chip.warn{color:#c47a00;} .vault-chip.off{color:var(--ink-soft);}
+  }
+  @media (max-width:1300px){
+    .search-box input{width:70px;}
+    .pg-indicator{min-width:0; padding:4px 8px;}
+    .topbar{padding:0 12px; gap:8px;}
+    .tb-div{margin:0 4px;}
+  }
+  @media (max-width:1120px){
+    .search-box input{width:48px;}
+    .topbar .btn[data-act="doUndo"], .topbar .btn[data-act="doRedo"], .topbar-left .tb-div:nth-of-type(n+2){display:none;}
+  }
+  @media (max-width:980px){
+    .lang-flags{display:none;}
+  }
+  .rail-item.active:active{background:rgba(54,153,212,.26);}
+  .rail-bottom{padding:12px 18px; font-size:12px; letter-spacing:.01em;}
+
+  /* Barre du haut */
+  .topbar{height:60px; padding:0 20px; gap:16px; box-shadow:0 1px 0 var(--hair); border-bottom:0;}
+  .topbar-left, .topbar-right{gap:4px;}
+  .topbar .btn{border-color:transparent; background:transparent; font-weight:500; padding:7px 11px; font-size:14px; white-space:nowrap;}
+  .topbar-left, .topbar-right{flex-wrap:nowrap; min-width:0;}
+  .topbar .btn:hover{background:var(--overlay-hover); border-color:transparent;}
+  .topbar .btn .icon{color:var(--ink-soft);}
+  .topbar .btn[data-act="insertScene"]{border-color:var(--hair); background:var(--surface); box-shadow:var(--shadow-sm); margin:0 2px;}
+  .topbar .btn[data-act="insertScene"]:hover{border-color:#B7D4EC; background:var(--surface-soft);}
+  .topbar .btn.btn-primary{background:var(--accent); border-color:var(--accent); color:#fff; font-weight:600; padding:8px 15px; margin-left:6px;}
+  .topbar .btn.btn-primary:hover{background:#2C7FB0; border-color:#2C7FB0;}
+  .topbar .btn.btn-primary .icon{color:#fff;}
+  .tb-div{flex:none; width:1px; height:22px; background:var(--hair); margin:0 8px;}
+  .save-status{padding:5px 11px; border-radius:999px; background:var(--surface-soft-2); font-size:12.5px; font-weight:500;}
+  .search-box{border-radius:999px; padding:6px 13px; background:var(--surface-soft-2); border-color:transparent; transition:box-shadow .12s, border-color .12s, background .12s;}
+  .search-box:focus-within{background:var(--surface); border-color:var(--accent); box-shadow:var(--focus-ring);}
+  .pg-indicator{border-radius:999px;}
+  .lang-flags{margin:0 2px;}
+
+  /* En-tête commun des onglets */
+  .center-pane{background:var(--backdrop);}
+  /* Zone « morte » autour des feuilles pendant l'écriture : un gris un peu plus soutenu que le reste
+     de l'interface (comme WriterDuet), pour que la page blanche se détache nettement. Limité à
+     l'éditeur : les autres onglets gardent le fond habituel. */
+  :root{--editor-backdrop:#DCE0E7;}
+  html[data-theme="dark"]{--editor-backdrop:#0D0D13;}
+  .center-pane:has(#pageStack){background:var(--editor-backdrop);}
+  .cards-toolbar{padding:26px 24px 6px; gap:14px; flex-wrap:wrap;}
+  .pane-title{font-family:var(--sans); font-weight:700; font-size:26px; line-height:1.15; letter-spacing:-.025em; border-bottom:0; padding-bottom:0; margin-bottom:0;}
+  .side-pane .pane-title{font-size:18px; padding-bottom:10px; border-bottom:1px solid var(--hair); margin-bottom:14px;}
+  .cards-hint, .structure-help{font-size:13.5px;}
+
+  /* Cartes */
+  .cards-grid{gap:16px; padding:18px 24px 64px;}
+  .card{border-radius:10px; box-shadow:var(--shadow-sm); padding:14px 15px 13px 13px; gap:8px; transition:border-left-color .12s, background .12s, box-shadow .15s, transform .15s;}
+  .card:hover{background:var(--surface); box-shadow:var(--shadow-md);}
+  .card-heading{font-weight:600;}
+  .card-num{font-weight:700;}
+
+  /* Structure */
+  .structure-list{gap:12px; max-width:760px;}
+  .structure-card{border-radius:10px; box-shadow:var(--shadow-sm); padding:12px 14px; gap:12px; transition:box-shadow .15s;}
+  .structure-card:hover{box-shadow:var(--shadow-md);}
+  .structure-card input[type=text]{font-weight:600; font-size:14.5px;}
+  .structure-add{border-radius:10px; padding:13px; font-weight:500; background:transparent; transition:border-color .12s, color .12s, background .12s;}
+  .structure-add:hover{background:var(--tag-chip-bg);}
+
+  /* Outline, Tags, Corbeille, Historique */
+  .flat-list{gap:12px; padding:18px 24px 64px;}
+  .flat-row{border-radius:10px; box-shadow:var(--shadow-sm); padding:14px 16px; transition:box-shadow .15s, border-color .15s;}
+  .flat-row:hover{box-shadow:var(--shadow-md);}
+  .flat-row-title{font-weight:600;}
+
+  /* Personnages */
+  .char-row{border:1px solid var(--hair); border-radius:10px; background:var(--surface); box-shadow:var(--shadow-sm); padding:13px 16px; margin-bottom:10px; transition:border-color .12s, box-shadow .15s;}
+  .char-row:hover{background:var(--surface); border-color:#B7D4EC; box-shadow:var(--shadow-md);}
+  .char-name{font-weight:600;}
+
+  /* Statistiques */
+  .stat-grid{gap:16px; padding:20px 24px 40px;}
+  .stat-card{border-radius:12px; box-shadow:var(--shadow-sm); padding:20px 22px;}
+  .stat-num{font-size:34px; letter-spacing:-.03em; line-height:1.1;}
+  .stat-label{font-size:13.5px; margin-top:4px;}
+
+  /* Paramètres */
+  .center-pane > div > .panel-block{background:var(--surface); border:1px solid var(--hair); border-radius:12px; padding:18px 20px 6px; box-shadow:var(--shadow-sm); margin-bottom:18px;}
+  .panel-block h4{font-family:var(--sans); font-size:15.5px; font-weight:700; letter-spacing:-.01em; margin-bottom:12px;}
+  .toolbar-row{padding-left:24px; padding-right:24px;}
+
+  /* Navigateur de scènes */
+  .side-pane{width:300px; box-shadow:-1px 0 0 var(--hair);}
+  .nav-pane-head{border-bottom:0; padding-bottom:4px;}
+  .nav-pane-head .t{font-family:var(--sans); font-size:17px; font-weight:700; letter-spacing:-.015em;}
+  .nav-pane-head .c{font-weight:500;}
+  .nav-filter input{border-radius:999px; padding:8px 13px; background:var(--surface-soft-2); border-color:transparent;}
+  .nav-filter input:focus{background:var(--surface); border-color:var(--accent); box-shadow:var(--focus-ring);}
+  .nav-item{border-radius:8px; padding:8px 10px;}
+  .nav-item.active{background:var(--tag-chip-bg); border-color:transparent; box-shadow:inset 3px 0 0 var(--accent);}
+
+  @media (max-width:880px){
+    .rail{width:64px;}
+    .rail-brand{justify-content:center; padding:0;}
+    .rail-brand .mm-word, .rail-group{display:none;}
+    .rail-nav{padding:8px 8px;}
+    .rail-item{justify-content:center; padding:10px 0;}
+    .rail-item.active::before{left:-8px;}
+    .topbar{padding:0 12px; gap:8px;}
+    .tb-div{margin:0 4px;}
+    .cards-toolbar{padding:20px 16px 4px;}
+    .pane-title{font-size:22px;}
+    #homeView .wd-main-h h1{font-size:24px;}
+    #homeView .wd-count{min-width:30px; height:30px; font-size:16px;}
+  }
+
+/* ===== v29 : sauvegarde, renommage global, variantes, scènes d'anciennes versions, sides ===== */
+.wd-bar{display:flex; align-items:center; gap:12px; flex-wrap:wrap; padding:8px 20px; font-size:13px; line-height:1.4;
+  background:var(--chip-bg); color:var(--ink); border-bottom:1px solid var(--hair); border-left:3px solid #d98b1f;}
+.wd-bar .wd-bar-text{flex:1 1 280px; min-width:0;}
+.wd-bar .wd-bar-text b{font-weight:700;}
+.wd-bar .wd-bar-actions{display:flex; gap:6px; align-items:center;}
+.wd-modal{max-width:660px; width:100%; max-height:88vh; display:flex; flex-direction:column; padding:24px 26px 20px;}
+.wd-modal h2{margin:0 0 4px;}
+.wd-sub{font-size:13px; color:var(--ink-soft); margin:0 0 14px; line-height:1.45;}
+.wd-body{overflow:auto; min-height:0; margin:0 -6px; padding:0 6px;}
+.wd-seg{display:inline-flex; border:1px solid var(--hair); border-radius:9px; overflow:hidden; margin-bottom:14px;}
+.wd-seg button{border:0; background:var(--surface); color:var(--ink-soft); padding:6px 14px; font-size:13px; font-weight:600; cursor:pointer;}
+.wd-seg button.on{background:var(--accent); color:#fff;}
+.wd-row2{display:grid; grid-template-columns:1fr 1fr; gap:12px;}
+.wd-opts{display:flex; flex-wrap:wrap; gap:6px 18px; margin:2px 0 12px; font-size:13px;}
+.wd-opts label{display:flex; align-items:center; gap:6px; cursor:pointer;}
+.wd-sum{font-size:12.5px; color:var(--ink-soft); margin:0 0 8px; font-weight:600;}
+.wd-warn{font-size:12.5px; color:#9a5b00; background:rgba(217,139,31,.12); border-radius:8px; padding:6px 10px; margin:0 0 8px;}
+.wd-list{display:flex; flex-direction:column; gap:6px;}
+.wd-chg{display:flex; gap:9px; align-items:flex-start; border:1px solid var(--hair); border-radius:8px; padding:7px 10px; background:var(--surface); cursor:pointer; font-size:12.5px;}
+.wd-chg input{margin-top:3px; flex:none;}
+.wd-chg .wd-k{flex:none; width:62px; font-size:10px; font-weight:700; letter-spacing:.05em; text-transform:uppercase; color:var(--ink-soft); padding-top:2px;}
+.wd-chg .wd-t{min-width:0; flex:1; font-family:var(--mono); white-space:pre-wrap; word-break:break-word;}
+.wd-chg .wd-b{color:var(--ink-soft); text-decoration:line-through; text-decoration-color:#d6454566;}
+.wd-chg mark{background:rgba(54,153,212,.22); color:inherit; border-radius:3px; padding:0 1px;}
+.wd-chg .wd-b mark{background:rgba(214,69,69,.18);}
+.wd-more{font-size:12.5px; color:var(--ink-soft); padding:4px 2px;}
+.wd-card{border:1px solid var(--hair); border-radius:10px; padding:12px 14px; background:var(--surface); margin-bottom:10px;}
+.wd-card-h{display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:8px;}
+.wd-badge{font-size:10px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-soft); background:var(--chip-bg); border-radius:6px; padding:3px 7px;}
+.wd-pick{display:flex; align-items:center; gap:8px; padding:4px 0; font-size:13.5px; cursor:pointer;}
+.wd-pick .wd-n{margin-left:auto; font-size:12px; color:var(--ink-soft);}
+.wd-pick .wd-name{font-family:var(--mono); font-weight:700;}
+.wd-chip{font-size:11px; font-weight:700; border-radius:6px; padding:2px 7px;}
+.wd-chip.mod{background:rgba(217,139,31,.16); color:#9a5b00;}
+.wd-chip.gone{background:rgba(214,69,69,.14); color:#b02a2a;}
+.wd-chip.same{background:var(--chip-bg); color:var(--ink-soft);}
+.wd-prev{margin-top:8px; max-height:220px; overflow:auto; border:1px solid var(--hair); border-radius:8px; padding:8px 10px; background:var(--surface-soft); font-family:var(--mono); font-size:12px; line-height:1.5; white-space:pre-wrap;}
+.wd-prev .wd-ln-new{background:rgba(47,158,68,.14);}
+.wd-prev .wd-ln-old{background:rgba(214,69,69,.12);}
+.wd-empty{padding:26px 8px; text-align:center; color:var(--ink-soft); font-size:13.5px;}
+.wd-modal .modal-actions{margin-top:16px;}
+.wd-modal select, .wd-modal input[type=text]{width:100%;}
+@media (max-width:640px){ .wd-row2{grid-template-columns:1fr;} .wd-chg .wd-k{display:none;} }
+/* Sides : réplique de l'acteur surlignée à l'impression */
+#printArea .line.side-hl, #pdfStage .line.side-hl{background:#fff1a8 !important; -webkit-print-color-adjust:exact; print-color-adjust:exact;}
+#printArea .line--character.side-hl, #pdfStage .line--character.side-hl{width:fit-content; max-width:100%;}
+.wd-bar.wd-bar-info{border-left-color:var(--accent);}
+
+  /* ===== Paramètres : même D.A. que le reste du site (v64) ===== */
+  .center-pane > div > .sset-group > .panel-block{background:var(--surface); border:1px solid var(--hair); border-radius:12px; padding:18px 20px 6px; box-shadow:var(--shadow-sm); margin-bottom:18px;}
+  .sset-nav{gap:4px; padding:4px; background:var(--surface-soft-2); border:1px solid var(--hair); border-radius:12px; margin:8px 0 14px;}
+  .sset-nav .fmt-opt{border:0; border-radius:9px; padding:9px 10px; text-align:center; background:transparent; color:var(--ink-soft); transition:background .12s, color .12s, box-shadow .12s;}
+  .sset-nav .fmt-opt .t{font-size:14px; font-weight:600;}
+  .sset-nav .fmt-opt:hover{color:var(--ink);}
+  .sset-nav .fmt-opt.active{background:var(--surface); color:var(--accent); box-shadow:var(--shadow-sm), 0 0 0 1px var(--hair);}
+  .sset-lead{font-size:14px; line-height:1.5; margin:0 2px 14px; color:color-mix(in srgb, var(--ink) 80%, var(--surface));}
+  .sset-group .panel-block h4{font-size:16px; color:var(--ink);}
+  .sset-group .opt-help{font-size:13.5px; line-height:1.55; color:color-mix(in srgb, var(--ink) 78%, var(--surface));}
+  .sset-group .opt-label{font-size:14px; color:var(--ink);}
+  .sset-group .field label{font-size:13.5px; color:var(--ink);}
+  .sset-group .field input[type=text], .sset-group .field input[type=date], .sset-group .field input[type=number], .sset-group .field select{
+    border-color:color-mix(in srgb, var(--ink) 24%, var(--surface)); color:var(--ink);
+  }
+  .sset-group .fmt-choice:not(.sset-nav) .fmt-opt{border-color:color-mix(in srgb, var(--ink) 22%, var(--surface)); color:var(--ink);}
+  .sset-group .fmt-choice:not(.sset-nav) .fmt-opt.active{border-color:var(--accent); background:color-mix(in srgb, var(--accent) 12%, var(--surface));}
+  .sset-group .fmt-opt .d{color:color-mix(in srgb, var(--ink) 70%, var(--surface));}
+  .sset-group .btn:not(.btn-primary), .sset-group .btn-ghost:not(.btn-danger){border-color:color-mix(in srgb, var(--ink) 28%, var(--surface)); color:var(--ink); background:var(--surface);}
+  .sset-group .btn:not(.btn-primary):hover{background:var(--overlay-hover); border-color:var(--accent);}
+  .sset-group .btn-danger{color:var(--danger); border-color:color-mix(in srgb, var(--danger) 55%, var(--surface));}
+  .sset-group .btn-primary, .center-pane [data-act="saveSettings"]{background:var(--accent-2); border-color:var(--accent-2); color:#fff;}
+  .sset-group .btn-primary:hover, .center-pane [data-act="saveSettings"]:hover{background:#185A84; border-color:#185A84;}
+  .center-pane [data-act="saveSettings"]{padding:11px 22px; font-size:14.5px; font-weight:600; box-shadow:var(--shadow-sm);}
+  .sset-group details summary{color:var(--accent); font-weight:600;}
+
+  /* Paramètres › Sauvegarde : texte aéré, par petites touches lisibles (v65) */
+  .sset-sub{font-size:14px; line-height:1.5; margin:-2px 0 12px; color:color-mix(in srgb, var(--ink) 82%, var(--surface));}
+  .sset-label{font-size:13px; font-weight:600; color:var(--ink); margin:0 0 8px;}
+  .sset-points{list-style:none; margin:0 0 16px; padding:0; display:grid; gap:8px;}
+  .sset-points li{position:relative; padding-left:26px; font-size:13.5px; line-height:1.45; color:color-mix(in srgb, var(--ink) 78%, var(--surface));}
+  .sset-points li::before{content:""; position:absolute; left:2px; top:1px; width:15px; height:15px; border-radius:50%; background:color-mix(in srgb, var(--accent) 16%, var(--surface));}
+  .sset-points li::after{content:""; position:absolute; left:7.5px; top:4.5px; width:3.5px; height:6.5px; border:solid var(--accent); border-width:0 2px 2px 0; transform:rotate(45deg);}
+  .sset-actions{display:flex; gap:8px; flex-wrap:wrap; margin:0 0 14px;}
+  .sset-status{display:flex; align-items:flex-start; gap:9px; padding:10px 12px; margin:0 0 14px; background:var(--surface-soft); border:1px solid var(--hair); border-radius:9px; font-size:13px; line-height:1.45; color:var(--ink);}
+  .sset-status .sset-dot{flex:none; width:8px; height:8px; margin-top:5px; border-radius:50%; background:color-mix(in srgb, var(--ink) 35%, var(--surface));}
+  .sset-status.ok .sset-dot{background:var(--ok);}
+  .sset-status.warn .sset-dot{background:#D98A00;}
+  .sset-more{margin:0 0 14px;}
+  .sset-more summary{cursor:pointer; font-size:13px; font-weight:600; color:var(--accent); margin-bottom:6px;}
+
+  /* Paramètres › Mise en page : lignes à case + explication courte dessous (v66) */
+  .sset-row{margin:0 0 12px;}
+  .sset-row .opt-label{margin-bottom:0;}
+  .sset-hint{font-size:13px; line-height:1.5; margin:3px 0 0 24px; color:color-mix(in srgb, var(--ink) 74%, var(--surface));}
+  .sset-sep{border-top:1px solid var(--hair); margin:6px 0 14px;}
+
+  /* Menu « Plus d'options » : rubriques (v67) */
+  .tb-more-menu .tb-more-title{padding:10px 10px 4px; font-size:10.5px; font-weight:600; letter-spacing:.09em; text-transform:uppercase; color:var(--ink-soft);}
+  .tb-more-menu .tb-more-title:first-child{padding-top:4px;}
+
+  /* Comment faire : onglets en barre, contenu en cartes (v68) */
+  .help-modal{max-width:640px;}
+  .help-lead{font-size:14px; line-height:1.5; margin:-6px 0 14px; color:color-mix(in srgb, var(--ink) 80%, var(--surface));}
+  .help-tabs{gap:4px; padding:4px; background:var(--surface-soft-2); border:1px solid var(--hair); border-radius:12px; margin:0 0 16px; flex-wrap:nowrap; overflow-x:auto;}
+  .help-tab{flex:1 1 auto; justify-content:center; border:0; background:transparent; border-radius:9px; padding:8px 10px; white-space:nowrap; font-size:13px; transition:background .12s, color .12s, box-shadow .12s;}
+  .help-tab:hover{color:var(--ink);}
+  .help-tab.active{background:var(--surface); color:var(--accent); box-shadow:var(--shadow-sm), 0 0 0 1px var(--hair);}
+  .help-body{max-height:58vh;}
+  .help-card{background:var(--surface); border:1px solid var(--hair); border-radius:12px; padding:14px 16px 6px; margin-bottom:12px; box-shadow:var(--shadow-sm);}
+  .help-card:last-child{margin-bottom:4px;}
+  .help-card-t{font-size:14.5px; font-weight:700; letter-spacing:-.01em; color:var(--ink); margin:0 0 10px;}
+  .help-card .help-p{margin:0 0 12px;}
+  .help-card .help-step-list{margin:0 0 12px;}
+  .help-card .help-list{margin:0 0 12px;}
+  .help-card .help-callout{margin:2px 0 12px;}
+  .help-points{list-style:none; margin:0 0 12px; padding:0; display:grid; gap:8px;}
+  .help-points li{position:relative; padding-left:26px; font-size:13.5px; line-height:1.5; color:var(--ink);}
+  .help-points li::before{content:""; position:absolute; left:2px; top:2px; width:15px; height:15px; border-radius:50%; background:color-mix(in srgb, var(--accent) 16%, var(--surface));}
+  .help-points li::after{content:""; position:absolute; left:7.5px; top:5.5px; width:3.5px; height:6.5px; border:solid var(--accent); border-width:0 2px 2px 0; transform:rotate(45deg);}
+  /* Aide à l'écriture : cartes, même D.A. que Sauvegarde et Comment faire (v69) */
+  .wh-lead{font-size:14px; line-height:1.5; margin:0 2px 16px; color:color-mix(in srgb, var(--ink) 80%, var(--surface));}
+  .wh-card{background:var(--surface); border:1px solid var(--hair); border-radius:12px; padding:18px 20px 8px; margin-bottom:18px; box-shadow:var(--shadow-sm);}
+  .wh-card-t{display:flex; align-items:center; gap:8px; font-size:16px; font-weight:700; letter-spacing:-.01em; color:var(--ink); margin:0 0 4px;}
+  .wh-card-t .icon{width:18px; height:18px; color:var(--accent);}
+  .wh-card-s{font-size:14px; line-height:1.5; margin:0 0 14px; color:color-mix(in srgb, var(--ink) 82%, var(--surface));}
+  .wh-card.wh-sample{border:1.5px solid var(--accent); background:color-mix(in srgb, var(--accent) 6%, var(--surface));}
+  .wh-card .help-points{margin:0 0 14px;}
+  .wh-card .sset-actions{margin:0 0 14px;}
+  .wh-card .sset-status{margin:0 0 14px;}
+  .wh-strip{align-items:center; flex-wrap:wrap;}
+  .wh-strip .sset-dot{margin-top:0;}
+  .wh-strip-t{flex:1 1 200px;}
+  .wh-els{margin:0 0 6px;}
+  .wh-el{padding:12px 0; border-top:1px solid var(--hair);}
+  .wh-el:first-child{border-top:0; padding-top:2px;}
+  .wh-el-h{display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:4px;}
+  .wh-el-t{font-size:14px; font-weight:600; color:var(--ink);}
+  .wh-el-d{font-size:13.5px; line-height:1.5; color:color-mix(in srgb, var(--ink) 80%, var(--surface));}
+  .wh-el-e{display:inline-block; margin-top:8px; padding:3px 9px; font-family:var(--mono); font-size:12.5px; color:var(--ink); background:var(--surface-soft); border:1px solid var(--hair); border-radius:7px;}
+  .wh-acts{list-style:none; margin:0 0 14px; padding:0; display:flex; flex-direction:column; gap:16px;}
+  .wh-act{display:flex; gap:12px; align-items:flex-start;}
+  .wh-act-b{min-width:0;}
+  .wh-act-h{display:flex; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:3px; font-size:14px; color:var(--ink);}
+  .wh-act-k{font-size:11.5px; font-weight:600; color:var(--ink-soft); background:var(--surface-soft-2); border:1px solid var(--hair); border-radius:999px; padding:2px 9px;}
+  .wh-act-d{margin:0; font-size:13.5px; line-height:1.55; color:color-mix(in srgb, var(--ink) 80%, var(--surface));}
+  .wh-card .help-callout{margin:2px 0 14px;}
+  .wh-where{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin:0 0 14px;}
+  .wh-tile{background:var(--surface-soft); border:1px solid var(--hair); border-radius:10px; padding:11px 13px;}
+  .wh-tile-t{font-size:13.5px; font-weight:700; color:var(--accent); margin:0 0 3px;}
+  .wh-tile-d{margin:0; font-size:13px; line-height:1.5; color:color-mix(in srgb, var(--ink) 80%, var(--surface));}
+  @media (max-width:640px){ .wh-where{grid-template-columns:1fr;} .wh-wrap{padding-left:14px; padding-right:14px;} }
+  /* Autres onglets : cartes, même D.A. (v70) */
+  .wh-wrap .flat-list{padding:0 0 10px;}
+  .wh-wrap .stat-grid{grid-template-columns:repeat(3,1fr); gap:12px; padding:0; margin:0 0 18px;}
+  .wh-wrap .stat-card{border-radius:12px; padding:16px 18px; box-shadow:var(--shadow-sm);}
+  .wh-wrap .stat-num{font-size:28px;}
+  .wh-wrap .stat-label{font-size:13px;}
+  .wh-chars{margin:0 0 8px;}
+  .wh-card .char-row{padding:11px 8px; margin:0 -8px; border-bottom:0; border-top:1px solid var(--hair); border-radius:8px;}
+  .wh-card .wh-chars .char-row:first-child{border-top:0;}
+  .wh-chips{display:flex; flex-wrap:wrap; gap:8px; margin:0 0 14px;}
+  .wh-card textarea.notes-area{min-height:48vh; margin:0 0 14px; border-radius:10px;}
+  .wh-card .field{margin-bottom:12px;}
+  .wh-lines{display:flex; flex-direction:column; gap:8px; margin:0 0 14px;}
+  .wh-lines .flat-row{box-shadow:none;}
+  .wh-lines .flat-row:hover{box-shadow:none;}
+  .wh-wrap > .sset-status{margin:0 0 14px;}
+  .wh-card .sset-status:last-child{margin-bottom:14px;}
+  @media (max-width:640px){ .wh-wrap .stat-grid{grid-template-columns:1fr 1fr;} }
