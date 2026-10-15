@@ -125,7 +125,7 @@ async function vaultAttach(){
   try{
     const h = await window.showSaveFilePicker({
       suggestedName: safeFileName(S.project.title) + '.smmproj',
-      types:[{ description:'Scénario Raging Page', accept:{ 'application/json':['.smmproj'] } }]
+      types:[{ description:L('Scénario Raging Page','Raging Page screenplay'), accept:{ 'application/json':['.smmproj'] } }]
     });
     V.handle = h; V.pid = S.project.id; V.ok = true; V.err = ''; V.name = h.name || '';
     try{ await idbSet(vaultKey(S.project.id), { handle:h, at:Date.now(), name:V.name }); }catch(e){}
@@ -215,7 +215,7 @@ async function vaultOpenFromFile(){
   let h, data;
   try{
     const picked = await window.showOpenFilePicker({
-      types:[{ description:'Scénario Raging Page', accept:{ 'application/json':['.smmproj','.json'] } }],
+      types:[{ description:L('Scénario Raging Page','Raging Page screenplay'), accept:{ 'application/json':['.smmproj','.json'] } }],
       multiple:false
     });
     h = picked[0];
@@ -608,4 +608,3 @@ async function vaultInit(){
   if(mode === 'none') showStorageBanner();
   updateVaultChip();
 }
-
