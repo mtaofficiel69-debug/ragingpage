@@ -59,6 +59,7 @@ function renderEditorShell(){
           <span class="tb-div"></span>
           <div class="save-status"><span class="dot" id="saveDot"></span><span id="saveLabel">${L('Sauvegardé','Saved')}</span></div>
           <span class="vault-chip off" id="vaultChip" data-act="vaultChipClick" title="${L('Coffre-fort','Vault')}"></span>
+          <span class="vault-chip off" id="driveChip" data-act="driveChipClick" style="display:none" title="${L('Google Drive','Google Drive')}"></span>
           ${langFlagsHtml()}
         </div>
         <div class="topbar-right">
