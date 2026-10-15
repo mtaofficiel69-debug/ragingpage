@@ -286,6 +286,14 @@ const I18N_EN = {
   /* --- Ajouts : hub de série --- */
   'Accueil':'Home', 'Nouvel épisode':'New episode', 'Nouvelle saison':'New season',
   'Exporter la série…':'Export series…',
+
+  /* --- Ajouts : messages d'import et notifications du panneau Synonymes --- */
+  'Import terminé, vérifie les types de lignes détectés.':'Import complete: check the detected line types.',
+  'Import PDF terminé : la mise en forme (personnage/dialogue/action) est déduite automatiquement, vérifie-la avant d\u2019écrire.':'PDF import complete: the formatting (character/dialogue/action) is detected automatically, check it before writing.',
+  'Sélectionne d\u2019abord un mot dans le scénario.':'First select a word in the screenplay.',
+  'Mot introuvable.':'Word not found.',
+  'Le texte a changé : re-sélectionne le mot.':'The text has changed: select the word again.',
+  'Infinitif inséré : pense à le conjuguer.':'Infinitive inserted: remember to conjugate it.',
 };
 
 /* Sélecteur des zones jamais traduites : tout ce qui affiche du texte
@@ -422,4 +430,3 @@ function setLang(l){
     restoreScrolls(snap);
   }, ms));
 }
-
