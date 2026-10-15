@@ -34,7 +34,7 @@ function loadJsPdf(){
       try{
         await new Promise((resolve, reject)=>{
           const s = document.createElement('script');
-          s.src = src; s.onload = resolve; s.onerror = ()=>reject(new Error('échec de chargement: '+src));
+          s.src = src; s.onload = resolve; s.onerror = ()=>reject(new Error(L('échec de chargement: ','loading failed: ')+src));
           document.head.appendChild(s);
         });
         if(window.jspdf && window.jspdf.jsPDF) return window.jspdf.jsPDF;
@@ -582,14 +582,14 @@ async function exportPDF(){
       if(s.isTitle) data.pattern = ensureTPDesign(p);
       return data;
     });
-    if(!pages.length) throw new Error('rien à exporter');
+    if(!pages.length) throw new Error(L('rien à exporter','nothing to export'));
 
     const doc = new jsPDF({ unit:'pt', orientation:'portrait', format:[pages[0].wPt, pages[0].hPt], compress:true });
     pages.forEach((page, i)=>{
       if(i > 0) doc.addPage([page.wPt, page.hPt], 'portrait');
       pdfPaintPage(doc, page);
     });
-    doc.setProperties({ title:p.title || 'Scénario', author:p.author || '' });
+    doc.setProperties({ title:p.title || L('Scénario','Screenplay'), author:p.author || '' });
 
     stageRef.remove(); stageRef = null;
 
@@ -675,7 +675,7 @@ function downloadBlob(filename, content, mime){
 function exportTXT(){
   closeExportMenu();
   const p = S.project;
-  const header = `${p.title.toUpperCase()}\n${p.author?('Écrit par '+p.author+'\n'):''}\n`;
+  const header = `${p.title.toUpperCase()}\n${p.author?(L('Écrit par ','Written by ')+p.author+'\n'):''}\n`;
   const lg = revLegendText(p);
   downloadBlob((p.title||'scenario')+'.txt', header + (lg ? lg + '\n\n' : '') + elementsToText(visibleElements(), false), 'text/plain');
 }
@@ -739,7 +739,7 @@ function fdxDocument(p){
   const body = elementsToFDX(visibleElements());
   const titleParas = [];
   if(p.title) titleParas.push(`<Paragraph><Text>${esc(p.title)}</Text></Paragraph>`);
-  if(p.author) titleParas.push(`<Paragraph><Text>${esc('Écrit par ' + p.author)}</Text></Paragraph>`);
+  if(p.author) titleParas.push(`<Paragraph><Text>${esc(L('Écrit par ','Written by ') + p.author)}</Text></Paragraph>`);
   const titlePage = titleParas.length
     ? `<TitlePage>\n<Content>\n${titleParas.join('\n')}\n</Content>\n</TitlePage>\n`
     : '';
@@ -750,4 +750,3 @@ function exportFDX(){
   const p = S.project;
   downloadBlob((p.title||'scenario')+'.fdx', fdxDocument(p), 'application/xml');
 }
-
