@@ -268,7 +268,7 @@ function importFDXFile(file){
       toast(L('Aucun texte trouvé dans ce .fdx.','No text found in this .fdx.'));
       return;
     }
-    finishImport(elements, title, 'Import Final Draft terminé : les types de lignes viennent du fichier, rien n\u2019a été deviné.' + (revExtra ? ' Les révisions ont été reconstituées (dates = jour d\u2019import).' : ''), author, revExtra);
+    finishImport(elements, title, L('Import Final Draft terminé : les types de lignes viennent du fichier, rien n\u2019a été deviné.','Final Draft import complete: line types come from the file, nothing was guessed.') + (revExtra ? L(' Les révisions ont été reconstituées (dates = jour d\u2019import).',' Revisions were rebuilt (dates = import day).') : ''), author, revExtra);
   };
   reader.readAsText(file);
 }
