@@ -267,7 +267,7 @@ function synCss(){
 function synChip(i, r){
   const cons = (r.g.t==='v' && r.it.cons && r.it.cons!=='d' && r.it.cons!=='i') ? ' '+r.it.cons : '';
   const tag = r.g.t==='n' ? (r.it.tag?'<small>'+synEsc(r.it.tag.replace('nm','m.').replace('nf','f.').replace(/p$/,' pl.'))+'</small>':'') : '';
-  return `<button class="sy-chip${r.ok?'':' inf'}" data-i="${i}" title="${r.ok?'Remplacer dans le texte':'Insère l’infinitif : à conjuguer'}">${synEsc(r.txt)}${cons?'<small>'+synEsc(cons.trim())+'</small>':''}${tag}</button>`;
+  return `<button class="sy-chip${r.ok?'':' inf'}" data-i="${i}" title="${r.ok?L('Remplacer dans le texte','Replace in the text'):L('Insère l’infinitif : à conjuguer','Inserts the infinitive: to be conjugated')}">${synEsc(r.txt)}${cons?'<small>'+synEsc(cons.trim())+'</small>':''}${tag}</button>`;
 }
 function synRender(){
   const p = document.getElementById('synPanel'); if(!p) return;
@@ -276,11 +276,11 @@ function synRender(){
   const inp = p.querySelector('.sy-q input'); if(inp && document.activeElement!==inp) inp.value = SYN.query;
   SYN.items = [];
   if(SYN.tab==='alt'){
-    if(!SYN.query.trim()){ body.innerHTML = '<div class="sy-hint">Sélectionne un mot dans ton scénario (ou pose le curseur dedans), ou tape-le ci-dessus. Les alternatives sont classées par nuance.</div>'; return; }
+    if(!SYN.query.trim()){ body.innerHTML = '<div class="sy-hint">'+L('Sélectionne un mot dans ton scénario (ou pose le curseur dedans), ou tape-le ci-dessus. Les alternatives sont classées par nuance.','Select a word in your screenplay (or place the cursor in it), or type it above. Alternatives are sorted by nuance.')+'</div>'; return; }
     const res = synLookup(SYN.query);
-    if(!res.length){ body.innerHTML = '<div class="sy-empty">Aucune alternative pour « '+synEsc(SYN.query)+' » dans le dictionnaire pour l’instant.</div>'; return; }
+    if(!res.length){ body.innerHTML = '<div class="sy-empty">'+L('Aucune alternative pour « ','No alternative for “')+synEsc(SYN.query)+L(' » dans le dictionnaire pour l’instant.','” in the dictionary yet.')+'</div>'; return; }
     body.innerHTML = res.map(g=>`<div class="sy-g"><div class="sy-gt">${synEsc(g.g.nuance)}</div><div class="sy-chips">${g.list.map(r=>{ SYN.items.push(r); return synChip(SYN.items.length-1, r); }).join('')}</div></div>`).join('')
-      + '<div class="sy-hint">Trait pointillé = l’infinitif est inséré, à conjuguer à la main.</div>';
+      + '<div class="sy-hint">'+L('Trait pointillé = l’infinitif est inséré, à conjuguer à la main.','Dotted line = the infinitive is inserted, to be conjugated by hand.')+'</div>';
   } else {
     body.innerHTML = synRepHtml();
   }
@@ -436,4 +436,3 @@ document.addEventListener('keydown', e=>{
   else if(e.key==='Escape' && SYN.open && !document.getElementById('tbMoreMenu')){ closeSynonyms(); }
 }, true);
 ACTIONS.openSynonyms = openSynonyms;
-
