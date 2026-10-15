@@ -157,6 +157,7 @@ function renderHome(){
             <li>${icon('swap')}<span>${L('Compatible Final Draft (.fdx), Fountain, texte et PDF','Final Draft (.fdx), Fountain, text and PDF')}</span></li>
             <li>${icon('save')}<span>${L('Tes données restent sur ton ordinateur','Your work stays on your computer')}</span></li>
           </ul>
+          <div class="wd-ver" style="margin-top:14px;font-size:11.5px;color:var(--ink-soft);opacity:.6;letter-spacing:.02em;">v1.10</div>
         </div>
       </aside>
       <main class="wd-main">
@@ -753,4 +754,3 @@ function toast(msg){
   t.textContent = msg; t.style.opacity='1';
   clearTimeout(t._h); t._h = setTimeout(()=>{ t.style.transition='opacity .4s'; t.style.opacity='0'; }, 2600);
 }
-
