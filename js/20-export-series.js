@@ -107,7 +107,7 @@ async function exportSeriesPDFMerged(entries){
       const pages = await buildEpisodePagesForPDF(p);
       pages.forEach(pg=> allPages.push(pg));
     }
-    if(!allPages.length) throw new Error('rien à exporter');
+    if(!allPages.length) throw new Error(L('rien à exporter','nothing to export'));
     const doc = new jsPDF({ unit:'pt', orientation:'portrait', format:[allPages[0].wPt, allPages[0].hPt], compress:true });
     allPages.forEach((page, i)=>{
       if(i>0) doc.addPage([page.wPt, page.hPt], 'portrait');
@@ -138,9 +138,9 @@ async function exportSeriesPDFSeparate(entries){
       if(!pages.length) continue;
       const doc = new jsPDF({ unit:'pt', orientation:'portrait', format:[pages[0].wPt, pages[0].hPt], compress:true });
       pages.forEach((page, k)=>{ if(k>0) doc.addPage([page.wPt, page.hPt], 'portrait'); pdfPaintPage(doc, page); });
-      doc.setProperties({ title:p.title || 'Épisode', author:p.author||'' });
+      doc.setProperties({ title:p.title || L('Épisode','Episode'), author:p.author||'' });
       const label = 'S' + (p.season||1) + 'E' + (p.episode||1);
-      const filename = ((p.seriesName||'Série') + ' - ' + label + ' - ' + (p.title||'Episode'))
+      const filename = ((p.seriesName||L('Série','Series')) + ' - ' + label + ' - ' + (p.title||'Episode'))
         .replace(/[\\/:*?"<>|]+/g,' ').trim() + '.pdf';
       const blob = doc.output('blob');
       const url = URL.createObjectURL(blob);
@@ -168,7 +168,7 @@ async function exportSeriesFountain(entries){
     if(!p) continue;
     if(!p.tagDefs) p.tagDefs = {};
     if(!first) first = p;
-    const head = (p.seriesName || 'Série') + ' · S' + (p.season||1) + 'E' + (p.episode||1) + (p.title ? (' · ' + p.title) : '');
+    const head = (p.seriesName || L('Série','Series')) + ' · S' + (p.season||1) + 'E' + (p.episode||1) + (p.title ? (' · ' + p.title) : '');
     await withSwappedProject(p, ()=>{
       ensureSettings(p);
       const lg = revLegendText(p);
@@ -188,7 +188,7 @@ async function exportSeriesFDX(entries){
     if(!p.tagDefs) p.tagDefs = {};
     let xml = '';
     await withSwappedProject(p, ()=>{ ensureSettings(p); xml = fdxDocument(p); });
-    const nm = ((p.seriesName || 'Serie') + ' S' + (p.season||1) + 'E' + (p.episode||1) + (p.title ? ' ' + p.title : '')).replace(/[\\/:*?"<>|]+/g,' ').trim();
+    const nm = ((p.seriesName || L('Serie','Series')) + ' S' + (p.season||1) + 'E' + (p.episode||1) + (p.title ? ' ' + p.title : '')).replace(/[\\/:*?"<>|]+/g,' ').trim();
     downloadBlob(nm + '.fdx', xml, 'application/xml');
     if(++n < entries.length) await new Promise(r=>setTimeout(r, 400));   // laisse le navigateur accepter plusieurs téléchargements
   }
@@ -199,7 +199,7 @@ async function exportSeriesTXT(entries){
     const p = await storGet(proj_key(entry.id));
     if(!p) continue;
     if(!p.tagDefs) p.tagDefs = {};
-    out += (p.seriesName || 'Série') + ' · S' + (p.season||1) + 'E' + (p.episode||1) + (p.title ? (' · ' + p.title) : '') + '\n';
+    out += (p.seriesName || L('Série','Series')) + ' · S' + (p.season||1) + 'E' + (p.episode||1) + (p.title ? (' · ' + p.title) : '') + '\n';
     out += '='.repeat(44) + '\n\n';
     await withSwappedProject(p, ()=>{ const lg = revLegendText(p); if(lg) out += lg + '\n\n'; out += elementsToText(visibleElements(), false); });
     out += '\n\n';
@@ -207,4 +207,3 @@ async function exportSeriesTXT(entries){
   const seriesName = entries.find(e=>e.seriesName)?.seriesName || L('Série','Series');
   downloadBlob((seriesName.replace(/[\\/:*?"<>|]+/g,' ').trim() || 'serie') + '.txt', out, 'text/plain');
 }
-
