@@ -463,6 +463,13 @@ function pdfPagesToElements(pages){
         return;                     // expectDialogue inchangé : toujours le même bloc
       }
 
+      // CORRECTIF. Deux paragraphes d'action séparés par une vraie ligne blanche dans le PDF
+      // arrivaient collés l'un à l'autre dans l'éditeur (aucun espace entre deux éléments
+      // « action » consécutifs). On rend la ligne blanche sous forme d'un élément action vide.
+      // Jamais d'une page à l'autre (prev vaut null en début de page), jamais avant/après autre
+      // chose qu'une action : scène, personnage et dialogue ont déjà leur espace.
+      if(prev && prev.type === 'action' && c.type === 'action' && gap != null && lineGap > 0 && gap > lineGap * 1.6)
+        elements.push(newElement('action',''));
       const el = newElement(c.type, c.text);
       elements.push(el);
       expectDialogue = c.expect;
