@@ -392,7 +392,26 @@ function pdfPagesToElements(pages){
   }
   const centers = clusterIndents([...freqX.keys()].filter(x => x > baseline + 8));
   const dialogueX = centers.length ? centers[0] : null;
-  const characterX = centers.length ? centers[centers.length - 1] : null;
+  // CORRECTIF. La colonne « personnage » n'est pas forcément la plus à DROITE : une colonne rare
+  // (transitions « CUT TO: » calées à droite, numéros…) pouvait être prise pour elle. Les noms de
+  // personnage sont de loin les lignes courtes en capitales les plus nombreuses : on prend donc,
+  // parmi les colonnes à droite du dialogue, celle qui en porte le plus (à défaut de tout nom,
+  // l'ancienne règle : la plus à droite). Sinon, un nom placé en haut de page, juste après une
+  // réplique, était rangé « dialogue » et collé à la réplique précédente.
+  const nameLike = t => t.length < 40 && /^[A-ZÀ-ÝŒ][A-ZÀ-ÝŒ0-9 .'’\-]*(\s*\([^()]*\))*$/.test(t)
+    && !isSceneHeading(t) && !/[.:!?…]$/.test(t.replace(/\([^()]*\)/g, '').trim());
+  const nameFreq = new Map();
+  pages.forEach(pl => pl.forEach(l=>{
+    if(isNoise(l) || !nameLike(l.text.trim())) return;
+    const rx = Math.round(l.x / 2) * 2;
+    nameFreq.set(rx, (nameFreq.get(rx) || 0) + 1);
+  }));
+  const nameCount = c => { let n = 0; nameFreq.forEach((v, x) => { if(Math.abs(x - c) <= 8) n += v; }); return n; };
+  let characterX = centers.length ? centers[centers.length - 1] : null;
+  if(centers.length > 1){
+    const best = centers.slice(1).reduce((b, c) => nameCount(c) > nameCount(b) ? c : b);
+    if(nameCount(best) > 0) characterX = best;
+  }
 
   function bucketOf(x){
     if(dialogueX == null) return null;   // aucun retrait distinct nulle part : pas d'info exploitable
