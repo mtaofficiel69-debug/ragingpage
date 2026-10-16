@@ -39,7 +39,9 @@ function renderEditorTab(){
   // sauts de page tomberaient au mauvais endroit.
   requestAnimationFrame(()=>{
     paginateEditor();
-    if(document.fonts && document.fonts.ready) document.fonts.ready.then(()=>repaginateNow());
+    // Seconde pagination seulement si une police est encore en cours de chargement : quand elle est déjà
+    // là (cas de chaque retour dans l'éditeur), la refaire doublait le temps d'affichage d'un long scénario.
+    if(document.fonts && document.fonts.ready && document.fonts.status !== 'loaded') document.fonts.ready.then(()=>repaginateNow());
   });
   if(S.search.query) runSearch(S.search.query, true);
 }
@@ -320,4 +322,3 @@ function renumberScenes(){
     }
   });
 }
-
