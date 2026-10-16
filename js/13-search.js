@@ -3,7 +3,7 @@
 ===================================================================== */
 function onSearchInput(e){ runSearch(e.target.value); }
 function onSearchKeydown(e){
-  if(e.key==='Enter'){ e.preventDefault(); gotoMatch(e.shiftKey ? -1 : 1); }
+  if(e.key==='Enter'){ e.preventDefault(); if(e.repeat) return; gotoMatch(e.shiftKey ? -1 : 1); }
 }
 /* =====================================================================
    RECHERCHE APPROCHANTE (barre de recherche uniquement)
@@ -52,18 +52,19 @@ function searchSpanAt(spans, p){
   return r;
 }
 function searchFind(q){
-  const out = { ids:[], span:{}, approx:false };
+  const out = { ids:[], span:{}, approx:false, pos:{}, sp:[] };
   const nq = searchNorm(q), m = nq.length;
   const idx = searchBuildIndex();
   if(!m || !idx.spans.length) return out;
   const t = idx.text, spans = idx.spans;
+  out.sp = spans;
   // 1) correspondance exacte (après normalisation), y compris sur plusieurs lignes
   const seen = {};
   let p = t.indexOf(nq);
   while(p >= 0){
     const a = searchSpanAt(spans, p), b = searchSpanAt(spans, p+m-1);
     const id = spans[a].id;
-    if(!seen[id]){ seen[id] = 1; out.ids.push(id); out.span[id] = spans.slice(a, b+1).map(x=>x.id); }
+    if(!seen[id]){ seen[id] = 1; out.ids.push(id); out.span[id] = spans.slice(a, b+1).map(x=>x.id); out.pos[id] = { s:p, e:p+m }; }
     p = t.indexOf(nq, p+1);
   }
   if(out.ids.length) return out;
@@ -91,7 +92,7 @@ function searchFind(q){
     if(curD[m] <= k && curS[m] <= j-1){
       const a = searchSpanAt(spans, curS[m]), b = searchSpanAt(spans, j-1);
       const id = spans[a].id;
-      if(!best[id] || curD[m] < best[id].d) best[id] = { d:curD[m], a:a, b:b };
+      if(!best[id] || curD[m] < best[id].d) best[id] = { d:curD[m], a:a, b:b, s:curS[m], e:j };
     }
     let tmp = prevD; prevD = curD; curD = tmp;
     tmp = prevS; prevS = curS; curS = tmp;
@@ -102,6 +103,7 @@ function searchFind(q){
     const id = spans[h.a].id;
     out.ids.push(id);
     out.span[id] = spans.slice(h.a, h.b+1).map(x=>x.id);
+    out.pos[id] = { s:h.s, e:h.e };
   });
   out.approx = out.ids.length > 0;
   return out;
@@ -116,9 +118,9 @@ function runSearch(q, silent){
   S.search.query = q;
   const cnt = document.getElementById('searchCount');
   clearTimeout(_matchTimer); clearMatchMarks();
-  if(!q){ S.search.matches=[]; S.search.idx=-1; S.search.approx=false; S.search.spans={}; if(cnt){ cnt.textContent=''; cnt.title=''; } return; }
+  if(!q){ S.search.matches=[]; S.search.idx=-1; S.search.approx=false; S.search.spans={}; S.search.pos={}; S.search.sp=[]; if(cnt){ cnt.textContent=''; cnt.title=''; } return; }
   const r = searchFind(q);
-  S.search.matches = r.ids; S.search.spans = r.span; S.search.approx = r.approx;
+  S.search.matches = r.ids; S.search.spans = r.span; S.search.approx = r.approx; S.search.pos = r.pos; S.search.sp = r.sp;
   S.search.idx = S.search.matches.length? 0 : -1;
   if(cnt){
     if(S.search.matches.length) setSearchCount();
@@ -282,63 +284,98 @@ let _matchTimer = 0;
    redessinée (pagination, rafraîchissement), c'est sa copie qui gardait le contour pour toujours.
    On retire maintenant le contour de TOUTES les lignes présentes à l'écran, au moment voulu. */
 function clearMatchMarks(){
-  document.querySelectorAll('#pageStack .hl-group').forEach(o=>o.remove());
+  if(window.CSS && CSS.highlights) CSS.highlights.delete('rp-search');
   document.querySelectorAll('#page .line').forEach(d=>{
     if(d.classList.contains('hl') || (d.style.outline && d.style.outline.indexOf('31, 111, 160') >= 0) || (d.style.outline && d.style.outline.toLowerCase().indexOf('1f6fa0') >= 0)){
-      d.classList.remove('hl'); d.style.outline = '';
+      d.classList.remove('hl'); d.style.outline = ''; d.style.background = '';
     }
   });
 }
 document.addEventListener('mousedown', e=>{ if(e.target && e.target.closest && e.target.closest('#page')){ clearTimeout(_matchTimer); clearMatchMarks(); } }, true);
-/* Phrase répartie sur plusieurs blocs : au lieu d'un contour par ligne (qui se collaient et se
-   chevauchaient dès que les lignes se touchent), on dessine UN seul cadre bleu qui englobe tous les
-   blocs concernés — un cadre par feuille si la phrase passe d'une page à l'autre. Le cadre est posé
-   dans #pageStack (hors de #page) : il ne touche jamais au contenu éditable ni à la pagination. */
-function drawMatchFrames(divs){
-  const stack = document.getElementById('pageStack');
-  if(!stack || !divs.length) return;
-  const sr = stack.getBoundingClientRect();
-  const k = (stack.offsetWidth && sr.width) ? sr.width / stack.offsetWidth : 1;
-  const sheets = Array.prototype.map.call(document.querySelectorAll('#sheets .sheet'), s=>s.getBoundingClientRect());
-  const sheetOf = r=>{
-    const y = (r.top + r.bottom) / 2;
-    for(let i=0;i<sheets.length;i++) if(y >= sheets[i].top && y <= sheets[i].bottom) return i;
-    return -1;
-  };
-  const groups = [];
-  divs.forEach(d=>{
-    const r = d.getBoundingClientRect();
-    if(!r.width && !r.height) return;
-    const s = sheetOf(r), g = groups[groups.length-1];
-    if(g && g.s === s){ g.l = Math.min(g.l, r.left); g.t = Math.min(g.t, r.top); g.r = Math.max(g.r, r.right); g.b = Math.max(g.b, r.bottom); }
-    else groups.push({ s:s, l:r.left, t:r.top, r:r.right, b:r.bottom });
-  });
-  groups.forEach(g=>{
-    const o = document.createElement('div');
-    o.className = 'hl-group';
-    o.style.cssText = 'position:absolute;z-index:2;pointer-events:none;box-sizing:border-box;border:2px solid #1F6FA0;border-radius:3px;'
-      + 'left:' + ((g.l - sr.left)/k - 2) + 'px;top:' + ((g.t - sr.top)/k - 2) + 'px;'
-      + 'width:' + ((g.r - g.l)/k + 4) + 'px;height:' + ((g.b - g.t)/k + 4) + 'px;';
-    stack.appendChild(o);
-  });
+/* Surlignage façon WriterDuet : on surligne le TEXTE trouvé (fond ambré, sans cadre ni contour), pas la ligne.
+   Rien n'est ajouté dans le DOM (API CSS Custom Highlight) : aucun risque de collision avec l'écriture du
+   scénario, et le contenu éditable reste strictement intact. Si le navigateur ne sait pas le faire, on teinte
+   légèrement la ligne à la place. */
+(function(){
+  if(typeof document === 'undefined' || document.getElementById('rpSearchHlCss')) return;
+  const st = document.createElement('style');
+  st.id = 'rpSearchHlCss';
+  st.textContent = '::highlight(rp-search){background-color:rgba(255,193,7,.55);}';
+  (document.head || document.documentElement).appendChild(st);
+})();
+/* même normalisation que searchNorm(), mais en gardant, pour chaque caractère normalisé, sa position d'origine */
+function searchNormMap(src){
+  src = String(src==null?'':src);
+  const chars = [], org = [];
+  for(let k=0;k<src.length;k++){
+    const x = src[k].normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+      .toLowerCase()
+      .replace(/[\u2018\u2019\u201A\u201B\u02BC\u2032`\u00B4]/g,"'")
+      .replace(/[\u201C\u201D\u201E\u201F\u00AB\u00BB]/g,'"')
+      .replace(/[\u2010-\u2015\u2212]/g,'-')
+      .replace(/\u2026/g,'...')
+      .replace(/\u0153/g,'oe').replace(/\u00E6/g,'ae');
+    for(let q=0;q<x.length;q++){
+      const ch = x[q];
+      if(/\s/.test(ch)){
+        if(!chars.length || chars[chars.length-1] === ' ') continue;
+        chars.push(' '); org.push(k);
+      } else { chars.push(ch); org.push(k); }
+    }
+  }
+  if(chars.length && chars[chars.length-1] === ' '){ chars.pop(); org.pop(); }
+  return { n: chars.join(''), map: org };
+}
+function searchTextRange(div, a, b){
+  const w = document.createTreeWalker(div, NodeFilter.SHOW_TEXT);
+  let pos = 0, n, sn = null, so = 0, en = null, eo = 0;
+  while((n = w.nextNode())){
+    const len = n.nodeValue.length;
+    if(!sn && a < pos+len){ sn = n; so = a - pos; }
+    if(sn && b <= pos+len){ en = n; eo = b - pos; break; }
+    pos += len;
+  }
+  if(!sn || !en) return null;
+  const r = document.createRange();
+  r.setStart(sn, so); r.setEnd(en, eo);
+  return r;
+}
+/* ranges (dans le DOM) du texte trouvé pour la correspondance 'id' ; null si on ne peut pas les établir sûrement */
+function searchMatchRanges(id){
+  const pos = (S.search.pos||{})[id], sp = S.search.sp||[];
+  if(!pos) return null;
+  const group = (S.search.spans||{})[id] || [id];
+  const ranges = [];
+  for(let g=0; g<group.length; g++){
+    const seg = sp.filter(x=>x.id === group[g])[0];
+    const el = S.project.elements.filter(e=>e.id === group[g])[0];
+    const div = document.querySelector('#page [data-id="'+group[g]+'"]');
+    if(!seg || !el || !div) return null;
+    const nm = searchNormMap(el.text);
+    if(nm.n.length !== seg.end - seg.start || div.textContent !== (el.text||'')) return null;
+    const ls = Math.max(pos.s, seg.start) - seg.start, le = Math.min(pos.e, seg.end) - seg.start;
+    if(le <= ls) continue;
+    const r = searchTextRange(div, nm.map[ls], nm.map[le-1] + 1);
+    if(!r) return null;
+    ranges.push(r);
+  }
+  return ranges.length ? ranges : null;
 }
 function scrollToMatch(){
   const id = S.search.matches[S.search.idx];
   const div = document.querySelector('#page [data-id="'+id+'"]');
-  const grp = (S.search.spans||{})[id]||[];
-  const multi = grp.length > 1;
-  /* v87 : un seul contour à la fois. Avant, chaque Entrée laissait le contour de la ligne
-     précédente allumé jusqu'à la fin de son minuteur : en spammant Entrée, ils s'empilaient. */
+  /* un seul surlignage à la fois : chaque saut efface le précédent avant d'en poser un nouveau. */
   clearTimeout(_matchTimer);
   clearMatchMarks();
-  if(div){ div.scrollIntoView({block:'center', behavior:'smooth'}); div.classList.add('hl'); if(!multi) div.style.outline='2px solid #1F6FA0'; _matchTimer = setTimeout(clearMatchMarks,1200); }
-  /* phrase répartie sur plusieurs lignes : on englobe aussi les lignes suivantes concernées dans un cadre unique */
-  if(multi){
-    const divs = [];
-    grp.forEach(x=>{
-      const d2 = document.querySelector('#page [data-id="'+x+'"]');
-      if(d2){ d2.classList.add('hl'); divs.push(d2); }
-    });
-    drawMatchFrames(divs);
+  if(div){ div.scrollIntoView({block:'center', behavior:'smooth'}); _matchTimer = setTimeout(clearMatchMarks,1200); }
+  let ranges = null;
+  if(window.CSS && CSS.highlights && typeof Highlight !== 'undefined'){
+    try{ ranges = searchMatchRanges(id); }catch(err){ ranges = null; }
   }
+  if(ranges){ CSS.highlights.set('rp-search', new Highlight(...ranges)); return; }
+  /* repli : teinte légère sur la ou les lignes concernées (pas de contour) */
+  ((S.search.spans||{})[id]||[id]).forEach(x=>{
+    const d2 = document.querySelector('#page [data-id="'+x+'"]');
+    if(d2){ d2.classList.add('hl'); d2.style.background = 'rgba(255,193,7,.28)'; }
+  });
 }
