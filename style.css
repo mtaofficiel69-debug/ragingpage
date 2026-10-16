@@ -1589,6 +1589,7 @@
   .center-pane::-webkit-scrollbar-button:single-button:vertical:increment{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 10 10'%3E%3Cpath d='M1 3l4 4 4-4z' fill='rgb%28110%2C118%2C140%29'/%3E%3C/svg%3E");}
   .center-pane::-webkit-scrollbar-button:single-button:horizontal:decrement{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 10 10'%3E%3Cpath d='M7 1L3 5l4 4z' fill='rgb%28110%2C118%2C140%29'/%3E%3C/svg%3E");}
   .center-pane::-webkit-scrollbar-button:single-button:horizontal:increment{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 10 10'%3E%3Cpath d='M3 1l4 4-4 4z' fill='rgb%28110%2C118%2C140%29'/%3E%3C/svg%3E");}
+  .center-pane{scroll-behavior:smooth; will-change:scroll-position;}   /* défilement adouci (flèches, clic sur la piste, clavier) + défilement composité plus fluide */
 
   /* Colonne de gauche */
   .rail{width:240px; border-right:0; box-shadow:inset -1px 0 0 rgba(0,0,0,.28);}
@@ -1924,3 +1925,30 @@
   .wh-wrap > .sset-status{margin:0 0 14px;}
   .wh-card .sset-status:last-child{margin-bottom:14px;}
   @media (max-width:640px){ .wh-wrap .stat-grid{grid-template-columns:1fr 1fr;} }
+  /* ===== Mode sombre : pastilles Coffre-fort / Drive, sélection de texte, menu « ⋯ » =====
+     Constat : (1) --line n'existe pas, donc la pastille n'avait aucune bordure ; les verts/ambres
+     des états « ok » / « attention » (#127a4b, #9a5b00) sont pensés pour fond clair et disparaissent
+     sur la barre sombre. (2) ::selection était un bleu clair unique : en sombre, le texte clair
+     devenait illisible sur ce bleu clair. Même logique que WriterDuet : états lisibles par la teinte
+     (vert / ambre / gris clair), sélection bleue de la charte avec texte blanc. Le thème clair
+     et la feuille de scénario (qui reste claire) ne changent pas. */
+  html[data-theme="dark"] .vault-chip{border-color:rgba(255,255,255,.28); color:var(--ink);}
+  html[data-theme="dark"] .vault-chip:hover{filter:brightness(1.15);}
+  html[data-theme="dark"] .vault-chip.ok{color:#5FD39A; border-color:rgba(95,211,154,.6); background:rgba(95,211,154,.14);}
+  html[data-theme="dark"] .vault-chip.warn{color:#F2B45A; border-color:rgba(242,180,90,.6); background:rgba(242,180,90,.14);}
+  html[data-theme="dark"] .vault-chip.off{opacity:1; color:var(--ink); background:rgba(255,255,255,.08);}
+  @media (max-width:1460px){
+    html[data-theme="dark"] .vault-chip, html[data-theme="dark"] .vault-chip.ok, html[data-theme="dark"] .vault-chip.warn, html[data-theme="dark"] .vault-chip.off{background:currentColor; border-color:transparent;}
+    html[data-theme="dark"] .vault-chip.ok{color:#5FD39A;} html[data-theme="dark"] .vault-chip.warn{color:#F2B45A;} html[data-theme="dark"] .vault-chip.off{color:var(--ink);}
+  }
+  html[data-theme="dark"] ::selection{background:rgba(54,153,212,.65); color:#fff;}
+  html[data-theme="dark"] input::selection, html[data-theme="dark"] textarea::selection{background:rgba(54,153,212,.65); color:#fff;}
+  /* La feuille de scénario, la page de titre et l'aperçu d'impression restent claires en thème sombre :
+     leur sélection garde donc le bleu clair d'origine avec l'encre foncée. */
+  html[data-theme="dark"] #page ::selection, html[data-theme="dark"] #page::selection,
+  html[data-theme="dark"] #sheets ::selection, html[data-theme="dark"] .titlepage ::selection, html[data-theme="dark"] .titlepage::selection,
+  html[data-theme="dark"] .print-page ::selection, html[data-theme="dark"] .tp-fs-page ::selection{background:#BFE3FA; color:var(--paper-ink);}
+  /* Menu « ⋯ » : survol un peu plus marqué et bouton principal lisible. */
+  html[data-theme="dark"] .tb-more-menu .btn:hover{background:rgba(255,255,255,.10);}
+  html[data-theme="dark"] .tb-more-menu .btn:focus-visible{outline:2px solid var(--accent); outline-offset:-2px;}
+  html[data-theme="dark"] .tb-more-menu .btn:active{background:rgba(54,153,212,.28); color:#fff;}
