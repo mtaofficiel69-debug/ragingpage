@@ -1943,3 +1943,7 @@
   html[data-theme="dark"] .tb-more-menu .btn:hover{background:rgba(255,255,255,.10);}
   html[data-theme="dark"] .tb-more-menu .btn:focus-visible{outline:2px solid var(--accent); outline-offset:-2px;}
   html[data-theme="dark"] .tb-more-menu .btn:active{background:rgba(54,153,212,.28); color:#fff;}
+  /* v56 : section Page de titre plus aérée — un peu d'espace entre la barre de police / les boutons « Modifier »
+     et le panneau de réglages, et une marge sous le panneau pour qu'il ne touche plus le bas de l'écran. */
+  .tp-tb-wrap{padding-bottom:12px; gap:8px;}
+  .tp-design-wrap{padding-top:16px; padding-bottom:30px;}
