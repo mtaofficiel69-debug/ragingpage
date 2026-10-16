@@ -340,24 +340,83 @@ function importFDXFile(file){
       };
     })();
 
-    // Titre et auteur depuis la page de titre du .fdx quand elle existe,
-    // sinon le nom du fichier (comme les autres imports).
+    // Titre, auteur et autres textes depuis la page de titre du .fdx quand elle existe,
+    // sinon le nom du fichier (comme les autres imports). Les textes restent rangés par BLOCS,
+    // séparés par une ligne vide dans « Phrases supplémentaires » : ceux du fichier (paragraphes
+    // vides = espace voulu, ou types Final Draft Title/Author/DraftDate/Contact…), jamais collés.
     let title = file.name.replace(/\.fdx$/i,'');
     let author = '';
+    let tpExtra = '';
     if(titlePage){
-      const tp = Array.prototype.map.call(titlePage.getElementsByTagName('Paragraph'), fdxParagraphText).filter(Boolean);
-      if(tp.length){
-        title = tp[0];
-        const a = tp.find(l=>/^(written by|écrit par|by|de)\b/i.test(l));
-        if(a) author = a.replace(/^(written by|écrit par|by|de)\s*/i,'').trim();
-        else if(tp[1] && tp[1].length < 60) author = tp[1];
+      const tpPars = Array.prototype.map.call(titlePage.getElementsByTagName('Paragraph'), par=>({
+        type: String(par.getAttribute('Type') || '').replace(/\s+/g,'').toLowerCase(),
+        text: fdxParagraphText(par)
+      }));
+      const TYPED = ['title','subtitle','credit','author','authors','source','draftdate','date','revision','contact','copyright'];
+      // « Written by » / « Écrit par » : l'appli l'écrit déjà devant l'auteur, on ne le garde pas deux fois.
+      const GENERIC_CREDIT = /^(?:(?:written|screenplay|teleplay|story)\s+by|[ée]crit(?:e)?\s+(?:et\s+r[ée]alis[ée]e?\s+)?par|un\s+(?:sc[ée]nario|film)\s+de|sc[ée]nario\s+(?:de|par)|by|par)\s*:?$/i;
+      const groups = [];
+      if(tpPars.some(q => q.text && TYPED.indexOf(q.type) >= 0)){
+        // Le fichier dit lui-même ce qu'est chaque paragraphe : rien à deviner.
+        const ofType = (...ts)=> tpPars.filter(q => q.text && ts.indexOf(q.type) >= 0).map(q => q.text);
+        const tt = ofType('title');   if(tt.length) title = tt.join(' ');
+        const au = ofType('author','authors'); if(au.length) author = au.join(', ');
+        const head = ofType('subtitle','source').concat(ofType('credit').filter(c => !GENERIC_CREDIT.test(c)));
+        if(head.length) groups.push(head);
+        tpPars.filter(q => q.text && TYPED.indexOf(q.type) < 0).forEach(q => groups.push([q.text]));
+        const dates = ofType('draftdate','date','revision'); if(dates.length) groups.push(dates);
+        const foot = ofType('copyright','contact');          if(foot.length) groups.push(foot);
+      }else{
+        // Pas de types (cas courant de Final Draft) : on garde l'ordre, et les paragraphes vides
+        // (l'espace vertical voulu) séparent les blocs.
+        const flat = [];
+        let blk = 0, pendingBreak = false;
+        tpPars.forEach(q=>{
+          if(!q.text){ pendingBreak = true; return; }
+          if(pendingBreak && flat.length) blk++;
+          pendingBreak = false;
+          flat.push({ t:q.text, b:blk });
+        });
+        if(flat.length){
+          const MARK = /^(?:written\s+by|screenplay\s+by|teleplay\s+by|[ée]crit(?:e)?\s+par|un\s+sc[ée]nario\s+de|sc[ée]nario\s+(?:de|par)|by|par|de)\b\s*:?\s*(.*)$/i;
+          let mk = -1;
+          for(let i = 1; i < flat.length; i++){ if(MARK.test(flat[i].t)){ mk = i; break; } }
+          // Titre : les lignes du premier bloc (3 au plus, ou jusqu'à la mention d'auteur).
+          // Sans mention d'auteur, une 2e/3e ligne du même bloc n'est prise dans le titre que si elle est,
+          // comme la première, toute en capitales (jamais « Copyright… »).
+          const allCaps = t => /[A-ZÀ-Ý]/.test(t) && !/[a-zà-ÿ]/.test(t);
+          let n = 0;
+          const lim = mk >= 0 ? mk : Math.min(flat.length, 3);
+          while(n < lim && flat[n].b === flat[0].b
+                && (mk >= 0 || n === 0 || (allCaps(flat[0].t) && allCaps(flat[n].t)))) n++;
+          if(n < 1) n = 1;
+          title = flat.slice(0, n).map(f => f.t).join(' ');
+          const used = new Set();
+          for(let i = 0; i < n; i++) used.add(i);
+          if(mk >= 0){
+            const name = flat[mk].t.match(MARK)[1].trim();
+            used.add(mk);
+            if(name) author = name;
+            else if(flat[mk+1]){ author = flat[mk+1].t; used.add(mk+1); }
+          }else if(flat[n] && flat[n].t.length < 60){
+            author = flat[n].t; used.add(n);
+          }
+          flat.forEach((f, i)=>{
+            if(used.has(i)) return;
+            if(!groups.length || groups[groups.length-1].b !== f.b) groups.push(Object.assign([], { b:f.b }));
+            groups[groups.length-1].push(f.t);
+          });
+        }
       }
+      tpExtra = groups.filter(g => g.length).map(g => g.join('\n')).join('\n\n');
     }
     if(!elements.length){
       toast(L('Aucun texte trouvé dans ce .fdx.','No text found in this .fdx.'));
       return;
     }
-    finishImport(elements, title, 'Import Final Draft terminé : les types de lignes viennent du fichier, rien n\u2019a été deviné.' + (revExtra ? ' Les révisions ont été reconstituées (dates = jour d\u2019import).' : ''), author, revExtra);
+    // Phrases supplémentaires de la page de titre d'abord, puis les révisions.
+    const fdxExtra = (revExtra || tpExtra) ? (p=>{ if(tpExtra) p.titlePageExtra = tpExtra; if(revExtra) revExtra(p); }) : undefined;
+    finishImport(elements, title, 'Import Final Draft terminé : les types de lignes viennent du fichier, rien n\u2019a été deviné.' + (revExtra ? ' Les révisions ont été reconstituées (dates = jour d\u2019import).' : ''), author, fdxExtra);
   };
   reader.readAsText(file);
 }
