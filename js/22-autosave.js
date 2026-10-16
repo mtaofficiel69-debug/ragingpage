@@ -118,10 +118,63 @@ function stripContdExt(name){
   return s || name;
 }
 
+/* Bloc de titre Fountain : les toutes premières lignes du fichier, de la forme « Clé: valeur »,
+   jusqu'à la première ligne vide. Une valeur peut se continuer sur les lignes suivantes si elles
+   sont indentées (3 espaces ou une tabulation). Seules les clés connues sont reconnues, pour ne
+   jamais prendre pour un bloc de titre une première ligne comme « INT. CUISINE: » ou « MARC: salut ».
+     · Title            -> titre du scénario (au lieu du nom du fichier)
+     · Author / Authors -> auteur de la page de titre
+     · Credit, Source, Draft date, Date, Contact, Copyright, Notes -> lignes supplémentaires de la page de titre
+   Renvoie null s'il n'y a pas de bloc ; sinon { title, author, extra[], next } où next est l'index de
+   la première ligne à lire comme scénario. */
+function parseFountainTitleBlock(lines){
+  const KNOWN = ['title','credit','author','authors','source','draft date','date','contact','copyright','notes','revision'];
+  const keyRe = /^([A-Za-z][A-Za-z ]*?)\s*:\s*(.*)$/;
+  let i = 0;
+  while(i < lines.length && !lines[i].trim()) i++;
+  if(i >= lines.length) return null;
+  const first = keyRe.exec(lines[i]);
+  if(!first || /^\s/.test(lines[i]) || KNOWN.indexOf(first[1].trim().toLowerCase()) < 0) return null;
+  const entries = [];
+  let cur = null;
+  for(; i < lines.length; i++){
+    const raw = lines[i];
+    if(!raw.trim()) break;                                   // ligne vide : fin du bloc
+    if(/^(\s{3,}|\t)/.test(raw)){                              // suite de la valeur précédente
+      if(cur) cur.vals.push(raw.trim());
+      continue;
+    }
+    const m = keyRe.exec(raw);
+    if(!m || KNOWN.indexOf(m[1].trim().toLowerCase()) < 0) break;   // pas une clé connue : le scénario commence ici
+    cur = { key:m[1].trim().toLowerCase(), vals:[] };
+    if(m[2].trim()) cur.vals.push(m[2].trim());
+    entries.push(cur);
+  }
+  // Retire le balisage Fountain (_souligné_, *italique*, **gras**) et les <br> des valeurs.
+  const clean = v => v.replace(/<br\s*\/?>/gi,' ')
+    .replace(/(^|[\s(])[*_]{1,3}(?=\S)/g,'$1')
+    .replace(/(\S)[*_]{1,3}(?=$|[\s).,;:!?])/g,'$1')
+    .trim();
+  let title = '', author = '';
+  const extra = [];
+  entries.forEach(e=>{
+    const vals = e.vals.map(clean).filter(Boolean);
+    if(!vals.length) return;
+    if(e.key === 'title') title = vals.join(' ');
+    else if(e.key === 'author' || e.key === 'authors') author = vals.join(', ');
+    else vals.forEach(v=> extra.push(v));
+  });
+  return { title, author, extra, next:i };
+}
+
 function importTextFile(file){
   const reader = new FileReader();
   reader.onload = ()=>{
-    const lines = String(reader.result).split(/\r?\n/);
+    let lines = String(reader.result).replace(/^\uFEFF/, '').split(/\r?\n/);
+    // Bloc de titre Fountain (Title:, Author:, Credit:…) : il remplit la page de titre
+    // et ne doit JAMAIS arriver dans le corps du scénario.
+    const tb = parseFountainTitleBlock(lines);
+    if(tb){ lines = lines.slice(tb.next); }
     const elements = [];
     let expectDialogue = false;
     lines.forEach(raw=>{
@@ -133,8 +186,9 @@ function importTextFile(file){
       elements.push(el);
       expectDialogue = c.expect;
     });
-    const title = file.name.replace(/\.(txt|fountain)$/i,'');
-    finishImport(elements, title);
+    const title = (tb && tb.title) || file.name.replace(/\.(txt|fountain)$/i,'');
+    finishImport(elements, title, undefined, tb && tb.author,
+      (tb && tb.extra.length) ? (p=>{ p.titlePageExtra = tb.extra.join('\n'); }) : undefined);
   };
   reader.readAsText(file);
 }
