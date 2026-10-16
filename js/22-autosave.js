@@ -238,8 +238,7 @@ function importTextFile(file){
     // .fountain et .txt : une ligne vide entre deux paragraphes d'action doit rester visible
     // (comme pour l'import PDF, on la rend par un élément action vide), sinon les paragraphes
     // arrivent collés les uns aux autres.
-    const isFountain = /\.fountain$/i.test(file.name);          // « === » (saut de page) : Fountain seulement
-    const keepBlank = /\.(fountain|txt)$/i.test(file.name);
+    const keepBlank = /\.(fountain|txt)$/i.test(file.name);      // « === » (saut de page) : ignoré aussi
     let prevType = null, blankSince = false;
     lines.forEach(raw=>{
       const t = raw.trim();
@@ -247,7 +246,7 @@ function importTextFile(file){
       // Fountain : « === » (3 signes égal ou plus, seuls sur leur ligne) est un saut de page forcé.
       // Raging Page pagine tout seul et n'a pas de saut de page manuel : on ne garde pas la marque
       // comme texte, elle compte simplement comme une ligne vide.
-      if(isFountain && /^={3,}$/.test(t)){ expectDialogue = false; if(prevType !== null) blankSince = true; return; }
+      if(keepBlank && /^={3,}$/.test(t)){ expectDialogue = false; if(prevType !== null) blankSince = true; return; }
       const c = classifyScreenplayLine(t, null, expectDialogue);
       if(keepBlank && blankSince && prevType === 'action' && c.type === 'action')
         elements.push(newElement('action',''));
