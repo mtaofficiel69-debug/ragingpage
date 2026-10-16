@@ -782,9 +782,15 @@ function applyTPDesignVars(el, design){
   tpApplyElementStyles(el, design);   // v51 : style propre à chaque élément
 }
 function tpExtraLinesHtml(text){
-  const lines = String(text||'').split('\n').map(l=>l.trim()).filter(Boolean);
+  // Une ligne vide sépare deux blocs (comme sur une page de titre pro) : on la garde comme une
+  // ligne vide à l'écran et à l'export. Plusieurs lignes vides de suite n'en font qu'une, et celles
+  // du début / de la fin sont ignorées. <br> garde la hauteur d'une ligne et rend « \n » à l'édition.
+  const lines = String(text||'').split('\n').map(l=>l.trim());
+  while(lines.length && !lines[0]) lines.shift();
+  while(lines.length && !lines[lines.length-1]) lines.pop();
   if(!lines.length) return '';
-  return lines.map(l=>`<div class="tp-extra-line">${esc(l)}</div>`).join('');
+  return lines.filter((l,i)=> l || lines[i-1])
+    .map(l=> l ? `<div class="tp-extra-line">${esc(l)}</div>` : `<div class="tp-extra-line tp-extra-gap"><br></div>`).join('');
 }
 /* Étiquette affichée sous le titre : pour un épisode de série, on préfère
    « Série — Nom · S1 E2 » à un simple « Série » qui ne dirait rien du
@@ -854,4 +860,3 @@ function migrateOldStorage(){
     localStorage.setItem(IDX_KEY, oldRaw);
   }catch(e){}
 }
-
