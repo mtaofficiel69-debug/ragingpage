@@ -235,10 +235,11 @@ function importTextFile(file){
     }
     const elements = [];
     let expectDialogue = false;
-    // Fichier .fountain uniquement : une ligne vide entre deux paragraphes d'action doit rester
-    // visible (comme pour l'import PDF, on la rend par un élément action vide), sinon les
-    // paragraphes arrivent collés les uns aux autres. Le .txt garde son comportement d'origine.
-    const isFountain = /\.fountain$/i.test(file.name);
+    // .fountain et .txt : une ligne vide entre deux paragraphes d'action doit rester visible
+    // (comme pour l'import PDF, on la rend par un élément action vide), sinon les paragraphes
+    // arrivent collés les uns aux autres.
+    const isFountain = /\.fountain$/i.test(file.name);          // « === » (saut de page) : Fountain seulement
+    const keepBlank = /\.(fountain|txt)$/i.test(file.name);
     let prevType = null, blankSince = false;
     lines.forEach(raw=>{
       const t = raw.trim();
@@ -248,7 +249,7 @@ function importTextFile(file){
       // comme texte, elle compte simplement comme une ligne vide.
       if(isFountain && /^={3,}$/.test(t)){ expectDialogue = false; if(prevType !== null) blankSince = true; return; }
       const c = classifyScreenplayLine(t, null, expectDialogue);
-      if(isFountain && blankSince && prevType === 'action' && c.type === 'action')
+      if(keepBlank && blankSince && prevType === 'action' && c.type === 'action')
         elements.push(newElement('action',''));
       const el = newElement(c.type, c.type === 'character' ? stripContdExt(c.text) : c.text);
       if(c.dual) el.dual = true;
