@@ -341,15 +341,22 @@ function stripTitlePage(pages){
   });
   if(hasHeading(pages[0])) return { pages, titleInfo:null };
   if(!pages.slice(1).some(hasHeading)) return { pages, titleInfo:null };
-  return { pages: pages.slice(1), titleInfo: parsePdfTitleLines(pages[0].map(l => l.text)) };
+  return { pages: pages.slice(1), titleInfo: parsePdfTitleLines(pages[0]) };
 }
 
-/* Lit les lignes de la page de titre d'un PDF (de haut en bas) et renvoie
-   { title, author, extra[] } — ou null si rien d'exploitable.
+/* Lit les lignes de la page de titre d'un PDF (de haut en bas, avec leur position {text,x,y})
+   et renvoie { title, author, extra[] } — ou null si rien d'exploitable.
      · Les lignes AVANT « Écrit par / Written by / Un scénario de… » forment le titre.
      · Le nom qui suit (sur la même ligne ou sur la ligne d'après) est l'auteur.
      · Tout ce qui vient ensuite (« Based on… », date, adresse, mail…) devient une ligne
        supplémentaire de la page de titre, une par ligne du PDF.
+     · Sauf un paragraphe qui se continue sur plusieurs lignes (« (Obviously, the tipped-in
+       pink sheets… » coupé en 4 par la largeur de la page du PDF) : il est recollé en UNE
+       seule phrase, que la page de titre de l'appli remet ensuite en forme à sa propre largeur.
+       Une ligne en continue une autre si elle est calée sur la même marge gauche, à l'interligne
+       normal, et que la précédente est « pleine » (45 caractères ou plus) ou garde une
+       parenthèse ouverte. Les lignes centrées (« FOURTH DRAFT », « Revised 10-12-84 »…) et les
+       petits blocs (adresse, contact) restent donc une ligne chacune.
    Sans mention d'auteur, on ne sait pas où finit le titre : la première ligne est le titre
    et le reste va dans les lignes supplémentaires.
    Garde-fous, parce que la mise en page d'une page de titre est libre et que les fragments
@@ -359,15 +366,45 @@ function stripTitlePage(pages){
    abandonné (le nom du fichier reste alors le titre). */
 function parsePdfTitleLines(rawLines){
   const seen = new Set();
-  const lines = [];
+  const recs = [];                                    // { t, x, y } — texte nettoyé + position
   rawLines.forEach(r=>{
-    const t = String(r || '').replace(/^[\s_\-–—=*~|]+|[\s_\-–—=*~|]+$/g,'').replace(/\s+/g,' ');
+    const raw = (r && typeof r === 'object') ? r : { text:r };
+    const t = String(raw.text || '').replace(/^[\s_\-–—=*~|]+|[\s_\-–—=*~|]+$/g,'').replace(/\s+/g,' ');
     if(!t || !/[A-Za-zÀ-ÿ0-9]/.test(t)) return;
     const k = t.toLowerCase();
     if(seen.has(k)) return;
-    seen.add(k); lines.push(t);
+    seen.add(k); recs.push({ t, x:raw.x, y:raw.y });
   });
-  if(!lines.length) return null;
+  if(!recs.length) return null;
+  const lines = recs.map(r => r.t);
+  // Interligne de la page : le plus petit écart vertical qui se répète (sinon le plus petit tout court).
+  const gaps = [];
+  for(let i = 1; i < recs.length; i++){
+    if(typeof recs[i-1].y === 'number' && typeof recs[i].y === 'number') gaps.push(recs[i-1].y - recs[i].y);
+  }
+  const gcount = new Map();
+  gaps.forEach(g=>{ const k = Math.round(g); gcount.set(k, (gcount.get(k) || 0) + 1); });
+  const grep = [...gcount.entries()].filter(([g, n]) => n >= 2 && g > 0).map(([g]) => g);
+  const lineGap = grep.length ? Math.min(...grep) : (gaps.filter(g => g > 0).length ? Math.min(...gaps.filter(g => g > 0)) : 0);
+  // Recolle les lignes d'un même paragraphe (voir plus haut) ; renvoie des phrases { t } dans l'ordre.
+  const mergeWrapped = list=>{
+    const out = [];
+    let prev = null;
+    list.forEach(r=>{
+      const open = prev ? (prev.acc.match(/\(/g) || []).length > (prev.acc.match(/\)/g) || []).length : false;
+      const same = prev && lineGap > 0 && typeof r.x === 'number' && typeof prev.x === 'number'
+        && Math.abs(r.x - prev.x) <= 4 && (prev.y - r.y) > 0 && (prev.y - r.y) <= lineGap * 1.35
+        && (prev.t.length >= 45 || open);
+      if(same){
+        prev.acc = prev.acc + ' ' + r.t; prev.t = r.t; prev.x = r.x; prev.y = r.y;
+        out[out.length - 1] = prev.acc;
+      }else{
+        prev = { acc:r.t, t:r.t, x:r.x, y:r.y };
+        out.push(r.t);
+      }
+    });
+    return out;
+  };
   const authorPattern = /^(?:un\s+sc[ée]nario\s+de|un\s+film\s+de|[ée]crit(?:e)?\s+(?:et\s+r[ée]alis[ée]e?\s+)?par|sc[ée]nario\s+(?:de|par)|written\s+by|screenplay\s+by|teleplay\s+by)\s*:?\s*(.*)$|^(by|par)\s*$/i;
   let mi = -1, author = '', after = 0;
   for(let i = 0; i < lines.length; i++){
@@ -382,8 +419,8 @@ function parsePdfTitleLines(rawLines){
   }
   const unquote = t => t.replace(/^[«“"‘'\s]+|[»”"’'\s]+$/g,'').trim();
   let titleLines, rest;
-  if(mi >= 0){ titleLines = lines.slice(0, mi); rest = lines.slice(after); }
-  else { titleLines = lines.slice(0, 1); rest = lines.slice(1); }
+  if(mi >= 0){ titleLines = lines.slice(0, mi); rest = mergeWrapped(recs.slice(after)); }
+  else { titleLines = lines.slice(0, 1); rest = mergeWrapped(recs.slice(1)); }
   let title = unquote(titleLines.join(' '));
   if(title.length > 120) title = '';
   // Une page entière de texte (note d'intention, synopsis…) n'est pas une page de titre : pas de lignes en plus.
