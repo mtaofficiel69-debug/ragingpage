@@ -660,13 +660,7 @@ async function confirmAddEpisode(seriesId){
 /* Un seul logo pour toute l'appli (accueil, hub de série, colonne de
    l'éditeur, favicon). Le favicon du <head> est la même image, en data-URI. */
 function mmLogo(size, cls, smoke){
-  /* Le logo de l'appli = le favicon (même dessin, mêmes couleurs : feuille bleue + visage). Thème sombre et colonne de l'éditeur : comme le favicon en mode sombre. */
-  return '<svg class="' + (cls||'') + (smoke ? ' mm-logo-smoke' : '') + '" width="' + size + '" height="' + size + '" viewBox="0 0 16 16" shape-rendering="crispEdges" aria-hidden="true">'
-    + '<style>html[data-theme="dark"] .mmfr, .rail .mmfr{fill:#0E2A3D}</style>'
-    + '<path class="mmlb" fill="#1F6FA0" d="M0 0h11v1h-11zM0 1h11v1h-11zM0 2h11v1h-11zM0 3h11v1h-11zM0 4h11v1h-11zM0 5h16v1h-16zM0 6h16v1h-16zM0 7h16v1h-16zM0 8h16v1h-16zM0 9h16v1h-16zM0 10h16v1h-16zM0 11h16v1h-16zM0 12h16v1h-16zM0 13h16v1h-16zM0 14h16v1h-16zM0 15h16v1h-16z"/>'
-    + '<path fill="#B7D4EC" d="M11 0h1v1h-1zM11 1h2v1h-2zM11 2h3v1h-3zM11 3h4v1h-4zM11 4h5v1h-5z"/>'
-    + '<path class="mmfr" fill="#FCFDFE" d="M2 3h8v1h-8zM3 4h3v1h-3zM8 4h3v1h-3zM3 5h3v1h-3zM9 5h3v1h-3zM3 6h3v1h-3zM9 6h3v1h-3zM3 7h3v1h-3zM8 7h3v1h-3zM3 8h7v1h-7zM3 9h3v1h-3zM7 9h3v1h-3zM3 10h3v1h-3zM8 10h3v1h-3zM3 11h3v1h-3zM8 11h3v1h-3zM3 12h3v1h-3zM9 12h3v1h-3zM3 13h3v1h-3zM9 13h3v1h-3zM2 14h5v1h-5zM8 14h5v1h-5z"/>'
-    + '</svg>';
+  return '<svg class="' + (cls||'') + (smoke ? ' mm-logo-smoke' : '') + '" width="' + size + '" height="' + size + '" viewBox="0 0 64 64" aria-hidden="true"><rect class="mmlb" width="64" height="64" rx="14" fill="#1F6FA0"/><path d="M12 7H38L53 22V57H12Z" fill="#FCFDFE" stroke="#FCFDFE" stroke-width="3" stroke-linejoin="round"/><path d="M38 7V22H53Z" fill="#B7D4EC" stroke="#B7D4EC" stroke-width="2" stroke-linejoin="round"/><path d="M16 25L31 30M50 27L35 30" stroke="#14425E" stroke-width="6" stroke-linecap="round"/><circle cx="25" cy="38" r="6.6" fill="#14425E"/><circle cx="27.2" cy="35.8" r="1.9" fill="#FCFDFE"/><circle cx="41" cy="38" r="6.6" fill="#14425E"/><circle cx="43.2" cy="35.8" r="1.9" fill="#FCFDFE"/><path d="M20 51H37" stroke="#14425E" stroke-width="5.6" stroke-linecap="round"/><g transform="translate(37 51) rotate(-28)"><rect x="-1" y="-3.2" width="5" height="6.4" rx="1" fill="#5DB6EC"/><rect x="4" y="-3.2" width="15" height="6.4" fill="#14425E"/><path d="M19 -3.2L25.5 0L19 3.2Z" fill="#FCFDFE"/></g>' + (smoke ? '<g class="mm-smoke"><circle class="sp sp1" cx="58.5" cy="37" r="4.2"/><circle class="sp sp2" cx="58.5" cy="37" r="4.2"/><circle class="sp sp3" cx="58.5" cy="37" r="4.2"/></g>' : '') + '</svg>';
 }
 /* Le nom « Raging Page », dessiné une seule fois : accueil, hub de série, colonne de l'éditeur. */
 function mmWordmark(cls){
