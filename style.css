@@ -1577,7 +1577,7 @@
   .center-pane, .rail-nav, .side-pane, #homeView .home-list-scroll{scrollbar-width:thin; scrollbar-color:rgba(120,128,150,.4) transparent;}
   /* v26 : barre de défilement de l'éditeur plus large (comme WriterDuet), plus facile à saisir pour parcourir les pages. */
   .center-pane{scrollbar-width:auto; scrollbar-color:rgba(110,118,140,.55) rgba(120,128,150,.12);}
-  .center-pane::-webkit-scrollbar{width:16px; height:16px;}
+  .center-pane::-webkit-scrollbar{width:20px; height:20px;}
   .center-pane::-webkit-scrollbar-track{background:rgba(120,128,150,.12);}
   .center-pane::-webkit-scrollbar-thumb{background:rgba(110,118,140,.55); border-radius:8px; border:3px solid transparent; background-clip:content-box; min-height:48px;}
   .center-pane::-webkit-scrollbar-thumb:hover{background:rgba(110,118,140,.85); background-clip:content-box;}
