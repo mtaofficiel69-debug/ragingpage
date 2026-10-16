@@ -323,14 +323,16 @@ function clusterIndents(xs){
 
 /* Repère une éventuelle page de titre en tête du PDF — page 1 sans la
    moindre en-tête de scène, alors que le reste du document en contient —
-   et en extrait au passage un auteur probable (« Un scénario de… »,
-   « Écrit par… », « Written by… »). Une page de titre n'a rien à faire
-   dans le corps du texte : mise en page libre, souvent des fragments
-   décoratifs (filets, encadrés) qui n'ont pas de sens hors contexte et
-   qui, mélangés aux vraies lignes du scénario, produisaient un texte qui
-   semblait "désordonné". On ne retire la page que si on est sûr qu'elle
-   n'est pas la scène d'ouverture elle-même (garde-fou : le reste du
-   document doit contenir au moins une vraie scène). */
+   et en extrait ce qu'elle dit : le titre, l'auteur (« Un scénario de… »,
+   « Écrit par… », « Written by… ») et les autres lignes (adaptation, date,
+   contact, mention légale…), qui vont dans la page de titre de l'appli.
+   Une page de titre n'a rien à faire dans le corps du texte : mise en
+   page libre, souvent des fragments décoratifs (filets, encadrés) qui n'ont
+   pas de sens hors contexte et qui, mélangés aux vraies lignes du
+   scénario, produisaient un texte qui semblait \"désordonné\". On ne
+   retire la page que si on est sûr qu'elle n'est pas la scène d'ouverture
+   elle-même (garde-fou : le reste du document doit contenir au moins une
+   vraie scène). */
 function stripTitlePage(pages){
   if(pages.length < 2) return { pages, titleInfo:null };
   const hasHeading = pl => pl.some(l=>{
@@ -339,23 +341,55 @@ function stripTitlePage(pages){
   });
   if(hasHeading(pages[0])) return { pages, titleInfo:null };
   if(!pages.slice(1).some(hasHeading)) return { pages, titleInfo:null };
+  return { pages: pages.slice(1), titleInfo: parsePdfTitleLines(pages[0].map(l => l.text)) };
+}
 
-  // NB. On extrait volontairement l'auteur mais pas le titre : les pages
-  // de titre mettent souvent le titre en forme avec des éléments décoratifs
-  // (cadres, filets) dont le rendu texte est peu fiable selon la police —
-  // testé sur un vrai PDF, ça produisait un titre dédoublé et truffé de
-  // parasites. Le nom du fichier reste une base plus sûre pour le titre ;
-  // l'utilisateur peut de toute façon le corriger dans les réglages du
-  // projet. La détection de l'auteur, elle, s'appuie sur un motif de texte
-  // précis et n'a pas ce problème.
-  const lines = pages[0].map(l => l.text.trim()).filter(Boolean);
-  const authorPattern = /^(un\s+sc[ée]nario\s+de|un\s+film\s+de|[ée]crit\s+par|written\s+by)\s*:?\s*(.*)$/i;
-  let author = null;
+/* Lit les lignes de la page de titre d'un PDF (de haut en bas) et renvoie
+   { title, author, extra[] } — ou null si rien d'exploitable.
+     · Les lignes AVANT « Écrit par / Written by / Un scénario de… » forment le titre.
+     · Le nom qui suit (sur la même ligne ou sur la ligne d'après) est l'auteur.
+     · Tout ce qui vient ensuite (« Based on… », date, adresse, mail…) devient une ligne
+       supplémentaire de la page de titre, une par ligne du PDF.
+   Sans mention d'auteur, on ne sait pas où finit le titre : la première ligne est le titre
+   et le reste va dans les lignes supplémentaires.
+   Garde-fous, parce que la mise en page d'une page de titre est libre et que les fragments
+   décoratifs (filets, cadres) donnaient des titres dédoublés ou pleins de parasites :
+   les lignes sans aucune lettre ni chiffre sont ignorées, les tirets/filets collés aux bords
+   sont retirés, les lignes identiques ne comptent qu'une fois, et un titre trop long est
+   abandonné (le nom du fichier reste alors le titre). */
+function parsePdfTitleLines(rawLines){
+  const seen = new Set();
+  const lines = [];
+  rawLines.forEach(r=>{
+    const t = String(r || '').replace(/^[\s_\-–—=*~|]+|[\s_\-–—=*~|]+$/g,'').replace(/\s+/g,' ');
+    if(!t || !/[A-Za-zÀ-ÿ0-9]/.test(t)) return;
+    const k = t.toLowerCase();
+    if(seen.has(k)) return;
+    seen.add(k); lines.push(t);
+  });
+  if(!lines.length) return null;
+  const authorPattern = /^(?:un\s+sc[ée]nario\s+de|un\s+film\s+de|[ée]crit(?:e)?\s+(?:et\s+r[ée]alis[ée]e?\s+)?par|sc[ée]nario\s+(?:de|par)|written\s+by|screenplay\s+by|teleplay\s+by)\s*:?\s*(.*)$|^(by|par)\s*$/i;
+  let mi = -1, author = '', after = 0;
   for(let i = 0; i < lines.length; i++){
     const m = lines[i].match(authorPattern);
-    if(m){ author = (m[2] && m[2].trim()) || (lines[i+1] || '').trim() || null; break; }
+    if(!m) continue;
+    mi = i;
+    const same = (m[1] || '').trim();
+    if(same){ author = same; after = i + 1; }
+    else if(lines[i+1]){ author = lines[i+1]; after = i + 2; }
+    else after = i + 1;
+    break;
   }
-  return { pages: pages.slice(1), titleInfo: author ? { author } : null };
+  const unquote = t => t.replace(/^[«“"‘'\s]+|[»”"’'\s]+$/g,'').trim();
+  let titleLines, rest;
+  if(mi >= 0){ titleLines = lines.slice(0, mi); rest = lines.slice(after); }
+  else { titleLines = lines.slice(0, 1); rest = lines.slice(1); }
+  let title = unquote(titleLines.join(' '));
+  if(title.length > 120) title = '';
+  // Une page entière de texte (note d'intention, synopsis…) n'est pas une page de titre : pas de lignes en plus.
+  const extra = lines.length > 20 ? [] : rest.filter(t => t !== author && t.toLowerCase() !== title.toLowerCase());
+  if(!title && !author && !extra.length) return null;
+  return { title, author, extra };
 }
 
 /* Transforme les pages déjà extraites (tableau de tableaux de {text,x,y})
@@ -596,13 +630,14 @@ async function importPdfFile(file){
       return;
     }
     const { elements, titleInfo } = pdfPagesToElements(pages);
-    // Si une page de titre a été repérée et retirée, on s'en sert pour
-    // préremplir l'auteur — le titre, lui, vient toujours du nom du
-    // fichier, comme avant.
-    const title = file.name.replace(/\.pdf$/i, '');
+    // Si une page de titre a été repérée et retirée, on s'en sert pour remplir la page de titre
+    // (titre, auteur, lignes supplémentaires) ; sans titre lisible, le nom du fichier reste le titre.
+    const title = (titleInfo && titleInfo.title) || file.name.replace(/\.pdf$/i, '');
     const author = titleInfo && titleInfo.author;
+    const extra = (titleInfo && titleInfo.extra && titleInfo.extra.length)
+      ? (p=>{ p.titlePageExtra = titleInfo.extra.join('\n'); }) : undefined;
     await finishImport(elements, title,
-      'Import PDF terminé : la mise en forme (personnage/dialogue/action) est déduite automatiquement, vérifie-la avant d\u2019écrire.', author);
+      'Import PDF terminé : la mise en forme (personnage/dialogue/action) est déduite automatiquement, vérifie-la avant d\u2019écrire.', author, extra);
   }catch(err){
     console.error(err);
     toast(L('Impossible de lire ce PDF (','Couldn\u2019t read this PDF (') + (err && err.message ? err.message : L('erreur inconnue','unknown error')) + L('). Vérifie ta connexion internet : l\u2019import PDF a besoin de charger une bibliothèque de lecture.','). Check your internet connection: PDF import needs to load a reading library.'));
