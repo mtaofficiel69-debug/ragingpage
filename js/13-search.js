@@ -19,9 +19,9 @@ function onSearchKeydown(e){
      différente), les meilleures d'abord. Le compteur affiche alors « ≈ ».
    Le Rechercher & remplacer (Ctrl+H) reste, lui, strictement exact.
 ===================================================================== */
-function searchNorm(s){
-  return String(s==null?'':s)
-    .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+function searchNorm(s, keep){
+  const x = String(s==null?'':s).normalize('NFD');
+  return (keep ? x : x.replace(/[\u0300-\u036f]/g,''))
     .toLowerCase()
     .replace(/[\u2018\u2019\u201A\u201B\u02BC\u2032`\u00B4]/g,"'")
     .replace(/[\u201C\u201D\u201E\u201F\u00AB\u00BB]/g,'"')
@@ -30,10 +30,10 @@ function searchNorm(s){
     .replace(/\u0153/g,'oe').replace(/\u00E6/g,'ae')
     .replace(/\s+/g,' ').trim();
 }
-function searchBuildIndex(){
+function searchBuildIndex(keep){
   const spans = []; let text = '', pos = 0;
   S.project.elements.forEach(e=>{
-    const n = searchNorm(e.text);
+    const n = searchNorm(e.text, keep);
     if(!n) return;
     if(text){ text += ' '; pos++; }
     spans.push({ id:e.id, start:pos, end:pos+n.length });
@@ -52,9 +52,13 @@ function searchSpanAt(spans, p){
   return r;
 }
 function searchFind(q){
-  const out = { ids:[], span:{}, approx:false, pos:{}, sp:[] };
-  const nq = searchNorm(q), m = nq.length;
-  const idx = searchBuildIndex();
+  const out = { ids:[], span:{}, approx:false, pos:{}, sp:[], keep:false };
+  /* accents : si la recherche contient un accent (é, è, ç…), on le respecte à la lettre ; sinon (« ete »),
+     les accents sont ignorés et « ete » trouve aussi « été ». */
+  const keep = /[\u0300-\u036f]/.test(String(q==null?'':q).normalize('NFD'));
+  out.keep = keep;
+  const nq = searchNorm(q, keep), m = nq.length;
+  const idx = searchBuildIndex(keep);
   if(!m || !idx.spans.length) return out;
   const t = idx.text, spans = idx.spans;
   out.sp = spans;
@@ -120,7 +124,7 @@ function runSearch(q, silent){
   clearTimeout(_matchTimer); clearMatchMarks();
   if(!q){ S.search.matches=[]; S.search.idx=-1; S.search.approx=false; S.search.spans={}; S.search.pos={}; S.search.sp=[]; if(cnt){ cnt.textContent=''; cnt.title=''; } return; }
   const r = searchFind(q);
-  S.search.matches = r.ids; S.search.spans = r.span; S.search.approx = r.approx; S.search.pos = r.pos; S.search.sp = r.sp;
+  S.search.matches = r.ids; S.search.spans = r.span; S.search.approx = r.approx; S.search.pos = r.pos; S.search.sp = r.sp; S.search.keep = r.keep;
   S.search.idx = S.search.matches.length? 0 : -1;
   if(cnt){
     if(S.search.matches.length) setSearchCount();
@@ -304,11 +308,12 @@ document.addEventListener('mousedown', e=>{ if(e.target && e.target.closest && e
   (document.head || document.documentElement).appendChild(st);
 })();
 /* même normalisation que searchNorm(), mais en gardant, pour chaque caractère normalisé, sa position d'origine */
-function searchNormMap(src){
+function searchNormMap(src, keep){
   src = String(src==null?'':src);
   const chars = [], org = [];
   for(let k=0;k<src.length;k++){
-    const x = src[k].normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+    const d = src[k].normalize('NFD');
+    const x = (keep ? d : d.replace(/[\u0300-\u036f]/g,''))
       .toLowerCase()
       .replace(/[\u2018\u2019\u201A\u201B\u02BC\u2032`\u00B4]/g,"'")
       .replace(/[\u201C\u201D\u201E\u201F\u00AB\u00BB]/g,'"')
@@ -351,7 +356,7 @@ function searchMatchRanges(id){
     const el = S.project.elements.filter(e=>e.id === group[g])[0];
     const div = document.querySelector('#page [data-id="'+group[g]+'"]');
     if(!seg || !el || !div) return null;
-    const nm = searchNormMap(el.text);
+    const nm = searchNormMap(el.text, S.search.keep);
     if(nm.n.length !== seg.end - seg.start || div.textContent !== (el.text||'')) return null;
     const ls = Math.max(pos.s, seg.start) - seg.start, le = Math.min(pos.e, seg.end) - seg.start;
     if(le <= ls) continue;
