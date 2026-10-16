@@ -52,6 +52,7 @@ function tpControlsHtmlAll(){
           <label class="tp-field-label" for="tpExtraText">${L('Phrases supplémentaires','Extra lines')}</label>
           <textarea id="tpExtraText" rows="3" placeholder="${L('Ex. Adapté du roman de…','E.g. Adapted from the novel by…')}">${esc(p.titlePageExtra||'')}</textarea>
           <p class="tp-field-help">${L('Une phrase par ligne : adaptation, avertissement, citation, mention légale…','One line per sentence: adaptation, disclaimer, quote, legal notice…')}</p>
+          <label class="tp-checkrow"><input type="checkbox" id="tpShowFoot" ${p.tpShowFoot?'checked':''}><span>${L('Afficher la version et la date en bas de page','Show version and date at the bottom of the page')}</span></label>
         </div>
         <div class="tp-field">
           <label class="tp-field-label" for="tpFreeImgInput">${L('Image à la place du titre','Image in place of the title')}</label>
@@ -379,6 +380,10 @@ function onTPTabAttach(rebindOnly){
     const file = e.target.files && e.target.files[0]; if(!file) return;
     tpFreeImgLoad(file); e.target.value = '';
   });
+  bind('tpShowFoot','change', e=>{
+    S.project.tpShowFoot = !!e.target.checked;
+    scheduleAutosave(); refreshTPPreview();
+  });
   bind('tpTitleHidden','change', e=>{
     ensureTPDesign(S.project).titleHidden = !!e.target.checked;
     scheduleAutosave(); refreshTPPreview();
@@ -408,4 +413,3 @@ function afterTPChangeLight(){
   const tp = document.querySelector('#tpPreviewShell .titlepage');
   if(tp) applyTPDesignVars(tp, ensureTPDesign(S.project));
 }
-
