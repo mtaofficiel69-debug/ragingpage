@@ -157,7 +157,7 @@ function renderHome(){
             <li>${icon('swap')}<span>${L('Compatible Final Draft (.fdx), Fountain, texte et PDF','Final Draft (.fdx), Fountain, text and PDF')}</span></li>
             <li>${icon('save')}<span>${L('Tes données restent sur ton ordinateur','Your work stays on your computer')}</span></li>
           </ul>
-          <div class="wd-ver" style="margin-top:16px;"><span style="display:inline-block;padding:4px 12px;border-radius:12px;background:var(--tag-chip-bg);color:var(--tag-chip-text);font-size:16px;font-weight:700;letter-spacing:.02em;">v1.11</span></div>
+          <div class="wd-ver" style="margin-top:16px;"><span style="display:inline-block;padding:4px 12px;border-radius:12px;background:var(--tag-chip-bg);color:var(--tag-chip-text);font-size:16px;font-weight:700;letter-spacing:.02em;">v1.12</span></div>
         </div>
       </aside>
       <main class="wd-main">
