@@ -308,6 +308,14 @@ function importFDXFile(file){
       const type = fdxTypeToElement(par.getAttribute('Type'));
       const box = dualBoxOf(par);
       if(box !== curBox){ curBox = box; charsInBox = 0; }
+      // Final Draft laisse une ligne blanche devant chaque paragraphe d'action : deux actions de suite
+      // se lisent donc comme deux paragraphes séparés. Sans cela ils arrivaient collés l'un à l'autre
+      // dans l'éditeur ; on rend la ligne blanche par un élément action vide (comme l'import PDF).
+      const lastEl = elements[elements.length - 1];
+      if(type === 'action' && lastEl && lastEl.type === 'action' && lastEl.text !== ''){
+        elements.push(newElement('action',''));
+        revIds.push(0);                    // garde revIds aligné sur elements
+      }
       const el = newElement(type, txt);
       if(box && type === 'character' && ++charsInBox >= 2) el.dual = true;
       elements.push(el);
