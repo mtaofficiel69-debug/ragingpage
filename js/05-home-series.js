@@ -659,21 +659,13 @@ async function confirmAddEpisode(seriesId){
 /* ===================== LOGO + BOÎTES DE DIALOGUE ===================== */
 /* Un seul logo pour toute l'appli (accueil, hub de série, colonne de
    l'éditeur, favicon). Le favicon du <head> est la même image, en data-URI. */
-/* Logo dessiné pour la petite taille (40 px) : visage agrandi, traits épais, crayon jaune.
-   En SVG : net sur tous les écrans, aucune image à charger. Le logo complet (avec le corps et les mains) reste en PNG pour les grandes tailles. */
 function mmLogo(size, cls, smoke){
-  return '<svg class="' + (cls||'') + (smoke ? ' mm-logo-smoke' : '') + '" width="' + size + '" height="' + size + '" viewBox="0 0 64 64" aria-hidden="true">'
-    + '<rect class="mmlb" width="64" height="64" rx="14" fill="#1F6FA0"/>'
-    + '<circle cx="27" cy="35" r="23" fill="#FCFDFE"/>'
-    + '<path d="M12 21L23 26M42 21L31 26" stroke="#0B283E" stroke-width="5.6" stroke-linecap="round"/>'
-    + '<rect x="11" y="29" width="12" height="10" rx="2" fill="#0B283E"/><rect x="31" y="29" width="12" height="10" rx="2" fill="#0B283E"/>'
-    + '<rect x="13.4" y="31.6" width="7.2" height="4.8" rx="1" fill="#FCFDFE"/><rect x="33.4" y="31.6" width="7.2" height="4.8" rx="1" fill="#FCFDFE"/>'
-    + '<circle cx="17" cy="34" r="2.1" fill="#0B283E"/><circle cx="37" cy="34" r="2.1" fill="#0B283E"/>'
-    + '<path d="M27 32V42H31" fill="none" stroke="#0B283E" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"/>'
-    + '<path d="M16 52Q25 43 36 49" fill="none" stroke="#0B283E" stroke-width="5" stroke-linecap="round"/>'
-    + '<g transform="translate(35 49) rotate(-19)"><path d="M-1 -4.8H21L27 0L21 4.8H-1Z" fill="#0B283E" stroke="#0B283E" stroke-width="1.2" stroke-linejoin="round"/>'
-    + '<rect x="0.8" y="-3" width="5" height="6" fill="#FF6242"/><rect x="7" y="-3" width="12.5" height="6" fill="#FFCD38"/><path d="M20 -3L24.2 0L20 3Z" fill="#FCFDFE"/></g>'
-    + '<path d="M54.5 31c-3.2-3 3-5.8 0-9s3-5.2 0-8.4M60.5 27c-3-3 3-5.5 0-8.5" fill="none" stroke="#FCFDFE" stroke-width="3.8" stroke-linecap="round"/>'
+  /* Le logo de l'appli = le favicon (même dessin, mêmes couleurs : feuille bleue + visage). Thème sombre et colonne de l'éditeur : comme le favicon en mode sombre. */
+  return '<svg class="' + (cls||'') + (smoke ? ' mm-logo-smoke' : '') + '" width="' + size + '" height="' + size + '" viewBox="0 0 16 16" shape-rendering="crispEdges" aria-hidden="true">'
+    + '<style>html[data-theme="dark"] .mmfr, .rail .mmfr{fill:#0E2A3D}</style>'
+    + '<path class="mmlb" fill="#1F6FA0" d="M0 0h11v1h-11zM0 1h11v1h-11zM0 2h11v1h-11zM0 3h11v1h-11zM0 4h11v1h-11zM0 5h16v1h-16zM0 6h16v1h-16zM0 7h16v1h-16zM0 8h16v1h-16zM0 9h16v1h-16zM0 10h16v1h-16zM0 11h16v1h-16zM0 12h16v1h-16zM0 13h16v1h-16zM0 14h16v1h-16zM0 15h16v1h-16z"/>'
+    + '<path fill="#B7D4EC" d="M11 0h1v1h-1zM11 1h2v1h-2zM11 2h3v1h-3zM11 3h4v1h-4zM11 4h5v1h-5z"/>'
+    + '<path class="mmfr" fill="#FCFDFE" d="M2 3h8v1h-8zM3 4h3v1h-3zM8 4h3v1h-3zM3 5h3v1h-3zM9 5h3v1h-3zM3 6h3v1h-3zM9 6h3v1h-3zM3 7h3v1h-3zM8 7h3v1h-3zM3 8h7v1h-7zM3 9h3v1h-3zM7 9h3v1h-3zM3 10h3v1h-3zM7 10h3v1h-3zM3 11h3v1h-3zM8 11h3v1h-3zM3 12h3v1h-3zM8 12h3v1h-3zM3 13h3v1h-3zM9 13h3v1h-3zM2 14h5v1h-5zM8 14h4v1h-4z"/>'
     + '</svg>';
 }
 /* Le nom « Raging Page », dessiné une seule fois : accueil, hub de série, colonne de l'éditeur. */
