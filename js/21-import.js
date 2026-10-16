@@ -16,7 +16,18 @@
    utilisées par les logiciels professionnels comme repères de haut niveau
    au même titre qu'un INT./EXT. */
 function isSceneHeading(t){
-  if(/^(INT|EXT|INT\.\/EXT|EXT\.\/INT|EST)[.\s]/i.test(t)) return true;
+  // Indicatifs combinés, quelle que soit la graphie : INT./EXT., INT/EXT, INT-EXT, EXT./INT., I/E…
+  if(/^(INT|EXT)\.?\s*[\/\-–—]\s*(INT|EXT)(?=[.\s:\-–—]|$)/i.test(t)) return true;
+  if(/^(I\s*\/\s*E|E\s*\/\s*I)(?=[.\s:])/i.test(t)) return true;
+  if(/^(INT|EXT)(?=[.\s:\-–—])/i.test(t)) return true;
+  // INTÉRIEUR / EXTÉRIEUR en toutes lettres : en capitales seulement (en minuscules c'est presque
+  // toujours le début d'une phrase d'action : « Intérieur de la voiture, il pleut… »).
+  if(/^(INT[ÉE]RIEUR|EXT[ÉE]RIEUR)(?=[.\s:\-–—\/])/.test(t)) return true;
+  // EST. (plan d'ensemble). « Est ce que… » en minuscules est une phrase, pas une en-tête : sans point,
+  // il faut que toute la ligne soit en capitales.
+  if(/^EST\./i.test(t) || (/^EST\s/.test(t) && t === t.toUpperCase())) return true;
+  // « SCÈNE 12 », « SÉQUENCE 3 » (capitales + numéro : jamais une phrase d'action).
+  if(/^(SC[ÈE]NE|S[ÉE]QUENCE)\s*\d+/.test(t)) return true;
   if(/^(S[ÉE]RIE DE PLANS|SUITE DE PLANS|ENCHA[ÎI]NEMENT DE PLANS|MONTAGE)\b/i.test(t)) return true;
   return false;
 }
@@ -54,6 +65,32 @@ function isTransitionLine(t){
   return hadColon && /^[A-ZÀ-Ý' ]+(TO|A|À|SUR)$/.test(s) && s.split(' ').length<=4;
 }
 
+/* Extensions de personnage reconnues à coup sûr, quelle que soit leur casse :
+   (SUITE), (CONT'D), (V.O.), (O.S.), (voix off), (hors champ)… Une ligne qui se termine par l'une
+   d'elles est un nom de personnage, jamais une réplique. */
+const CUE_EXT_RE = /\(\s*(?:CONT['’`]?D\.?|CONTINUED|SUITE|V\.?\s?O\.?|O\.?\s?S\.?|O\.?\s?C\.?|VOIX\s+OFF|EN\s+VOIX\s+OFF|OFF|HORS[\s-]?CHAMP|H\.?\s?C\.?|[ÀA]\s+L['’]\u00c9CRAN|ON\s+SCREEN|FILTERED|PRE-?LAP)\s*\)\s*$/i;
+
+/* Analyse la FORME d'une ligne pour savoir si elle ressemble à un nom de personnage. Les parenthèses
+   sont mises de côté avant de juger la casse : « MARIE (voix off) » est un nom en capitales suivi
+   d'une extension, pas une phrase contenant des minuscules. */
+function cueInfo(t){
+  const bare = t.replace(/\([^()]*\)/g,' ').replace(/\s+/g,' ').trim();
+  const lastExt = /\(([^()]*)\)\s*$/.exec(t);
+  return {
+    caps:  /[A-ZÀ-ÝŒ]/.test(bare) && bare === bare.toUpperCase() && bare.length < 40 && t.length < 50,
+    known: CUE_EXT_RE.test(t),
+    ext:   !!lastExt && lastExt[1].length <= 30,
+    // « BOUM ! », « SILENCE. », « TITLES OVER: » : une phrase en capitales, pas un nom.
+    punct: /[.:!?…]$/.test(bare)
+  };
+}
+/* Nom « à la française » écrit en minuscules/Capitale (« Marie », « Jean-Pierre Martin ») : ne sert
+   que dans la colonne personnage d'un PDF, où la position suffit à dire que c'est un nom. */
+function looksLikeTitleCaseCue(t){
+  return t.length < 30 && !/[.:!?…]$/.test(t.replace(/\([^()]*\)/g,'').trim())
+    && /^[A-ZÀ-Ý][\wÀ-ÿ'’.\-]*(\s+[A-ZÀ-Ý][\wÀ-ÿ'’.\-]*){0,3}(\s*\([^()]*\))*$/.test(t);
+}
+
 /* Classifie UNE ligne de texte déjà nettoyée (jamais vide, jamais bordée
    d'espaces). `indentBucket` vaut null (texte seul, .txt/.fountain) ou
    'baseline' / 'dialogue' / 'character' / 'indented' (indentation connue
@@ -61,13 +98,35 @@ function isTransitionLine(t){
    Renvoie { type, text, expect } où `expect` indique si la ligne SUIVANTE
    doit être traitée comme un dialogue par défaut. */
 function classifyScreenplayLine(t, indentBucket, expectDialogue){
+  // Final Draft marque les lignes révisées d'une étoile en marge droite (« AMELIA WREN * ») :
+  // ce n'est pas du texte. On l'enlève tant qu'il reste autre chose que l'étoile.
+  const noStar = t.replace(/\s+\*+\s*$/,'');
+  if(noStar !== t && /[A-Za-zÀ-ÿ0-9]/.test(noStar)) t = noStar;
+
+  // Conventions Fountain « forcées » — uniquement quand on n'a que du texte (pas de position PDF),
+  // sinon une ligne d'action PDF qui commence par « ... » ou « ! » serait prise pour une marque.
+  if(indentBucket === null){
+    // [[note]] — « # Acte » — « = synopsis » : ce sont des notes de travail, jamais du texte joué.
+    const fNote = /^\[\[(.*)\]\]$/.exec(t);
+    if(fNote && fNote[1].trim()) return { type:'note', text:fNote[1].trim(), expect:expectDialogue };
+    const fSect = /^#{1,6}\s*(\S.*)$/.exec(t) || /^=\s+(\S.*)$/.exec(t);
+    if(fSect) return { type:'note', text:fSect[1].trim(), expect:expectDialogue };
+    if(/^\.(?=[^\s.])/.test(t)) return { type:'scene', text:t.slice(1).trim(), expect:false };
+    const fChar = /^@(\S.*)$/.exec(t);
+    if(fChar){
+      const fcar = /^(.*\S)\s*\^\s*$/.exec(fChar[1]);
+      return fcar ? { type:'character', text:fcar[1].trim(), expect:true, dual:true }
+                  : { type:'character', text:fChar[1].trim(), expect:true };
+    }
+    if(/^!\S/.test(t)) return { type:'action', text:t.slice(1), expect:false };
+  }
   // Convention Fountain : « JEANNE ^ » = réplique jouée en même temps que
   // la précédente. On retire la marque du texte et on la remonte comme
   // drapeau, sans quoi le ^ finirait imprimé dans le nom du personnage.
   const caret = /^(.*\S)\s*\^\s*$/.exec(t);
   if(caret){
     const name = caret[1];
-    if(name === name.toUpperCase() && /[A-ZÀ-Ý]/.test(name))
+    if(cueInfo(name).caps)
       return { type:'character', text:name, expect:true, dual:true };
   }
   // CORRECTIF. Beaucoup de scripts (dont les exports PDF) collent le
@@ -75,9 +134,21 @@ function classifyScreenplayLine(t, indentBucket, expectDialogue){
   // Raging Page numérote déjà les scènes tout seul, on retire ce numéro s'il
   // précède bien une vraie en-tête de scène — jamais sinon, pour ne pas
   // amputer une ligne d'action qui commencerait légitimement par un chiffre.
-  const numberedMatch = t.match(/^\d+[A-Za-z]?\.?\s+(.+)$/);
-  if(numberedMatch && isSceneHeading(numberedMatch[1]))
-    return { type:'scene', text:numberedMatch[1], expect:false };
+  // Formes acceptées : « 12 INT. », « 12. INT. », « 12 - INT. », « 12) INT. », « 12A INT. ».
+  const numberedMatch = t.match(/^([A-Za-z]?\d+[A-Za-z]?)\.?\s*[)\-–—:]?\s+(.+)$/);
+  if(numberedMatch){
+    const lead = numberedMatch[1], rest = numberedMatch[2];
+    // Final Draft garde la place d'une scène supprimée : « 8 OMITTED 8 ».
+    if(rest.toUpperCase() === ('OMITTED ' + lead).toUpperCase())
+      return { type:'scene', text:'OMITTED', expect:false };
+    if(isSceneHeading(rest)){
+      // Final Draft répète aussi le numéro EN FIN de ligne (« … CONTINUOUS - 3 ») : on le retire
+      // seulement s'il est identique à celui du début, donc jamais un « INT. CHAMBRE 12 » légitime.
+      const esc = lead.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+      const cleaned = rest.replace(new RegExp('\\s+[-–—]?\\s*' + esc + '$','i'),'').trim();
+      return { type:'scene', text:(cleaned && isSceneHeading(cleaned)) ? cleaned : rest, expect:false };
+    }
+  }
   if(isSceneHeading(t))
     return { type:'scene', text:t, expect:false };
   // « > Texte » force une transition quel que soit le texte (convention
@@ -88,19 +159,36 @@ function classifyScreenplayLine(t, indentBucket, expectDialogue){
     return { type:'transition', text:t.replace(/^>\s*/,''), expect:false };
   if(isTransitionLine(t) && t === t.toUpperCase())
     return { type:'transition', text:t, expect:false };
-  if(t.startsWith('('))
+  if(t.startsWith('(')){
+    // Au ras de la marge d'action, une ligne qui commence par « ( » est de l'action
+    // (« (et maximiser les gains). Mais CHARLIE traverse… »), pas une didascalie de réplique.
+    if(indentBucket === 'baseline') return { type:'action', text:t, expect:false };
+    // Texte seul : une parenthèse qui ne suit ni un personnage ni une réplique est de l'action.
+    if(indentBucket === null && !expectDialogue) return { type:'action', text:t, expect:false };
     return { type:'parenthetical', text:t, expect:expectDialogue };
+  }
 
-  const allCapsShort = t === t.toUpperCase() && t.length < 40 && /[A-ZÀ-Ý]/.test(t) && !/[a-zà-ÿ]/.test(t);
+  const ci = cueInfo(t);
+  // Un nom de personnage « plausible » : capitales (extensions entre parenthèses mises de côté),
+  // court, et qui ne finit pas comme une phrase — sauf extension connue, qui tranche toujours.
+  const cue = ci.caps && (ci.known || !ci.punct);
 
-  if(indentBucket === 'character') return { type:'character', text:t, expect:true };
-  if(indentBucket === 'dialogue')
-    return { type: (expectDialogue || !allCapsShort) ? 'dialogue' : 'character', text:t, expect:true };
+  if(indentBucket === 'character'){
+    // La colonne dit « personnage », mais une ligne de PROSE (minuscules, ponctuation de phrase) y
+    // arrive aussi quand un dialogue simultané déborde dans cette colonne : ce n'est pas un nom.
+    if(ci.caps || looksLikeTitleCaseCue(t)) return { type:'character', text:t, expect:true };
+    return { type:'dialogue', text:t, expect:true };
+  }
+  if(indentBucket === 'dialogue'){
+    // Une extension connue (CONT'D, V.O., voix off…) prouve que c'est un nom, même collé à une réplique.
+    if(ci.caps && ci.known) return { type:'character', text:t, expect:true };
+    return { type: (expectDialogue || !cue) ? 'dialogue' : 'character', text:t, expect:true };
+  }
   if(indentBucket === 'indented'){
     // Un seul niveau de retrait détecté dans tout le document : on ne peut
     // pas distinguer géométriquement personnage et dialogue, on retombe
     // sur la casse — comme pour .txt/.fountain.
-    if(allCapsShort) return { type:'character', text:t, expect:true };
+    if(cue) return { type:'character', text:t, expect:true };
     if(expectDialogue) return { type:'dialogue', text:t, expect:true };
     return { type:'action', text:t, expect:false };
   }
@@ -111,13 +199,14 @@ function classifyScreenplayLine(t, indentBucket, expectDialogue){
     // ci-dessus, on ne doit donc jamais retomber sur `expectDialogue` ici :
     // sinon une simple ligne d'action juste après une réplique (sans ligne
     // vide franche entre les deux) était prise pour la suite du dialogue.
-    return allCapsShort ? { type:'character', text:t, expect:true } : { type:'action', text:t, expect:false };
+    // Les capitales qui finissent comme une phrase (« THUNDER. », « TITLES OVER: ») sont de l'action.
+    return cue ? { type:'character', text:t, expect:true } : { type:'action', text:t, expect:false };
   }
   // indentBucket vaut null : aucune information de position (.txt/.fountain,
   // ou PDF dont tout le texte partage la même colonne — mise en page trop
   // inhabituelle pour qu'on en tire quoi que ce soit). On retombe sur la
   // seule casse, comme le faisait l'importeur .txt d'origine.
-  if(allCapsShort) return { type:'character', text:t, expect:true };
+  if(cue) return { type:'character', text:t, expect:true };
   if(expectDialogue) return { type:'dialogue', text:t, expect:true };
   return { type:'action', text:t, expect:false };
 }
@@ -268,7 +357,7 @@ function importFDXFile(file){
       toast(L('Aucun texte trouvé dans ce .fdx.','No text found in this .fdx.'));
       return;
     }
-    finishImport(elements, title, L('Import Final Draft terminé : les types de lignes viennent du fichier, rien n\u2019a été deviné.','Final Draft import complete: line types come from the file, nothing was guessed.') + (revExtra ? L(' Les révisions ont été reconstituées (dates = jour d\u2019import).',' Revisions were rebuilt (dates = import day).') : ''), author, revExtra);
+    finishImport(elements, title, 'Import Final Draft terminé : les types de lignes viennent du fichier, rien n\u2019a été deviné.' + (revExtra ? ' Les révisions ont été reconstituées (dates = jour d\u2019import).' : ''), author, revExtra);
   };
   reader.readAsText(file);
 }
