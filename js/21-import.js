@@ -302,11 +302,20 @@ function importFDXFile(file){
     // celui qui porte le drapeau chez nous (colonne de droite).
     const dualBoxOf = node => { let n = node; while(n){ if(n.nodeName === 'DualDialogue') return n; n = n.parentNode; } return null; };
     let curBox = null, charsInBox = 0;
-    pars.forEach(par=>{
+    pars.forEach((par, pi)=>{
       const txt = fdxParagraphText(par);
       if(!txt) return;                     // lignes vides d'aération du .fdx
-      const type = fdxTypeToElement(par.getAttribute('Type'));
+      let type = fdxTypeToElement(par.getAttribute('Type'));
       const box = dualBoxOf(par);
+      // Certains exports étiquettent « Character » une ligne qui n'en est pas une (en-tête de scène,
+      // « FADE OUT. », « FIN »…). Si elle n'est pas suivie d'une réplique, on la range comme au .txt.
+      if(type === 'character' && !box){
+        const nx = pars[pi + 1] ? fdxTypeToElement(pars[pi + 1].getAttribute('Type')) : '';
+        if(nx !== 'dialogue' && nx !== 'parenthetical'){
+          if(isSceneHeading(txt)) type = 'scene';
+          else if(isTransitionLine(txt)) type = 'transition';
+        }
+      }
       if(box !== curBox){ curBox = box; charsInBox = 0; }
       // Final Draft laisse une ligne blanche devant chaque paragraphe d'action : deux actions de suite
       // se lisent donc comme deux paragraphes séparés. Sans cela ils arrivaient collés l'un à l'autre
