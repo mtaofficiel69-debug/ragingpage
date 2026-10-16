@@ -440,6 +440,9 @@ function tpFitPreview(){
   tp.style.transform = 'scale('+s.toFixed(4)+')';
   tp.style.setProperty('--tp-hs', (1/s).toFixed(4));
   if(cap) cap.style.width = (shell.parentNode.offsetWidth)+'px';
+  // Le panneau de réglages (Contenu / Fond / Dessin) finit exactement au bord du bas du cadre de l'aperçu.
+  const ctl = document.getElementById('tpControlsCol');
+  if(ctl) ctl.style.height = (wide && mat) ? mat.offsetHeight+'px' : '';
 }
 function tpTbColor(id){
   if(tpSel==='none') return;
