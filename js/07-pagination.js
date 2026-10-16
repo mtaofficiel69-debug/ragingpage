@@ -458,6 +458,13 @@ function pgVerifyAndHeal(res){
     const pr0 = page.getBoundingClientRect();
     const K = (cssW > 0 && pr0.width > 0) ? pr0.width / cssW : 1;
     const viol = [];
+    // CORRECTIF. Une page qui reprend un dialogue coupé ENTRE deux répliques commence par le nom
+    // répété (« NOM (SUITE) »), qui occupe la 1re ligne de la feuille : sa première ligne de texte
+    // est donc voulue UNE LIGNE plus bas. Sans cela, le recalage ci-dessous la remontait tout en
+    // haut, sous le nom répété (texte superposé), et décalait d'autant tout ce qui suit, d'où le
+    // même chevauchement sur les coupes « dans une réplique » des pages suivantes.
+    const cuePad = {};
+    (res.splits || []).forEach(sp => { if(sp.kind === 'between' && sp.cue) cuePad[sp.startPage + 1] = (res.debug && res.debug.oneLine) || 0; });
     for(let k = 1; k < res.pages.length; k++){
       const first = res.pages[k][0];
       if(!first || first.classList.contains('is-split')) continue;           // suite d'un bloc coupé : posée par la coupe
@@ -465,7 +472,7 @@ function pgVerifyAndHeal(res){
       let guard = 0;
       while(guard++ < 3){
         const pr = page.getBoundingClientRect();
-        const want = geo.mTop + k * (pageH + PAGE_GAP);
+        const want = geo.mTop + k * (pageH + PAGE_GAP) + (cuePad[k] || 0);
         const got = (first.getBoundingClientRect().top - pr.top) / K;
         const dlt = want - got;
         if(Math.abs(dlt) <= 0.6) break;
@@ -551,4 +558,3 @@ function paginateEditor(){
   refreshNav();   // les numéros de page affichés par le navigateur viennent d'ici
   if(window.__pgDebug) renderPgDebug(res);
 }
-
