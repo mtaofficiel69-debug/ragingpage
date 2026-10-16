@@ -156,15 +156,65 @@ function parseFountainTitleBlock(lines){
     .replace(/(\S)[*_]{1,3}(?=$|[\s).,;:!?])/g,'$1')
     .trim();
   let title = '', author = '';
-  const extra = [];
+  // Les lignes supplémentaires sont rangées en blocs, comme sur une page de titre Fountain :
+  //   bloc 0 : sous-titre/crédit/source (centre)   bloc 1 : dates, version (bas à droite)
+  //   bloc 2 : contact, copyright, notes (bas à gauche)
+  // Un blanc entre les blocs : la page de titre de l'appli en fait un vrai espace.
+  // Un crédit du genre « Written by » / « Écrit par » n'est pas gardé : l'appli écrit déjà
+  // « Écrit par » devant l'auteur (sinon il apparaissait en double).
+  const GENERIC_CREDIT = /^(?:(?:written|screenplay|teleplay|story)\s+by|[ée]crit(?:e)?\s+(?:et\s+r[ée]alis[ée]e?\s+)?par|un\s+(?:sc[ée]nario|film)\s+de|sc[ée]nario\s+(?:de|par)|by|par)\s*:?$/i;
+  const groups = [[], [], []];
   entries.forEach(e=>{
     const vals = e.vals.map(clean).filter(Boolean);
     if(!vals.length) return;
     if(e.key === 'title') title = vals.join(' ');
     else if(e.key === 'author' || e.key === 'authors') author = vals.join(', ');
-    else vals.forEach(v=> extra.push(v));
+    else if(e.key === 'credit') vals.forEach(v=>{ if(!GENERIC_CREDIT.test(v)) groups[0].push(v); });
+    else if(e.key === 'source') vals.forEach(v=> groups[0].push(v));
+    else if(e.key === 'draft date' || e.key === 'date' || e.key === 'revision') vals.forEach(v=> groups[1].push(v));
+    else vals.forEach(v=> groups[2].push(v));
   });
+  const extra = tpJoinGroups(groups);
   return { title, author, extra, next:i };
+}
+
+/* Assemble des blocs de texte (tableaux de lignes) en une liste de lignes où chaque
+   changement de bloc est marqué par une ligne vide '' : c'est ce qui donne, dans « Phrases
+   supplémentaires », la même respiration que la page de titre d'origine. */
+function tpJoinGroups(groups){
+  const out = [];
+  groups.forEach(g=>{
+    const lines = (g || []).filter(t => t !== '' && t != null);
+    if(!lines.length) return;
+    if(out.length) out.push('');
+    lines.forEach(t => out.push(t));
+  });
+  return out;
+}
+
+/* Préambule Fountain : certains fichiers mettent, juste après le bloc de titre, des rubriques
+   (LOGLINE, NOTE D'INTENTION, PERSONNAGES…) puis une ligne « --- » avant la première scène.
+   Ce n'est pas du scénario : c'est le contenu d'une page de titre détaillée (l'export .fdx du même
+   fichier le range d'ailleurs dans la page de titre). On ne le considère ainsi que s'il y a un
+   séparateur « --- » ET aucune en-tête de scène avant lui. Renvoie { groups, next } (un bloc par
+   paragraphe, séparé par une ligne vide dans le fichier) ou null. */
+function splitFountainFrontMatter(lines){
+  let div = -1;
+  for(let i = 0; i < lines.length; i++){
+    const t = lines[i].trim();
+    if(/^-{3,}$/.test(t)){ div = i; break; }
+    if(t && (isSceneHeading(t) || /^\.(?=[^\s.])/.test(t))) return null;
+  }
+  if(div < 1) return null;
+  const groups = [];
+  let cur = [];
+  lines.slice(0, div).forEach(l=>{
+    const t = l.trim();
+    if(!t){ if(cur.length) groups.push(cur); cur = []; }
+    else cur.push(t);
+  });
+  if(cur.length) groups.push(cur);
+  return groups.length ? { groups, next: div + 1 } : null;
 }
 
 function importTextFile(file){
@@ -174,7 +224,15 @@ function importTextFile(file){
     // Bloc de titre Fountain (Title:, Author:, Credit:…) : il remplit la page de titre
     // et ne doit JAMAIS arriver dans le corps du scénario.
     const tb = parseFountainTitleBlock(lines);
-    if(tb){ lines = lines.slice(tb.next); }
+    if(tb){
+      lines = lines.slice(tb.next);
+      const fm = splitFountainFrontMatter(lines);
+      if(fm){
+        const fmLines = tpJoinGroups(fm.groups);
+        tb.extra = tb.extra.length ? tb.extra.concat([''], fmLines) : fmLines;
+        lines = lines.slice(fm.next);
+      }
+    }
     const elements = [];
     let expectDialogue = false;
     // Fichier .fountain uniquement : une ligne vide entre deux paragraphes d'action doit rester
@@ -341,52 +399,72 @@ function stripTitlePage(pages){
   });
   if(hasHeading(pages[0])) return { pages, titleInfo:null };
   if(!pages.slice(1).some(hasHeading)) return { pages, titleInfo:null };
-  return { pages: pages.slice(1), titleInfo: parsePdfTitleLines(pages[0]) };
+  return { pages: pages.slice(1), titleInfo: parsePdfTitleLines(pages[0], pages[1]) };
 }
 
 /* Lit les lignes de la page de titre d'un PDF (de haut en bas, avec leur position {text,x,y})
    et renvoie { title, author, extra[] } — ou null si rien d'exploitable.
-     · Les lignes AVANT « Écrit par / Written by / Un scénario de… » forment le titre.
-     · Le nom qui suit (sur la même ligne ou sur la ligne d'après) est l'auteur.
-     · Tout ce qui vient ensuite (« Based on… », date, adresse, mail…) devient une ligne
-       supplémentaire de la page de titre, une par ligne du PDF.
-     · Sauf un paragraphe qui se continue sur plusieurs lignes (« (Obviously, the tipped-in
-       pink sheets… » coupé en 4 par la largeur de la page du PDF) : il est recollé en UNE
-       seule phrase, que la page de titre de l'appli remet ensuite en forme à sa propre largeur.
-       Une ligne en continue une autre si elle est calée sur la même marge gauche, à l'interligne
-       normal, et que la précédente est « pleine » (45 caractères ou plus) ou garde une
-       parenthèse ouverte. Les lignes centrées (« FOURTH DRAFT », « Revised 10-12-84 »…) et les
-       petits blocs (adresse, contact) restent donc une ligne chacune.
-   Sans mention d'auteur, on ne sait pas où finit le titre : la première ligne est le titre
-   et le reste va dans les lignes supplémentaires.
+   `bodyLines` (la 1re page de scénario) sert seulement à connaître l'interligne normal.
+     · Titre : la première ligne, ou les lignes qui la suivent de près (même bloc), jusqu'à
+       « Écrit par / Written by / Screenplay by / Un scénario de… » s'il y en a une.
+     · Auteur : le nom qui suit cette mention (même ligne ou ligne d'après).
+     · Tout le reste (« From the novel by… », « Based on… », version, date, société, contact…) va
+       dans les lignes supplémentaires de la page de titre.
+   La disposition est conservée par BLOCS : deux lignes séparées par plus d'un interligne et demi
+   dans le PDF restent séparées par une ligne vide dans l'appli, et deux blocs d'une même page ne
+   sont jamais collés l'un à l'autre. Un paragraphe qui se continue sur plusieurs lignes
+   (« (Obviously, the tipped-in pink sheets… » coupé par la largeur du PDF) est recollé en UNE
+   phrase : même marge gauche, interligne normal, ligne précédente « pleine » (45 caractères ou
+   plus) ou parenthèse restée ouverte. Les lignes centrées et les petits blocs (adresse, contact)
+   restent une ligne chacune.
+   Sans mention d'auteur, on ne sait pas où finit le titre : on prend les lignes du premier bloc
+   (3 au plus) et le reste va dans les lignes supplémentaires.
    Garde-fous, parce que la mise en page d'une page de titre est libre et que les fragments
    décoratifs (filets, cadres) donnaient des titres dédoublés ou pleins de parasites :
    les lignes sans aucune lettre ni chiffre sont ignorées, les tirets/filets collés aux bords
-   sont retirés, les lignes identiques ne comptent qu'une fois, et un titre trop long est
-   abandonné (le nom du fichier reste alors le titre). */
-function parsePdfTitleLines(rawLines){
+   sont retirés, une même ligne (5 caractères ou plus) ne compte qu'une fois — les petits mots
+   comme « by » peuvent revenir —, et un titre trop long est abandonné (le nom du fichier reste
+   alors le titre). */
+function parsePdfTitleLines(rawLines, bodyLines){
   const seen = new Set();
-  const recs = [];                                    // { t, x, y } — texte nettoyé + position
+  const recs = [];                                    // { t, x, y, g } — texte nettoyé, position, bloc
   rawLines.forEach(r=>{
     const raw = (r && typeof r === 'object') ? r : { text:r };
     const t = String(raw.text || '').replace(/^[\s_\-–—=*~|]+|[\s_\-–—=*~|]+$/g,'').replace(/\s+/g,' ');
     if(!t || !/[A-Za-zÀ-ÿ0-9]/.test(t)) return;
-    const k = t.toLowerCase();
-    if(seen.has(k)) return;
-    seen.add(k); recs.push({ t, x:raw.x, y:raw.y });
+    if(t.length >= 5){
+      const k = t.toLowerCase();
+      if(seen.has(k)) return;
+      seen.add(k);
+    }
+    recs.push({ t, x:raw.x, y:raw.y, g:0 });
   });
   if(!recs.length) return null;
   const lines = recs.map(r => r.t);
-  // Interligne de la page : le plus petit écart vertical qui se répète (sinon le plus petit tout court).
-  const gaps = [];
+  // Interligne : le plus petit écart vertical qui se répète (sinon le plus petit tout court).
+  // On le cherche aussi sur la 1re page de scénario : une page de titre en double interligne
+  // (une ligne sur deux vide) donnerait sinon un « interligne » deux fois trop grand.
+  const pitchOf = list=>{
+    const gaps = [];
+    for(let i = 1; i < list.length; i++){
+      const a = list[i-1].y, b = list[i].y;
+      if(typeof a === 'number' && typeof b === 'number' && a - b > 0) gaps.push(a - b);
+    }
+    if(!gaps.length) return 0;
+    const cnt = new Map();
+    gaps.forEach(v=>{ const k = Math.round(v); cnt.set(k, (cnt.get(k) || 0) + 1); });
+    const rep = [...cnt.entries()].filter(([, n]) => n >= 2).map(([v]) => v);
+    return rep.length ? Math.min(...rep) : Math.min(...gaps);
+  };
+  const ownPitch = pitchOf(recs);
+  const bodyPitch = Array.isArray(bodyLines) ? pitchOf(bodyLines) : 0;
+  const lineGap = (ownPitch && bodyPitch >= 6) ? Math.min(ownPitch, bodyPitch) : (ownPitch || 0);
+  // Numéro de bloc de chaque ligne : on change de bloc quand l'écart dépasse 1,6 interligne.
   for(let i = 1; i < recs.length; i++){
-    if(typeof recs[i-1].y === 'number' && typeof recs[i].y === 'number') gaps.push(recs[i-1].y - recs[i].y);
+    const gap = (typeof recs[i-1].y === 'number' && typeof recs[i].y === 'number') ? recs[i-1].y - recs[i].y : 0;
+    recs[i].g = recs[i-1].g + ((lineGap > 0 && gap > lineGap * 1.6) ? 1 : 0);
   }
-  const gcount = new Map();
-  gaps.forEach(g=>{ const k = Math.round(g); gcount.set(k, (gcount.get(k) || 0) + 1); });
-  const grep = [...gcount.entries()].filter(([g, n]) => n >= 2 && g > 0).map(([g]) => g);
-  const lineGap = grep.length ? Math.min(...grep) : (gaps.filter(g => g > 0).length ? Math.min(...gaps.filter(g => g > 0)) : 0);
-  // Recolle les lignes d'un même paragraphe (voir plus haut) ; renvoie des phrases { t } dans l'ordre.
+  // Recolle les lignes d'un même paragraphe (voir plus haut) ; renvoie des phrases { t, g }.
   const mergeWrapped = list=>{
     const out = [];
     let prev = null;
@@ -397,10 +475,10 @@ function parsePdfTitleLines(rawLines){
         && (prev.t.length >= 45 || open);
       if(same){
         prev.acc = prev.acc + ' ' + r.t; prev.t = r.t; prev.x = r.x; prev.y = r.y;
-        out[out.length - 1] = prev.acc;
+        out[out.length - 1].t = prev.acc;
       }else{
         prev = { acc:r.t, t:r.t, x:r.x, y:r.y };
-        out.push(r.t);
+        out.push({ t:r.t, g:r.g });
       }
     });
     return out;
@@ -418,13 +496,28 @@ function parsePdfTitleLines(rawLines){
     break;
   }
   const unquote = t => t.replace(/^[«“"‘'\s]+|[»”"’'\s]+$/g,'').trim();
-  let titleLines, rest;
-  if(mi >= 0){ titleLines = lines.slice(0, mi); rest = mergeWrapped(recs.slice(after)); }
-  else { titleLines = lines.slice(0, 1); rest = mergeWrapped(recs.slice(1)); }
-  let title = unquote(titleLines.join(' '));
+  // Titre : les lignes du premier bloc (avant la mention d'auteur s'il y en a une).
+  // Sans mention d'auteur, une 2e/3e ligne du même bloc n'est prise dans le titre que si, comme la
+  // première, elle est toute en capitales (un titre sur deux lignes) — jamais « Copyright… ».
+  const allCaps = t => /[A-ZÀ-Ý]/.test(t) && !/[a-zà-ÿ]/.test(t);
+  let titleCount = 0;
+  const limit = mi >= 0 ? mi : Math.min(recs.length, 3);
+  while(titleCount < limit && recs[titleCount].g === recs[0].g
+        && (mi >= 0 || titleCount === 0 || (allCaps(recs[0].t) && allCaps(recs[titleCount].t)))) titleCount++;
+  if(mi < 0 && titleCount < 1) titleCount = 1;
+  let title = unquote(lines.slice(0, titleCount).join(' '));
   if(title.length > 120) title = '';
+  // Lignes supplémentaires : ce qui se trouve entre le titre et la mention d'auteur (« From the Novel
+  // by… »), puis tout ce qui suit l'auteur — chacune dans son bloc.
+  const restRecs = (mi >= 0 ? recs.slice(titleCount, mi).concat(recs.slice(after)) : recs.slice(titleCount));
+  const merged = mergeWrapped(restRecs);
+  const groups = [];
+  merged.forEach((m, i)=>{
+    if(!i || m.g !== merged[i-1].g) groups.push([]);
+    groups[groups.length - 1].push(m.t);
+  });
   // Une page entière de texte (note d'intention, synopsis…) n'est pas une page de titre : pas de lignes en plus.
-  const extra = lines.length > 20 ? [] : rest.filter(t => t !== author && t.toLowerCase() !== title.toLowerCase());
+  const extra = lines.length > 20 ? [] : tpJoinGroups(groups.map(g => g.filter(t => t !== author && t.toLowerCase() !== title.toLowerCase())));
   if(!title && !author && !extra.length) return null;
   return { title, author, extra };
 }
