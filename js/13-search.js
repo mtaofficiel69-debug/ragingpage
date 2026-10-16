@@ -5,131 +5,20 @@ function onSearchInput(e){ runSearch(e.target.value); }
 function onSearchKeydown(e){
   if(e.key==='Enter'){ e.preventDefault(); gotoMatch(e.shiftKey ? -1 : 1); }
 }
-/* =====================================================================
-   RECHERCHE APPROCHANTE (barre de recherche uniquement)
-   -----------------------------------------------------------------
-   La barre de recherche ne compare plus le texte brut ligne par ligne :
-   • le texte est « normalisé » avant comparaison (casse, accents,
-     apostrophes droites/courbes, guillemets, tirets, espaces multiples
-     ou insécables) ;
-   • tout le scénario est mis bout à bout : une phrase qui s'étend sur
-     plusieurs lignes est donc trouvée ;
-   • si rien ne correspond exactement, on cherche la correspondance la
-     plus proche (distance d'édition : une lettre en trop, en moins ou
-     différente), les meilleures d'abord. Le compteur affiche alors « ≈ ».
-   Le Rechercher & remplacer (Ctrl+H) reste, lui, strictement exact.
-===================================================================== */
-function searchNorm(s){
-  return String(s==null?'':s)
-    .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
-    .toLowerCase()
-    .replace(/[\u2018\u2019\u201A\u201B\u02BC\u2032`\u00B4]/g,"'")
-    .replace(/[\u201C\u201D\u201E\u201F\u00AB\u00BB]/g,'"')
-    .replace(/[\u2010-\u2015\u2212]/g,'-')
-    .replace(/\u2026/g,'...')
-    .replace(/\u0153/g,'oe').replace(/\u00E6/g,'ae')
-    .replace(/\s+/g,' ').trim();
-}
-function searchBuildIndex(){
-  const spans = []; let text = '', pos = 0;
-  S.project.elements.forEach(e=>{
-    const n = searchNorm(e.text);
-    if(!n) return;
-    if(text){ text += ' '; pos++; }
-    spans.push({ id:e.id, start:pos, end:pos+n.length });
-    text += n; pos += n.length;
-  });
-  return { text, spans };
-}
-/* index du segment qui contient la position p (ou le suivant si p tombe sur un séparateur) */
-function searchSpanAt(spans, p){
-  let lo = 0, hi = spans.length-1, r = 0;
-  while(lo <= hi){
-    const mid = (lo+hi) >> 1;
-    if(spans[mid].start <= p){ r = mid; lo = mid+1; } else hi = mid-1;
-  }
-  if(p >= spans[r].end && r < spans.length-1) r++;
-  return r;
-}
-function searchFind(q){
-  const out = { ids:[], span:{}, approx:false };
-  const nq = searchNorm(q), m = nq.length;
-  const idx = searchBuildIndex();
-  if(!m || !idx.spans.length) return out;
-  const t = idx.text, spans = idx.spans;
-  // 1) correspondance exacte (après normalisation), y compris sur plusieurs lignes
-  const seen = {};
-  let p = t.indexOf(nq);
-  while(p >= 0){
-    const a = searchSpanAt(spans, p), b = searchSpanAt(spans, p+m-1);
-    const id = spans[a].id;
-    if(!seen[id]){ seen[id] = 1; out.ids.push(id); out.span[id] = spans.slice(a, b+1).map(x=>x.id); }
-    p = t.indexOf(nq, p+1);
-  }
-  if(out.ids.length) return out;
-  // 2) sinon : correspondance la plus proche (distance d'édition, algorithme de Sellers)
-  const k = m < 4 ? 0 : Math.min(20, Math.max(1, Math.floor(m*0.2)));
-  if(!k) return out;
-  const qc = new Array(m);
-  for(let i=0;i<m;i++) qc[i] = nq.charCodeAt(i);
-  let prevD = new Int32Array(m+1), prevS = new Int32Array(m+1);
-  let curD = new Int32Array(m+1), curS = new Int32Array(m+1);
-  for(let i=0;i<=m;i++){ prevD[i] = i; prevS[i] = 0; }
-  const best = {};   // id du premier segment touché -> { d, a, b }
-  const n = t.length;
-  for(let j=1;j<=n;j++){
-    const c = t.charCodeAt(j-1);
-    curD[0] = 0; curS[0] = j;
-    for(let i=1;i<=m;i++){
-      let d = prevD[i-1] + (qc[i-1]===c ? 0 : 1), s = prevS[i-1];
-      const extra = prevD[i] + 1;          // caractère en trop dans le texte
-      if(extra < d){ d = extra; s = prevS[i]; }
-      const missing = curD[i-1] + 1;       // caractère manquant dans le texte
-      if(missing < d){ d = missing; s = curS[i-1]; }
-      curD[i] = d; curS[i] = s;
-    }
-    if(curD[m] <= k && curS[m] <= j-1){
-      const a = searchSpanAt(spans, curS[m]), b = searchSpanAt(spans, j-1);
-      const id = spans[a].id;
-      if(!best[id] || curD[m] < best[id].d) best[id] = { d:curD[m], a:a, b:b };
-    }
-    let tmp = prevD; prevD = curD; curD = tmp;
-    tmp = prevS; prevS = curS; curS = tmp;
-  }
-  const hits = Object.keys(best).map(id=>best[id]);
-  hits.sort((x,y)=> x.d - y.d || x.a - y.a);
-  hits.forEach(h=>{
-    const id = spans[h.a].id;
-    out.ids.push(id);
-    out.span[id] = spans.slice(h.a, h.b+1).map(x=>x.id);
-  });
-  out.approx = out.ids.length > 0;
-  return out;
-}
-function setSearchCount(){
-  const cnt = document.getElementById('searchCount');
-  if(!cnt) return;
-  cnt.textContent = (S.search.idx+1)+'/'+S.search.matches.length + (S.search.approx ? ' \u2248' : '');
-  cnt.title = S.search.approx ? L('Correspondance approchante','Approximate match') : '';
-}
 function runSearch(q, silent){
   S.search.query = q;
   const cnt = document.getElementById('searchCount');
   clearTimeout(_matchTimer); clearMatchMarks();
-  if(!q){ S.search.matches=[]; S.search.idx=-1; S.search.approx=false; S.search.spans={}; if(cnt){ cnt.textContent=''; cnt.title=''; } return; }
-  const r = searchFind(q);
-  S.search.matches = r.ids; S.search.spans = r.span; S.search.approx = r.approx;
+  if(!q){ S.search.matches=[]; S.search.idx=-1; if(cnt) cnt.textContent=''; return; }
+  S.search.matches = S.project.elements.filter(e=>e.text.toLowerCase().includes(q.toLowerCase())).map(e=>e.id);
   S.search.idx = S.search.matches.length? 0 : -1;
-  if(cnt){
-    if(S.search.matches.length) setSearchCount();
-    else { cnt.textContent = L('Aucun résultat','No results'); cnt.title = ''; }
-  }
+  if(cnt) cnt.textContent = S.search.matches.length ? (S.search.idx+1)+'/'+S.search.matches.length : L('Aucun résultat','No results');
   if(!silent && S.search.idx>=0) scrollToMatch();
 }
 function gotoMatch(dir){
   if(!S.search.matches.length) return;
   S.search.idx = (S.search.idx + dir + S.search.matches.length) % S.search.matches.length;
-  setSearchCount();
+  document.getElementById('searchCount').textContent = (S.search.idx+1)+'/'+S.search.matches.length;
   scrollToMatch();
 }
 /* =====================================================================
@@ -297,10 +186,4 @@ function scrollToMatch(){
   clearTimeout(_matchTimer);
   clearMatchMarks();
   if(div){ div.scrollIntoView({block:'center', behavior:'smooth'}); div.classList.add('hl'); div.style.outline='2px solid #1F6FA0'; _matchTimer = setTimeout(clearMatchMarks,1200); }
-  /* phrase répartie sur plusieurs lignes : on entoure aussi les lignes suivantes concernées */
-  ((S.search.spans||{})[id]||[]).forEach(x=>{
-    if(x===id) return;
-    const d2 = document.querySelector('#page [data-id="'+x+'"]');
-    if(d2){ d2.classList.add('hl'); d2.style.outline='2px solid #1F6FA0'; }
-  });
 }
