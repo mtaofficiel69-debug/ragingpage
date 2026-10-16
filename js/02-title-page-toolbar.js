@@ -814,7 +814,7 @@ function tpInnerHtml(p){
       ${p.kind?`<div class="tp-sub">${esc(kindLabel(p))}</div>`:''}
       <div class="tp-author">${tpAuthorInnerHtml(p.author)}</div>
       <div class="tp-extra-wrap">${tpExtraLinesHtml(p.titlePageExtra)}</div>
-      <div class="tp-foot">${esc(p.contact||'')}${p.contact&&p.version?' · ':''}${p.version?('v'+esc(p.version)):''}${p.date?(' · '+esc(p.date)):''}</div>
+      <div class="tp-foot">${esc(p.contact||'')}${p.tpShowFoot&&p.contact&&p.version?' · ':''}${p.tpShowFoot&&p.version?('v'+esc(p.version)):''}${p.tpShowFoot&&p.date?(' · '+esc(p.date)):''}</div>
     </div>`;
 }
 /* Builds a full .titlepage element (background image layer + drawing
