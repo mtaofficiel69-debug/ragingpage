@@ -536,7 +536,11 @@ function updatePageIndicator(){
     }
   }
   S.pagination.current = Math.min(S.pagination.count, Math.max(1, byCaret || dominantVisiblePage()));
-  el.innerHTML = `${L('Page','Page')} <b>${esc(pageLbl(S.pagination.current))}</b> / ${S.pagination.count}`;
+  /* CORRECTIF (défilement saccadé / pages qui disparaissent en tirant la scrollbar). Cette fonction tourne à chaque image
+     de défilement ; réécrire innerHTML à chaque fois, même avec le même texte, réveillait tous les MutationObserver de la page
+     (traduction, storyboard…) qui refaisaient leur travail à chaque image. On n'écrit donc que si le texte change vraiment. */
+  const html = `${L('Page','Page')} <b>${esc(pageLbl(S.pagination.current))}</b> / ${S.pagination.count}`;
+  if(el.__pgHtml !== html){ el.__pgHtml = html; el.innerHTML = html; }
 }
 async function goToPage(){
   const _v = await mmPrompt(L('Numéro de page (1 – ' + S.pagination.count + ')', 'Page number (1 – ' + S.pagination.count + ')'), S.pagination.current, {title:L('Aller à la page','Go to page'), ok:L('Aller','Go')});
