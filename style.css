@@ -1947,3 +1947,11 @@
      et le panneau de réglages, et une marge sous le panneau pour qu'il ne touche plus le bas de l'écran. */
   .tp-tb-wrap{padding-bottom:12px; gap:8px;}
   .tp-design-wrap{padding-top:16px; padding-bottom:30px;}
+  /* v57 : le panneau de réglages finit au bord du bas du cadre de l'aperçu, et Contenu / Fond / Dessin ont
+     exactement la même taille (le contenu défile dans le panneau) : plus de saut en passant de l'un à l'autre. */
+  @media (min-width:821px){
+    .tp-controls-col{display:flex; flex-direction:column; align-self:flex-start; overflow:visible;}
+    .tp-controls-col > .tp-seg{flex:none;}
+    .tp-controls-col > .tp-panes{flex:1 1 0; min-height:0; display:flex; flex-direction:column;}
+    .tp-controls-col .tp-panes > .tp-panel{flex:1 1 0; min-height:0; overflow-y:auto;}
+  }
