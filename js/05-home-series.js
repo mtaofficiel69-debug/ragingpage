@@ -665,7 +665,7 @@ function mmLogo(size, cls, smoke){
     + '<style>html[data-theme="dark"] .mmfr, .rail .mmfr{fill:#0E2A3D}</style>'
     + '<path class="mmlb" fill="#1F6FA0" d="M0 0h11v1h-11zM0 1h11v1h-11zM0 2h11v1h-11zM0 3h11v1h-11zM0 4h11v1h-11zM0 5h16v1h-16zM0 6h16v1h-16zM0 7h16v1h-16zM0 8h16v1h-16zM0 9h16v1h-16zM0 10h16v1h-16zM0 11h16v1h-16zM0 12h16v1h-16zM0 13h16v1h-16zM0 14h16v1h-16zM0 15h16v1h-16z"/>'
     + '<path fill="#B7D4EC" d="M11 0h1v1h-1zM11 1h2v1h-2zM11 2h3v1h-3zM11 3h4v1h-4zM11 4h5v1h-5z"/>'
-    + '<path class="mmfr" fill="#FCFDFE" d="M2 3h8v1h-8zM3 4h3v1h-3zM8 4h3v1h-3zM3 5h3v1h-3zM9 5h3v1h-3zM3 6h3v1h-3zM9 6h3v1h-3zM3 7h3v1h-3zM8 7h3v1h-3zM3 8h7v1h-7zM3 9h3v1h-3zM7 9h3v1h-3zM3 10h3v1h-3zM7 10h3v1h-3zM3 11h3v1h-3zM8 11h3v1h-3zM3 12h3v1h-3zM8 12h3v1h-3zM3 13h3v1h-3zM9 13h3v1h-3zM2 14h5v1h-5zM8 14h4v1h-4z"/>'
+    + '<path class="mmfr" fill="#FCFDFE" d="M2 3h8v1h-8zM3 4h3v1h-3zM8 4h3v1h-3zM3 5h3v1h-3zM9 5h3v1h-3zM3 6h3v1h-3zM9 6h3v1h-3zM3 7h3v1h-3zM8 7h3v1h-3zM3 8h7v1h-7zM3 9h3v1h-3zM7 9h3v1h-3zM3 10h3v1h-3zM8 10h3v1h-3zM3 11h3v1h-3zM8 11h3v1h-3zM3 12h3v1h-3zM9 12h3v1h-3zM3 13h3v1h-3zM9 13h3v1h-3zM2 14h5v1h-5zM8 14h5v1h-5z"/>'
     + '</svg>';
 }
 /* Le nom « Raging Page », dessiné une seule fois : accueil, hub de série, colonne de l'éditeur. */
