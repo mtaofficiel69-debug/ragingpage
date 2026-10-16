@@ -187,6 +187,10 @@ function pdfPageToLines(items){
   for(const it of items){
     const s = it.str;
     if(!s) continue;
+    // Étoile de révision Final Draft (« * » seule, en marge droite) : ce n'est jamais du texte
+    // joué. Laissée là, elle se retrouvait collée au bout de la ligne, puis au MILIEU du
+    // paragraphe une fois les lignes recollées (« Mr * Glaisher »).
+    if(/^\s*\*+\s*$/.test(s)) continue;
     const tr = it.transform;                    // [a,b,c,d,e,f] ; e,f = x,y
     const x = tr[4], y = tr[5];
     const h = it.height || Math.hypot(tr[2], tr[3]) || 10;
@@ -306,6 +310,14 @@ function pdfPagesToElements(pages){
   // détection de répétition ci-dessous — jamais supprimé sur ce seul
   // critère, seulement s'il revient sur plus de 4 pages sur 10.
   function markEdgeLines(pl){
+    // CORRECTIF. Le repérage par saut vertical ci-dessous rate les pages denses, où l'en-tête
+    // n'est pas nettement séparé du corps : il fuyait alors dans le texte (« The AERONAUTS Cut
+    // Order - As of … 3 » en action). On marque donc aussi les 2 premières et 2 dernières lignes
+    // de chaque page (_rim) ; elles ne sont supprimées que si leur texte REVIENT sur plus de 4
+    // pages sur 10 (même règle de répétition que pour _edge), et seulement si assez long pour
+    // être un titre courant et non un nom de personnage.
+    const byY0 = pl.slice().sort((a, b) => b.y - a.y);
+    byY0.slice(0, 2).concat(byY0.slice(-2)).forEach(l => { l._rim = true; });
     if(pl.length < 5) return;   // trop peu de lignes pour distinguer quoi que ce soit
     const byY = pl.slice().sort((a, b) => b.y - a.y);
     const gaps = [];
@@ -328,7 +340,7 @@ function pdfPagesToElements(pages){
   // 1) Titre/numéro de page répété sur beaucoup de pages, EN BORD DE PAGE.
   const freqText = new Map();
   pages.forEach(pl => pl.forEach(l=>{
-    if(!l._edge) return;
+    if(!l._edge && !(l._rim && l.text.trim().length >= 10)) return;
     const n = norm(l.text); if(n.length < 3) return;
     freqText.set(n, (freqText.get(n) || 0) + 1);
   }));
@@ -337,7 +349,7 @@ function pdfPagesToElements(pages){
     const t = l.text.trim();
     if(/^[ivxlcdm0-9]{1,5}\.?$/i.test(t)) return true;                          // numéro de page seul
     if(/^\(?\s*(more|cont'?d\.?|continued)\.?\)?\s*:?\s*$/i.test(t)) return true; // (MORE) / (CONT'D)
-    if(!l._edge) return false;
+    if(!l._edge && !(l._rim && t.length >= 10)) return false;
     const n = norm(t);
     return total >= 3 && (freqText.get(n) || 0) / total > 0.4 && t.length < 60; // en-tête/pied répété
   };
