@@ -104,7 +104,8 @@
   .rp-lb{position:fixed; inset:0; z-index:310; display:flex; align-items:center; justify-content:center; padding:30px; background:rgba(10,11,16,.86); cursor:zoom-out; animation:mmdFade .14s ease-out;}
   .rp-lb img{max-width:100%; max-height:100%; border-radius:10px; box-shadow:0 20px 60px rgba(0,0,0,.5); background:#fff;}
   #rpSnack{position:fixed; z-index:320; left:50%; bottom:26px; transform:translateX(-50%); display:flex; align-items:center; gap:14px; padding:9px 10px 9px 16px; border-radius:999px;
-    background:#262535; color:#fff; font:13px var(--sans); box-shadow:0 8px 24px #0005; animation:rpPop .16s ease;}
+    background:#262535; color:#fff; font:13px var(--sans); box-shadow:0 8px 24px #0005; animation:rpSnackIn .18s ease both;}
+  @keyframes rpSnackIn{from{opacity:0; transform:translate(-50%, 10px);} to{opacity:1; transform:translate(-50%, 0);}}
   #rpSnack button{border:0; border-radius:999px; padding:5px 12px; background:rgba(255,255,255,.14); color:#6CB8E8; font:inherit; font-weight:700; cursor:pointer;}
   #rpSnack button:hover{background:rgba(255,255,255,.22);}
   @media (max-width:1100px){ .rp-sb{width:250px;} }
@@ -161,9 +162,21 @@
   const SB = { sig:'', ro:null, roEls:[], pickPage:1, snack:null };
   const SELS = new Set();   // v89 : plans cochés pour le téléchargement
   function nPages(){ return Math.max(1, document.querySelectorAll('#sheets .sheet').length); }
-  function framesByPage(n){
+  /* v90 : un plan appartient à une scène (f.sc) ; sans scène choisie (ou si la scène ne passe plus par cette page),
+     il retombe sur la première scène présente sur la page */
+  function sceneIdOf(f, ps){
+    if(!ps || !ps.length) return '';
+    for(let i = 0; i < ps.length; i++) if(ps[i].id === f.sc) return ps[i].id;
+    return ps[0].id;
+  }
+  function framesByPage(n, scs){
+    scs = scs || sbScenes();
     const by = {}; for(let p = 1; p <= n; p++) by[p] = [];
     store().frames.forEach(f => { const p = Math.max(1, Math.min(n, parseInt(f.pg, 10) || 1)); by[p].push(f); });
+    for(let p = 1; p <= n; p++){
+      const ps = scs.filter(s => s.from <= p && p <= s.to);
+      if(ps.length > 1) by[p] = by[p].map((f, i) => ({ f:f, i:i, r:ps.findIndex(s => s.id === sceneIdOf(f, ps)) })).sort((a, b) => a.r - b.r || a.i - b.i).map(x => x.f);
+    }
     return by;
   }
   function sbFab(){
@@ -184,7 +197,8 @@
     if(!next){ const m = document.querySelector('.rp-sb-menu'); if(m) m.remove(); }
   }
   function laneHtml(p, list, nums){
-    const frames = list.map(f => `<div class="rp-sb-f${SELS.has(f.id) ? ' sel' : ''}" data-id="${f.id}">
+    const ps = (SB.scs || []).filter(s => s.from <= p && p <= s.to);
+    const frameHtml = f => `<div class="rp-sb-f${SELS.has(f.id) ? ' sel' : ''}" data-id="${f.id}" data-sc="${esc(sceneIdOf(f, ps))}">
         <div class="rp-sb-img" draggable="true" title="${esc(L('Clique pour agrandir · glisse pour réordonner', 'Click to enlarge · drag to reorder'))}">
           <span class="rp-sb-n">${nums[f.id]}</span><img src="${f.src}" alt="" draggable="false">
           <button type="button" class="rp-sb-chk" data-a="sel" aria-pressed="${SELS.has(f.id) ? 'true' : 'false'}" title="${esc(L('Cocher pour télécharger', 'Tick to download'))}">${svg('<path d="M4 8.5l2.5 2.5L12 5.5"/>', 12)}</button>
@@ -195,7 +209,14 @@
             <button type="button" data-a="del" title="${esc(L('Supprimer ce plan', 'Delete this shot'))}">${svg('<path d="M3.5 4.5h9M6.5 4.5V3h3v1.5M5 4.5l.5 8h5l.5-8"/>', 13)}</button>
           </div></div>
         <input class="rp-sb-cap" type="text" maxlength="200" placeholder="${esc(L('Légende (cadrage, mouvement…)', 'Caption (framing, movement…)'))}" value="${esc(f.cap || '')}">
-      </div>`).join('');
+      </div>`;
+    const scHead = s => `<div class="rp-sb-sh" data-sc="${esc(s.id)}"><span class="n">${esc(String(s.num || ''))}</span><span class="t" data-a="gosc" data-sc="${esc(s.id)}" title="${esc(L('Aller à cette scène : ', 'Go to this scene: ') + s.title)}">${esc(s.title)}</span>${s.from < p ? `<em>${esc(L('suite', 'cont.'))}</em>` : ''}<button type="button" class="rp-sb-add" title="${esc(L('Ajouter un plan à cette scène', 'Add a shot to this scene'))}">${svg('<path d="M8 3v10M3 8h10"/>', 12)}</button></div>`;
+    let frames;
+    if(ps.length){
+      const g = {}; ps.forEach(s => { g[s.id] = []; });
+      list.forEach(f => g[sceneIdOf(f, ps)].push(f));
+      frames = ps.map(s => scHead(s) + g[s.id].map(frameHtml).join('')).join('');
+    } else frames = list.map(frameHtml).join('');
     const ghost = list.length ? '' : `<div class="rp-sb-ghost first"><span>${esc(L('Aucun plan', 'No shot'))}</span>
         <button type="button" data-a="upload">${svg('<path d="M8 11V3M5 6l3-3 3 3M3 13h10"/>', 13)} ${esc(L('Image', 'Image'))}</button>
         <button type="button" data-a="draw">${svg('<path d="M3 13l.7-3L10.8 3a1.4 1.4 0 0 1 2 2L5.7 12.2 3 13z"/>', 13)} ${esc(L('Dessin', 'Draw'))}</button></div>`;
@@ -205,7 +226,8 @@
   }
   function sbRender(){
     const root = $('rpSb'); if(!root) return;
-    const n = nPages(), by = framesByPage(n), nums = {}; let k = 0;
+    SB.scs = sbScenes();
+    const n = nPages(), by = framesByPage(n, SB.scs), nums = {}; let k = 0;
     for(let p = 1; p <= n; p++) by[p].forEach(f => { nums[f.id] = ++k; });
     const inner = root.querySelector('.rp-sb-inner');
     inner.innerHTML = Object.keys(by).map(p => laneHtml(p, by[p], nums)).join('');
@@ -215,7 +237,7 @@
     sbPlace();
     selRefresh();
   }
-  const sigNow = () => (S.project ? S.project.id : '') + '|' + nPages() + '|' + getLang();
+  const sigNow = () => { SB.scsNow = sbScenes(); return (S.project ? S.project.id : '') + '|' + nPages() + '|' + getLang() + '|' + SB.scsNow.map(s => s.id + ':' + s.from + '-' + s.to).join(';'); };
   function sbPlace(){
     const root = $('rpSb'), cp = $('centerPane'); if(!root || !cp) return;
     const sheets = Array.from(document.querySelectorAll('#sheets .sheet'));
@@ -231,6 +253,14 @@
       if(l.style.height !== h + 'px') l.style.height = h + 'px';
     });
     if(Math.abs(sc.scrollTop - cp.scrollTop) > 0.5) sc.scrollTop = cp.scrollTop;
+    /* v90 : numéro et titre des scènes suivent ce qui est tapé dans le scénario, sans refaire toute la colonne */
+    const scs = SB.scsNow || SB.scs || [];
+    root.querySelectorAll('.rp-sb-sh').forEach(h => {
+      const s = scs.filter(x => x.id === h.dataset.sc)[0]; if(!s) return;
+      const nn = h.querySelector('.n'), tt = h.querySelector('.t'), num = String(s.num || '');
+      if(nn && nn.textContent !== num) nn.textContent = num;
+      if(tt && tt.textContent !== s.title){ tt.textContent = s.title; tt.title = L('Aller à cette scène : ', 'Go to this scene: ') + s.title; }
+    });
   }
   function sbSync(){
     const fab = sbFab();
@@ -275,26 +305,26 @@
       im.src = url;
     });
   }
-  async function addFiles(files, page){
+  async function addFiles(files, page, sc){
     const list = Array.from(files || []).filter(f => /^image\//.test(f.type));
     if(!list.length){ toast(L('Dépose une image (JPG, PNG, WebP…).', 'Drop an image (JPG, PNG, WebP…).')); return; }
     for(const f of list){
-      try{ store().frames.push({ id:uid(), pg:page, k:'img', src:await compress(f), cap:'' }); }
+      try{ store().frames.push(Object.assign({ id:uid(), pg:page, k:'img', src:await compress(f), cap:'' }, sc ? { sc:sc } : {})); }
       catch(e){ toast(L('Image illisible : ', 'Unreadable image: ') + f.name); }
     }
     save(); sbRender();
   }
-  function pickFile(page){
+  function pickFile(page, sc){
     const inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'image/*'; inp.multiple = true; inp.style.display = 'none';
-    inp.addEventListener('change', () => { addFiles(inp.files, page); inp.remove(); });
+    inp.addEventListener('change', () => { addFiles(inp.files, page, sc); inp.remove(); });
     document.body.appendChild(inp); inp.click();
   }
-  async function pasteImage(page){
+  async function pasteImage(page, sc){
     try{
       const items = await navigator.clipboard.read();
       for(const it of items){
         const t = it.types.find(x => /^image\//.test(x));
-        if(t){ const b = await it.getType(t); await addFiles([new File([b], 'collage', { type:t })], page); return; }
+        if(t){ const b = await it.getType(t); await addFiles([new File([b], 'collage', { type:t })], page, sc); return; }
       }
       toast(L('Aucune image dans le presse-papiers.', 'No image in the clipboard.'));
     }catch(e){ toast(L('Colle avec Ctrl/Cmd+V en survolant la page voulue.', 'Paste with Ctrl/Cmd+V while hovering the page you want.')); }
@@ -307,7 +337,7 @@
     d.innerHTML = `<span>${esc(msg)}</span><button type="button">${esc(L('Annuler', 'Undo'))}</button>`;
     d.querySelector('button').addEventListener('click', () => { undo(); d.remove(); });
     document.body.appendChild(d);
-    SB.snack = setTimeout(() => d.remove(), 7000);
+    SB.snack = setTimeout(() => { d.style.transition = 'opacity .16s ease'; d.style.opacity = '0'; setTimeout(() => d.remove(), 170); }, 4000);
   }
   function delFrame(id){
     const fr = store().frames, i = fr.findIndex(f => f.id === id); if(i < 0) return;
@@ -321,73 +351,156 @@
     d.addEventListener('click', close); document.addEventListener('keydown', onKey, true); document.body.appendChild(d);
   }
 
-  /* ---- éditeur de dessin ---- */
-  function drawOpen(page, frame){
+  /* ---- éditeur de dessin (v90 : formes, flèche, texte, remplissage, rétablir, repères de cadrage) ---- */
+  function drawOpen(page, frame, sc){
     const old = $('rpDrawBg'); if(old) old.remove();
-    const COLORS = ['#1b1b1f', '#3699D4', '#D64545', '#2E9E6B', '#E0A21B'];
+    const COLORS = ['#1b1b1f', '#8A8F98', '#3699D4', '#D64545', '#2E9E6B', '#E0A21B'];
+    const FF = 'system-ui, "Helvetica Neue", Arial, sans-serif';
+    const TOOLS = [
+      ['pen', L('Crayon (B)', 'Pen (B)'), '<path d="M3 13l.7-3L10.8 3a1.4 1.4 0 0 1 2 2L5.7 12.2 3 13z"/>'],
+      ['line', L('Ligne (L) \u00B7 Maj = droite', 'Line (L) \u00B7 Shift = straight'), '<path d="M3.5 12.5l9-9"/>'],
+      ['arrow', L('Fl\u00E8che (A) \u00B7 mouvement de cam\u00E9ra ou de personnage', 'Arrow (A) \u00B7 camera or character move'), '<path d="M3 13L13 3M7 3h6v6"/>'],
+      ['rect', L('Rectangle (R) \u00B7 Maj = carr\u00E9', 'Rectangle (R) \u00B7 Shift = square'), '<rect x="3" y="4" width="10" height="8" rx="1"/>'],
+      ['ellipse', L('Ellipse (O) \u00B7 Maj = cercle', 'Ellipse (O) \u00B7 Shift = circle'), '<ellipse cx="8" cy="8" rx="5.5" ry="4.2"/>'],
+      ['text', L('Texte (T)', 'Text (T)'), '<path d="M3.5 4.5v-1h9v1M8 3.5v9M6 12.5h4"/>'],
+      ['eraser', L('Gomme (E)', 'Eraser (E)'), '<path d="M3 11l5-6 5 4-3.5 4H5.5L3 11zM6.5 8.2l4 3.2"/>']
+    ];
+    const KEYS = { b:'pen', l:'line', a:'arrow', r:'rect', o:'ellipse', t:'text', e:'eraser' };
     const bg = document.createElement('div'); bg.id = 'rpDrawBg'; bg.className = 'rp-draw-bg rp-ui';
     bg.innerHTML = `<div class="rp-draw" role="dialog" aria-modal="true">
       <div class="rp-draw-bar"><h3>${esc(frame ? L('Modifier le plan', 'Edit the shot') : L('Dessiner un plan', 'Draw a shot'))}</h3>
-        ${COLORS.map((c, i) => `<button type="button" class="col${i ? '' : ' sel'}" data-col="${c}" style="background:${c}" title="${c}"></button>`).join('')}<i></i>
+        ${TOOLS.map(t => `<button type="button" data-tool="${t[0]}" class="${t[0] === 'pen' ? 'sel' : ''}" title="${esc(t[1])}">${svg(t[2], 14)}</button>`).join('')}<i></i>
+        ${COLORS.map((c, i) => `<button type="button" class="col${i ? '' : ' sel'}" data-col="${c}" style="background:${c}" title="${c}"></button>`).join('')}<input type="color" class="cust" value="#1b1b1f" title="${esc(L('Autre couleur', 'Custom color'))}"><i></i>
         <button type="button" data-size="3" class="sel" title="${esc(L('Fin', 'Thin'))}">${svg('<path d="M3 8h10" stroke-width="1.2"/>', 14)}</button>
         <button type="button" data-size="7" title="${esc(L('Moyen', 'Medium'))}">${svg('<path d="M3 8h10" stroke-width="2.6"/>', 14)}</button>
-        <button type="button" data-size="14" title="${esc(L('Épais', 'Thick'))}">${svg('<path d="M3 8h10" stroke-width="4.6"/>', 14)}</button><i></i>
-        <button type="button" data-tool="eraser" title="${esc(L('Gomme', 'Eraser'))}">${svg('<path d="M3 11l5-6 5 4-3.5 4H5.5L3 11zM6.5 8.2l4 3.2"/>', 14)}</button>
+        <button type="button" data-size="14" title="${esc(L('\u00C9pais', 'Thick'))}">${svg('<path d="M3 8h10" stroke-width="4.6"/>', 14)}</button>
+        <button type="button" data-size="26" title="${esc(L('Tr\u00E8s \u00E9pais', 'Extra thick'))}">${svg('<path d="M3 8h10" stroke-width="6.6"/>', 14)}</button><i></i>
+        <button type="button" data-a="fill" title="${esc(L('Remplir les formes', 'Fill shapes'))}">${svg('<rect x="3.5" y="4.5" width="9" height="7" rx="1.2" fill="currentColor" fill-opacity=".35"/>', 14)}</button>
+        <button type="button" data-a="guides" title="${esc(L('Rep\u00E8res de cadrage (tiers) \u2014 non enregistr\u00E9s', 'Framing guides (thirds) \u2014 not saved'))}">${svg('<path d="M6 2.5v11M10 2.5v11M2.5 6h11M2.5 10h11"/>', 14)}</button><i></i>
         <button type="button" data-a="undo" title="${esc(L('Annuler le dernier trait (Ctrl+Z)', 'Undo last stroke (Ctrl+Z)'))}">${svg('<path d="M4 7h6a3 3 0 0 1 0 6H6M4 7l2.5-2.5M4 7l2.5 2.5"/>', 14)}</button>
+        <button type="button" data-a="redo" title="${esc(L('R\u00E9tablir (Ctrl+Y)', 'Redo (Ctrl+Y)'))}">${svg('<path d="M12 7H6a3 3 0 0 0 0 6h4M12 7l-2.5-2.5M12 7l-2.5 2.5"/>', 14)}</button>
         <button type="button" data-a="clear" title="${esc(L('Tout effacer', 'Clear all'))}">${svg('<path d="M3.5 4.5h9M6.5 4.5V3h3v1.5M5 4.5l.5 8h5l.5-8"/>', 14)}</button></div>
-      <canvas width="960" height="540"></canvas>
+      <div class="rp-draw-cv"><canvas width="960" height="540"></canvas><div class="rp-draw-guides"></div></div>
       <div class="rp-draw-act"><button type="button" class="btn btn-ghost" data-a="cancel">${esc(L('Annuler', 'Cancel'))}</button>
         <button type="button" class="btn btn-primary" data-a="save">${esc(L('Enregistrer le plan', 'Save the shot'))}</button></div></div>`;
     document.body.appendChild(bg);
-    const cv = bg.querySelector('canvas'), cx = cv.getContext('2d', { willReadFrequently:true });
+    const cvw = bg.querySelector('.rp-draw-cv'), cv = bg.querySelector('canvas'), cx = cv.getContext('2d', { willReadFrequently:true });
     cx.fillStyle = '#fff'; cx.fillRect(0, 0, 960, 540);
     if(frame){
       const im = new Image();
       im.onload = () => { const k = Math.min(960 / im.naturalWidth, 540 / im.naturalHeight), w = im.naturalWidth * k, h = im.naturalHeight * k; cx.drawImage(im, (960 - w) / 2, (540 - h) / 2, w, h); };
       im.src = frame.src;
     }
-    let color = COLORS[0], size = 3, eraser = false, hist = [], last = null, prevMid = null, down = false, moved = false;
+    let color = COLORS[0], size = 3, tool = 'pen', fill = false, hist = [], fwd = [], last = null, prevMid = null, down = false, moved = false, start = null, base = null, txt = null;
+    const snap = () => { hist.push(cx.getImageData(0, 0, 960, 540)); if(hist.length > 30) hist.shift(); fwd.length = 0; };
     const pt = e => { const r = cv.getBoundingClientRect(); return { x:(e.clientX - r.left) * 960 / r.width, y:(e.clientY - r.top) * 540 / r.height, p:(e.pointerType === 'pen' && e.pressure) ? e.pressure : 0.5 }; };
-    const style = p => { cx.lineCap = 'round'; cx.lineJoin = 'round'; cx.strokeStyle = eraser ? '#fff' : color; cx.fillStyle = cx.strokeStyle; cx.lineWidth = (eraser ? size * 3 : size) * (p === 0.5 ? 1 : (0.5 + p)); };
+    const style = p => { cx.lineCap = 'round'; cx.lineJoin = 'round'; cx.strokeStyle = tool === 'eraser' ? '#fff' : color; cx.fillStyle = cx.strokeStyle; cx.lineWidth = (tool === 'eraser' ? size * 3 : size) * (p === 0.5 ? 1 : (0.5 + p)); };
+    const isShape = () => tool === 'line' || tool === 'arrow' || tool === 'rect' || tool === 'ellipse';
+    function setTool(t){
+      commitText(); tool = t;
+      bg.querySelectorAll('[data-tool]').forEach(x => x.classList.toggle('sel', x.dataset.tool === t));
+      cv.style.cursor = t === 'text' ? 'text' : 'crosshair';
+    }
+    function drawShape(a, b, shift){
+      style(0.5); cx.beginPath();
+      let x2 = b.x, y2 = b.y;
+      if(shift){
+        if(tool === 'line' || tool === 'arrow'){ const dx = b.x - a.x, dy = b.y - a.y, ang = Math.round(Math.atan2(dy, dx) / (Math.PI / 4)) * (Math.PI / 4), d = Math.hypot(dx, dy); x2 = a.x + Math.cos(ang) * d; y2 = a.y + Math.sin(ang) * d; }
+        else { const m = Math.max(Math.abs(b.x - a.x), Math.abs(b.y - a.y)); x2 = a.x + (b.x < a.x ? -m : m); y2 = a.y + (b.y < a.y ? -m : m); }
+      }
+      if(tool === 'line' || tool === 'arrow'){
+        cx.moveTo(a.x, a.y); cx.lineTo(x2, y2); cx.stroke();
+        if(tool === 'arrow'){
+          const ang = Math.atan2(y2 - a.y, x2 - a.x), hl = Math.max(14, cx.lineWidth * 4);
+          cx.beginPath(); cx.moveTo(x2, y2); cx.lineTo(x2 - hl * Math.cos(ang - 0.45), y2 - hl * Math.sin(ang - 0.45));
+          cx.moveTo(x2, y2); cx.lineTo(x2 - hl * Math.cos(ang + 0.45), y2 - hl * Math.sin(ang + 0.45)); cx.stroke();
+        }
+      } else if(tool === 'rect'){
+        cx.rect(Math.min(a.x, x2), Math.min(a.y, y2), Math.abs(x2 - a.x), Math.abs(y2 - a.y)); if(fill) cx.fill(); cx.stroke();
+      } else {
+        cx.ellipse((a.x + x2) / 2, (a.y + y2) / 2, Math.max(0.5, Math.abs(x2 - a.x) / 2), Math.max(0.5, Math.abs(y2 - a.y) / 2), 0, 0, Math.PI * 2); if(fill) cx.fill(); cx.stroke();
+      }
+    }
+    /* texte : un champ posé sur le dessin, validé par Entrée ou en cliquant ailleurs */
+    function textAt(p){
+      const fpx = Math.round(size * 2.2 + 14), r = cv.getBoundingClientRect(), k = r.width / 960;
+      const inp = document.createElement('input'); inp.type = 'text'; inp.className = 'rp-draw-txt'; inp.maxLength = 120;
+      inp.placeholder = L('Texte\u2026', 'Text\u2026');
+      inp.style.left = Math.round(p.x * k) + 'px'; inp.style.top = Math.round(p.y * k) + 'px';
+      inp.style.width = Math.max(120, Math.round(r.width - p.x * k - 6)) + 'px';
+      inp.style.font = '600 ' + (fpx * k) + 'px/1.2 ' + FF; inp.style.color = color;
+      cvw.appendChild(inp); txt = { el:inp, x:p.x, y:p.y, f:fpx, c:color };
+      inp.addEventListener('blur', commitText);
+      setTimeout(() => inp.focus(), 0);
+    }
+    function commitText(){
+      if(!txt) return; const t = txt; txt = null;
+      const v = t.el.value; t.el.remove();
+      if(!v.trim()) return;
+      snap(); cx.font = '600 ' + t.f + 'px ' + FF; cx.textBaseline = 'top'; cx.fillStyle = t.c; cx.fillText(v, t.x, t.y + t.f * 0.1);
+    }
     cv.addEventListener('pointerdown', e => {
-      e.preventDefault(); try{ cv.setPointerCapture(e.pointerId); }catch(err){}
-      hist.push(cx.getImageData(0, 0, 960, 540)); if(hist.length > 30) hist.shift();
-      const p = pt(e); style(p.p); down = true; moved = false; last = p; prevMid = p;
+      e.preventDefault(); commitText(); try{ cv.setPointerCapture(e.pointerId); }catch(err){}
+      const p = pt(e);
+      if(tool === 'text'){ textAt(p); return; }
+      snap(); down = true; moved = false; last = p; prevMid = p;
+      if(isShape()){ start = p; base = hist[hist.length - 1]; } else { start = null; style(p.p); }
     });
     cv.addEventListener('pointermove', e => {
       if(!down) return; e.preventDefault(); moved = true;
-      const p = pt(e), mid = { x:(last.x + p.x) / 2, y:(last.y + p.y) / 2 };
+      const p = pt(e);
+      if(start){ cx.putImageData(base, 0, 0); drawShape(start, p, e.shiftKey); last = p; return; }
+      const mid = { x:(last.x + p.x) / 2, y:(last.y + p.y) / 2 };
       style(p.p); cx.beginPath(); cx.moveTo(prevMid.x, prevMid.y); cx.quadraticCurveTo(last.x, last.y, mid.x, mid.y); cx.stroke();
       prevMid = mid; last = p;
     });
     const end = () => {
       if(!down) return; down = false;
+      if(start){ if(!moved) hist.pop(); start = null; base = null; return; }     // forme : déjà tracée pendant le glissement
       if(!moved){ cx.beginPath(); cx.arc(last.x, last.y, cx.lineWidth / 2, 0, Math.PI * 2); cx.fill(); }
       else { cx.beginPath(); cx.moveTo(prevMid.x, prevMid.y); cx.lineTo(last.x, last.y); cx.stroke(); }
     };
     cv.addEventListener('pointerup', end); cv.addEventListener('pointercancel', end);
-    const undo = () => { const h = hist.pop(); if(h) cx.putImageData(h, 0, 0); };
+    const undo = () => { const h = hist.pop(); if(h){ fwd.push(cx.getImageData(0, 0, 960, 540)); cx.putImageData(h, 0, 0); } };
+    const redo = () => { const h = fwd.pop(); if(h){ hist.push(cx.getImageData(0, 0, 960, 540)); cx.putImageData(h, 0, 0); } };
     const close = () => { bg.remove(); document.removeEventListener('keydown', onKey, true); };
     function onKey(e){
+      if(txt && e.target === txt.el){
+        if(e.key === 'Enter'){ e.preventDefault(); commitText(); }
+        else if(e.key === 'Escape'){ e.preventDefault(); const t = txt; txt = null; t.el.remove(); }
+        e.stopPropagation(); return;
+      }
       if(e.key === 'Escape'){ e.preventDefault(); e.stopPropagation(); close(); return; }
-      if((e.ctrlKey || e.metaKey) && !e.shiftKey && e.key.toLowerCase() === 'z'){ e.preventDefault(); e.stopPropagation(); undo(); return; }
+      const mod = e.ctrlKey || e.metaKey, k = (e.key || '').toLowerCase();
+      if(mod && !e.shiftKey && k === 'z'){ e.preventDefault(); e.stopPropagation(); commitText(); undo(); return; }
+      if(mod && (k === 'y' || (k === 'z' && e.shiftKey))){ e.preventDefault(); e.stopPropagation(); redo(); return; }
+      if(!mod && !e.altKey && KEYS[k] && !(e.target && e.target.type === 'color')){ e.preventDefault(); setTool(KEYS[k]); }
       e.stopPropagation();
     }
     document.addEventListener('keydown', onKey, true);
     bg.addEventListener('mousedown', e => { bg._d = e.target === bg; });
+    bg.addEventListener('input', e => {
+      if(!(e.target.matches && e.target.matches('input[type="color"]'))) return;
+      color = e.target.value; if(tool === 'eraser') setTool('pen');
+      bg.querySelectorAll('[data-col]').forEach(x => x.classList.remove('sel'));
+    });
     bg.addEventListener('click', e => {
       if(e.target === bg && bg._d){ close(); return; }
       const b = e.target.closest('button'); if(!b) return;
-      if(b.dataset.col){ color = b.dataset.col; eraser = false; bg.querySelectorAll('[data-col]').forEach(x => x.classList.toggle('sel', x === b)); bg.querySelector('[data-tool]').classList.remove('sel'); }
+      if(b.dataset.col){ color = b.dataset.col; if(tool === 'eraser') setTool('pen'); bg.querySelectorAll('[data-col]').forEach(x => x.classList.toggle('sel', x === b)); }
       else if(b.dataset.size){ size = +b.dataset.size; bg.querySelectorAll('[data-size]').forEach(x => x.classList.toggle('sel', x === b)); }
-      else if(b.dataset.tool){ eraser = !eraser; b.classList.toggle('sel', eraser); }
-      else if(b.dataset.a === 'undo') undo();
-      else if(b.dataset.a === 'clear'){ hist.push(cx.getImageData(0, 0, 960, 540)); cx.fillStyle = '#fff'; cx.fillRect(0, 0, 960, 540); }
+      else if(b.dataset.tool) setTool(b.dataset.tool);
+      else if(b.dataset.a === 'fill'){ fill = !fill; b.classList.toggle('sel', fill); }
+      else if(b.dataset.a === 'guides'){ const g = bg.querySelector('.rp-draw-guides'); g.classList.toggle('on'); b.classList.toggle('sel', g.classList.contains('on')); }
+      else if(b.dataset.a === 'undo'){ commitText(); undo(); }
+      else if(b.dataset.a === 'redo') redo();
+      else if(b.dataset.a === 'clear'){ commitText(); snap(); cx.fillStyle = '#fff'; cx.fillRect(0, 0, 960, 540); }
       else if(b.dataset.a === 'cancel') close();
       else if(b.dataset.a === 'save'){
+        commitText();
         const kind = frame ? frame.k : 'draw';
         const src = kind === 'img' ? cv.toDataURL('image/jpeg', 0.85) : cv.toDataURL('image/png');
-        if(frame){ frame.src = src; } else store().frames.push({ id:uid(), pg:page, k:'draw', src, cap:'' });
+        if(frame){ frame.src = src; } else store().frames.push(Object.assign({ id:uid(), pg:page, k:'draw', src, cap:'' }, sc ? { sc:sc } : {}));
         close(); save(); sbRender();
       }
     });
@@ -395,8 +508,9 @@
 
   /* ---- événements de la colonne (délégation) ---- */
   const laneOf = el => { const l = el.closest('.rp-sb-lane'); return l ? parseInt(l.dataset.p, 10) : 1; };
+  const scOfEl = el => { const h = el.closest('.rp-sb-sh'); return h ? h.dataset.sc : ''; };
   const frameOf = el => { const f = el.closest('.rp-sb-f'); return f ? store().frames.find(x => x.id === f.dataset.id) : null; };
-  function menu(btn, page){
+  function menu(btn, page, sc){
     const o = document.querySelector('.rp-sb-menu'); if(o) o.remove();
     const m = document.createElement('div'); m.className = 'rp-sb-menu rp-ui';
     m.innerHTML = `<button type="button" data-m="up">${svg('<path d="M8 11V3M5 6l3-3 3 3M3 13h10"/>', 14)} ${esc(L('Importer une image…', 'Import an image…'))}</button>
@@ -406,7 +520,7 @@
     m.style.top = Math.round(Math.max(8, Math.min(window.innerHeight - 150, r.bottom + 6))) + 'px'; m.style.left = Math.round(Math.max(8, Math.min(window.innerWidth - 210, r.right - 200))) + 'px';
     m.addEventListener('click', e => {
       const b = e.target.closest('[data-m]'); if(!b) return; m.remove();
-      if(b.dataset.m === 'up') pickFile(page); else if(b.dataset.m === 'draw') drawOpen(page); else pasteImage(page);
+      if(b.dataset.m === 'up') pickFile(page, sc); else if(b.dataset.m === 'draw') drawOpen(page, undefined, sc); else pasteImage(page, sc);
     });
     document.body.appendChild(m);
     setTimeout(() => document.addEventListener('click', function off(e){ if(!m.contains(e.target)) { m.remove(); } document.removeEventListener('click', off, true); }, true), 0);
@@ -414,7 +528,7 @@
   document.addEventListener('click', e => {
     const root = $('rpSb'); if(!root || !root.contains(e.target)) return;
     const a = e.target.closest('[data-a]'), add = e.target.closest('.rp-sb-add');
-    if(add){ e.stopPropagation(); menu(add, laneOf(add)); return; }
+    if(add){ e.stopPropagation(); menu(add, laneOf(add), scOfEl(add)); return; }
     if(a){
       const act = a.dataset.a;
       if(act === 'close') sbToggle(false);
@@ -462,8 +576,9 @@
     let after = false;
     if(tEl && tf){ const r = tEl.querySelector('.rp-sb-img').getBoundingClientRect(); after = e.clientY > r.top + r.height / 2; }
     arr.splice(arr.indexOf(mv), 1);
-    if(tf){ arr.splice(arr.indexOf(tf) + (after ? 1 : 0), 0, mv); mv.pg = tf.pg; }
-    else { mv.pg = page; arr.push(mv); }
+    const shEl = e.target.closest('.rp-sb-sh');
+    if(tf){ arr.splice(arr.indexOf(tf) + (after ? 1 : 0), 0, mv); mv.pg = tf.pg; if(tEl.dataset.sc) mv.sc = tEl.dataset.sc; else delete mv.sc; }
+    else { mv.pg = page; arr.push(mv); if(shEl && shEl.dataset.sc) mv.sc = shEl.dataset.sc; }
     dragId = null; save(); sbRender();
   });
   /* coller une image avec Ctrl/Cmd+V en survolant une page de la colonne */
@@ -550,6 +665,45 @@
   `;
   document.head.appendChild(stDl);
 
+  /* =====================================================================
+     v90 — STORYBOARD RANGÉ PAR SCÈNE · DESSIN PLUS COMPLET · POP-UP « PLAN SUPPRIMÉ »
+     ---------------------------------------------------------------------
+     • Dans chaque page, les plans sont rangés sous l'entête de leur scène (numéro + titre) ; une scène
+       qui continue d'une page à l'autre reprend son entête avec « suite ». Chaque entête a son « + », se
+       clique pour aller à la scène, et reçoit les plans qu'on y glisse. Un plan se déplace aussi vers une
+       scène par le menu de la flèche haut/bas. « Une scène » du téléchargement = les plans de cette scène.
+     • Dessin : crayon, ligne, flèche, rectangle, ellipse (remplissage au choix), texte, gomme, couleur libre,
+       4 épaisseurs, rétablir (Ctrl+Y), repères de cadrage (tiers) non enregistrés, raccourcis B L A R O T E.
+     • La pop-up « Plan supprimé » dure 4 s et apparaît sans se décaler.
+  ===================================================================== */
+  const stV90 = document.createElement('style'); stV90.id = 'rpV90Style';
+  stV90.textContent = `
+  .rp-sb-sh{flex:none; display:flex; align-items:center; gap:7px; min-height:26px; padding:2px 4px 2px 8px; border-radius:7px; border-left:3px solid var(--accent);
+    background:color-mix(in srgb, var(--accent) 9%, transparent); font-size:11px; color:var(--ink);}
+  .rp-sb-sh .n{font-weight:700; color:var(--accent); font-variant-numeric:tabular-nums;}
+  .rp-sb-sh .n:empty{display:none;}
+  .rp-sb-sh .t{flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-weight:700; letter-spacing:.02em; text-transform:uppercase; cursor:pointer; transition:color .14s ease;}
+  .rp-sb-sh .t:hover{color:var(--accent);}
+  .rp-sb-sh em{flex:none; font-style:normal; font-size:10.5px; font-weight:600; color:var(--ink-soft);}
+  .rp-sb-sh .rp-sb-add{flex:none; width:20px; height:20px;}
+  .rp-sb-sh.over{outline:2px solid var(--accent); outline-offset:1px;}
+  .rp-sb-pgmenu .s{display:flex; flex-direction:column; gap:3px; max-height:150px; overflow-y:auto;}
+  .rp-sb-pgmenu .s button{height:auto; min-height:28px; padding:4px 8px; text-align:left; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .rp-draw-bar input[type="color"].cust{width:24px; height:24px; padding:0; border:1px solid var(--hair); border-radius:50%; background:none; cursor:pointer; overflow:hidden;}
+  .rp-draw-bar input[type="color"].cust::-webkit-color-swatch-wrapper{padding:0;}
+  .rp-draw-bar input[type="color"].cust::-webkit-color-swatch{border:0; border-radius:50%;}
+  .rp-draw-bar input[type="color"].cust::-moz-color-swatch{border:0; border-radius:50%;}
+  .rp-draw-cv{position:relative;}
+  .rp-draw-guides{position:absolute; inset:0; display:none; pointer-events:none; border-radius:10px;
+    background-image:linear-gradient(90deg, transparent calc(33.333% - .5px), rgba(54,153,212,.6) calc(33.333% - .5px), rgba(54,153,212,.6) calc(33.333% + .5px), transparent calc(33.333% + .5px)),
+      linear-gradient(90deg, transparent calc(66.666% - .5px), rgba(54,153,212,.6) calc(66.666% - .5px), rgba(54,153,212,.6) calc(66.666% + .5px), transparent calc(66.666% + .5px)),
+      linear-gradient(180deg, transparent calc(33.333% - .5px), rgba(54,153,212,.6) calc(33.333% - .5px), rgba(54,153,212,.6) calc(33.333% + .5px), transparent calc(33.333% + .5px)),
+      linear-gradient(180deg, transparent calc(66.666% - .5px), rgba(54,153,212,.6) calc(66.666% - .5px), rgba(54,153,212,.6) calc(66.666% + .5px), transparent calc(66.666% + .5px));}
+  .rp-draw-guides.on{display:block;}
+  .rp-draw-txt{position:absolute; z-index:2; box-sizing:border-box; padding:0 2px; margin:0; border:1px dashed var(--accent); border-radius:3px; background:rgba(255,255,255,.6); outline:none;}
+  `;
+  document.head.appendChild(stV90);
+
   const plansTxt = n => n + ' ' + (n > 1 ? L('plans', 'shots') : L('plan', 'shot'));
   const pad2 = n => (n < 10 ? '0' : '') + n;
   const sanitize = s => String(s || '').replace(/[\\/:*?"<>|]+/g, ' ').replace(/\s+/g, ' ').trim();
@@ -579,8 +733,8 @@
 
   /* ---------- plans dans l'ordre d'affichage, scènes et pages ---------- */
   function sbOrdered(){
-    const n = nPages(), by = framesByPage(n), out = []; let k = 0;
-    for(let p = 1; p <= n; p++) by[p].forEach(f => out.push({ f:f, num:++k, pg:p }));
+    const n = nPages(), scs = sbScenes(), by = framesByPage(n, scs), out = []; let k = 0;
+    for(let p = 1; p <= n; p++){ const ps = scs.filter(s => s.from <= p && p <= s.to); by[p].forEach(f => out.push({ f:f, num:++k, pg:p, sc:sceneIdOf(f, ps) })); }
     return out;
   }
   /* pages couvertes par chaque scène : de la page de son entête à la page de son dernier bloc
@@ -594,7 +748,7 @@
         if(!start) return;
         let end = start;
         for(let i = els.length - 1; i >= 0; i--){ const v = po[els[i].id]; if(v){ end = v; break; } }
-        out.push({ id:b.sceneId, num:numbers[b.sceneId] || '', title:(els[0] && els[0].text) || L('(scène sans titre)', '(untitled scene)'), from:start, to:Math.max(start, end) });
+        out.push({ id:b.sceneId, eid:(els[0] && els[0].id) || '', num:numbers[b.sceneId] || '', title:(els[0] && els[0].text) || L('(scène sans titre)', '(untitled scene)'), from:start, to:Math.max(start, end) });
       });
     }catch(err){}
     return out;
@@ -603,7 +757,7 @@
     const all = sbOrdered();
     if(scope === 'one') return all.filter(x => x.f.id === one);
     if(scope === 'sel') return all.filter(x => SELS.has(x.f.id));
-    if(scope === 'scene'){ const sc = sbScenes().filter(s => s.id === val)[0]; return sc ? all.filter(x => x.pg >= sc.from && x.pg <= sc.to) : []; }
+    if(scope === 'scene') return all.filter(x => x.sc === val);
     if(scope === 'page') return all.filter(x => x.pg === (parseInt(val, 10) || 1));
     return all;
   }
@@ -747,7 +901,7 @@
     const old = $('rpDlBg'); if(old) old.remove();
     const all = sbOrdered();
     if(!all.length){ toast(L('Aucun plan à télécharger.', 'No shots to download.')); return; }
-    const scenes = sbScenes().map(s => Object.assign({}, s, { n:all.filter(x => x.pg >= s.from && x.pg <= s.to).length })).filter(s => s.n);
+    const scenes = sbScenes().map(s => Object.assign({}, s, { n:all.filter(x => x.sc === s.id).length })).filter(s => s.n);
     const pages = []; for(let p = 1; p <= nPages(); p++){ const n = all.filter(x => x.pg === p).length; if(n) pages.push({ p:p, n:n }); }
     const selN = all.filter(x => SELS.has(x.f.id)).length, oneIt = one ? all.filter(x => x.f.id === one)[0] : null;
     let scope = oneIt ? 'one' : (selN ? 'sel' : 'all'), fmt = 'png';
@@ -760,7 +914,7 @@
       <div class="rp-dl-sec">${esc(L('Quoi télécharger', 'What to download'))}</div>
       ${oneIt ? opt('one', esc(L('Ce plan', 'This shot')), esc(L('Plan', 'Shot') + ' ' + oneIt.num + ' \u00B7 page ' + oneIt.pg)) : ''}
       ${opt('sel', esc(L('Les plans cochés', 'Selected shots')), esc(selN ? plansTxt(selN) : L('Coche des plans avec le rond en bas à gauche de chaque image', 'Tick shots with the circle at the bottom left of each image')), '', !selN)}
-      ${opt('scene', esc(L('Une scène', 'A scene')), esc(scenes.length ? L('Tous les plans des pages de cette scène', 'Every shot on the pages of this scene') : L('Aucune scène n\u2019a de plan', 'No scene has a shot')), sceneSel, !scenes.length)}
+      ${opt('scene', esc(L('Une scène', 'A scene')), esc(scenes.length ? L('Tous les plans rangés sous cette scène', 'Every shot filed under this scene') : L('Aucune scène n\u2019a de plan', 'No scene has a shot')), sceneSel, !scenes.length)}
       ${opt('page', esc(L('Une page', 'A page')), '', pageSel)}
       ${opt('all', esc(L('Tout le storyboard', 'The whole storyboard')), esc(plansTxt(all.length)))}
       <div class="rp-dl-sec">Format</div>
@@ -829,26 +983,44 @@
     const fl = el.closest('.rp-sb-fl'); if(fl) fl.scrollTop = Math.max(0, el.offsetTop - fl.offsetTop - 8);
     el.classList.add('flash'); setTimeout(() => el.classList.remove('flash'), 1300);
   }
-  function moveFrame(f, p){
+  function goScene(id){
+    const s = (SB.scs || sbScenes()).filter(x => x.id === id)[0]; if(!s) return;
+    const cp = $('centerPane');
+    let el = null;
+    if(s.eid){ try{ el = document.querySelector('#sheets [data-id="' + String(s.eid).replace(/"/g, '\\"') + '"]'); }catch(err){} }
+    if(cp && el){ const cr = cp.getBoundingClientRect(), r = el.getBoundingClientRect(); cp.scrollTo({ top:Math.max(0, Math.round(r.top - cr.top + cp.scrollTop - 60)), behavior:'smooth' }); }
+    else goPage(s.from);
+  }
+  function moveFrame(f, p, sc){
     const arr = store().frames, i = arr.indexOf(f); if(i < 0) return;
-    const from = f.pg;
-    arr.splice(i, 1); f.pg = p; arr.push(f);          // le plan arrive en dernier sur la page choisie
+    const from = f.pg, fromSc = f.sc;
+    arr.splice(i, 1); f.pg = p; if(sc) f.sc = sc; else delete f.sc; arr.push(f);          // le plan arrive en dernier sur la page / scène choisie
     save(); sbRender(); goPage(p); flashFrame(f.id);
-    snack(L('Plan déplacé vers la page ', 'Shot moved to page ') + p + '.', () => {
+    const scn = sc ? (SB.scs || []).filter(s => s.id === sc)[0] : null;
+    snack((scn ? L('Plan déplacé vers la scène ', 'Shot moved to scene ') + (scn.num || scn.title) : L('Plan déplacé vers la page ', 'Shot moved to page ') + p) + '.', () => {
       const a = store().frames, j = a.indexOf(f); if(j >= 0) a.splice(j, 1);
-      f.pg = from; a.splice(Math.min(i, a.length), 0, f); save(); sbRender(); goPage(from); flashFrame(f.id);
+      f.pg = from; if(fromSc) f.sc = fromSc; else delete f.sc; a.splice(Math.min(i, a.length), 0, f); save(); sbRender(); goPage(from); flashFrame(f.id);
     });
   }
   function moveMenu(btn, f){
     const o = document.querySelector('.rp-sb-pgmenu'); if(o) o.remove();
     const n = nPages(), cur = Math.max(1, Math.min(n, parseInt(f.pg, 10) || 1));
+    const scs = SB.scs || [], curPs = scs.filter(s => s.from <= cur && cur <= s.to), curSc = sceneIdOf(f, curPs);
     const m = document.createElement('div'); m.className = 'rp-sb-pgmenu rp-ui';
     let g = ''; for(let p = 1; p <= n; p++) g += `<button type="button" data-pg="${p}"${p === cur ? ' class="cur" aria-current="true"' : ''}>${p}</button>`;
-    m.innerHTML = `<h4>${esc(L('Déplacer vers la page', 'Move to page'))}</h4><div class="g">${g}</div>`;
+    const sl = scs.length ? `<h4 style="margin-top:12px">${esc(L('ou vers la scène', 'or to scene'))}</h4><div class="s">${scs.map(s => `<button type="button" data-sc="${esc(s.id)}"${s.id === curSc ? ' class="cur" aria-current="true"' : ''} title="${esc(s.title)}">${esc((s.num ? s.num + '. ' : '') + s.title)}</button>`).join('')}</div>` : '';
+    m.innerHTML = `<h4>${esc(L('Déplacer vers la page', 'Move to page'))}</h4><div class="g">${g}</div>${sl}`;
     const r = btn.getBoundingClientRect();
-    m.style.top = Math.round(Math.max(8, Math.min(window.innerHeight - 250, r.bottom + 6))) + 'px';
+    m.style.top = Math.round(Math.max(8, Math.min(window.innerHeight - (scs.length ? 400 : 250), r.bottom + 6))) + 'px';
     m.style.left = Math.round(Math.max(8, Math.min(window.innerWidth - 240, r.right - 228))) + 'px';
     m.addEventListener('click', e => {
+      const sb = e.target.closest('[data-sc]');
+      if(sb){
+        const s = scs.filter(x => x.id === sb.dataset.sc)[0]; if(!s) return;
+        m.remove();
+        if(s.id === curSc) goScene(s.id); else moveFrame(f, (s.from <= cur && cur <= s.to) ? cur : s.from, s.id);
+        return;
+      }
       const b = e.target.closest('[data-pg]'); if(!b) return;
       const p = parseInt(b.dataset.pg, 10); m.remove();
       if(p !== cur) moveFrame(f, p); else goPage(p);
@@ -866,6 +1038,7 @@
     else if(act === 'dl'){ const f = frameOf(a); if(f) dlOpen(f.id); }
     else if(act === 'mv'){ const f = frameOf(a); if(f) moveMenu(a, f); }
     else if(act === 'gopage') goPage(laneOf(a));
+    else if(act === 'gosc') goScene(a.dataset.sc);
   });
   /* glisser un plan près du haut ou du bas de la colonne : le scénario défile tout seul */
   document.addEventListener('dragover', e => {
@@ -878,6 +1051,12 @@
     if(e.clientY < t + z) dv = -Math.ceil((t + z - e.clientY) / z * 24);
     else if(e.clientY > r.bottom - z) dv = Math.ceil((e.clientY - (r.bottom - z)) / z * 24);
     if(dv) cp.scrollTop += Math.max(-30, Math.min(30, dv));
+  });
+
+  document.addEventListener('dragover', e => {
+    const root = $('rpSb'); if(!root || !root.contains(e.target) || !dragId) return;
+    const sh = e.target.closest('.rp-sb-sh'); if(!sh) return;
+    sh.classList.add('over'); const l = sh.closest('.rp-sb-lane'); if(l) l.classList.remove('drop');
   });
 
   /* menu ⋯ et liste des raccourcis */
