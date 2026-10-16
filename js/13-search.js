@@ -282,6 +282,7 @@ let _matchTimer = 0;
    redessinée (pagination, rafraîchissement), c'est sa copie qui gardait le contour pour toujours.
    On retire maintenant le contour de TOUTES les lignes présentes à l'écran, au moment voulu. */
 function clearMatchMarks(){
+  document.querySelectorAll('#pageStack .hl-group').forEach(o=>o.remove());
   document.querySelectorAll('#page .line').forEach(d=>{
     if(d.classList.contains('hl') || (d.style.outline && d.style.outline.indexOf('31, 111, 160') >= 0) || (d.style.outline && d.style.outline.toLowerCase().indexOf('1f6fa0') >= 0)){
       d.classList.remove('hl'); d.style.outline = '';
@@ -289,18 +290,55 @@ function clearMatchMarks(){
   });
 }
 document.addEventListener('mousedown', e=>{ if(e.target && e.target.closest && e.target.closest('#page')){ clearTimeout(_matchTimer); clearMatchMarks(); } }, true);
+/* Phrase répartie sur plusieurs blocs : au lieu d'un contour par ligne (qui se collaient et se
+   chevauchaient dès que les lignes se touchent), on dessine UN seul cadre bleu qui englobe tous les
+   blocs concernés — un cadre par feuille si la phrase passe d'une page à l'autre. Le cadre est posé
+   dans #pageStack (hors de #page) : il ne touche jamais au contenu éditable ni à la pagination. */
+function drawMatchFrames(divs){
+  const stack = document.getElementById('pageStack');
+  if(!stack || !divs.length) return;
+  const sr = stack.getBoundingClientRect();
+  const k = (stack.offsetWidth && sr.width) ? sr.width / stack.offsetWidth : 1;
+  const sheets = Array.prototype.map.call(document.querySelectorAll('#sheets .sheet'), s=>s.getBoundingClientRect());
+  const sheetOf = r=>{
+    const y = (r.top + r.bottom) / 2;
+    for(let i=0;i<sheets.length;i++) if(y >= sheets[i].top && y <= sheets[i].bottom) return i;
+    return -1;
+  };
+  const groups = [];
+  divs.forEach(d=>{
+    const r = d.getBoundingClientRect();
+    if(!r.width && !r.height) return;
+    const s = sheetOf(r), g = groups[groups.length-1];
+    if(g && g.s === s){ g.l = Math.min(g.l, r.left); g.t = Math.min(g.t, r.top); g.r = Math.max(g.r, r.right); g.b = Math.max(g.b, r.bottom); }
+    else groups.push({ s:s, l:r.left, t:r.top, r:r.right, b:r.bottom });
+  });
+  groups.forEach(g=>{
+    const o = document.createElement('div');
+    o.className = 'hl-group';
+    o.style.cssText = 'position:absolute;z-index:2;pointer-events:none;box-sizing:border-box;border:2px solid #1F6FA0;border-radius:3px;'
+      + 'left:' + ((g.l - sr.left)/k - 2) + 'px;top:' + ((g.t - sr.top)/k - 2) + 'px;'
+      + 'width:' + ((g.r - g.l)/k + 4) + 'px;height:' + ((g.b - g.t)/k + 4) + 'px;';
+    stack.appendChild(o);
+  });
+}
 function scrollToMatch(){
   const id = S.search.matches[S.search.idx];
   const div = document.querySelector('#page [data-id="'+id+'"]');
+  const grp = (S.search.spans||{})[id]||[];
+  const multi = grp.length > 1;
   /* v87 : un seul contour à la fois. Avant, chaque Entrée laissait le contour de la ligne
      précédente allumé jusqu'à la fin de son minuteur : en spammant Entrée, ils s'empilaient. */
   clearTimeout(_matchTimer);
   clearMatchMarks();
-  if(div){ div.scrollIntoView({block:'center', behavior:'smooth'}); div.classList.add('hl'); div.style.outline='2px solid #1F6FA0'; _matchTimer = setTimeout(clearMatchMarks,1200); }
-  /* phrase répartie sur plusieurs lignes : on entoure aussi les lignes suivantes concernées */
-  ((S.search.spans||{})[id]||[]).forEach(x=>{
-    if(x===id) return;
-    const d2 = document.querySelector('#page [data-id="'+x+'"]');
-    if(d2){ d2.classList.add('hl'); d2.style.outline='2px solid #1F6FA0'; }
-  });
+  if(div){ div.scrollIntoView({block:'center', behavior:'smooth'}); div.classList.add('hl'); if(!multi) div.style.outline='2px solid #1F6FA0'; _matchTimer = setTimeout(clearMatchMarks,1200); }
+  /* phrase répartie sur plusieurs lignes : on englobe aussi les lignes suivantes concernées dans un cadre unique */
+  if(multi){
+    const divs = [];
+    grp.forEach(x=>{
+      const d2 = document.querySelector('#page [data-id="'+x+'"]');
+      if(d2){ d2.classList.add('hl'); divs.push(d2); }
+    });
+    drawMatchFrames(divs);
+  }
 }
