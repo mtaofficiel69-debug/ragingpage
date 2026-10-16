@@ -109,6 +109,15 @@ function importBackupFile(file){
   reader.readAsText(file);
 }
 
+/* L'éditeur ajoute lui-même (CONT'D)/(SUITE) quand le même personnage reprend la parole : si
+   le fichier importé en porte déjà un dans le nom, il s'affichait en double (« JAMES GLAISHER
+   (CONT'D) (SUITE) »). On retire donc, à l'import, ces seules extensions de continuation ;
+   les autres (V.O., O.S., voix off…) sont gardées. Jamais de nom vidé : sans reste, on garde l'original. */
+function stripContdExt(name){
+  const s = String(name).replace(/\s*\(\s*(?:CONT['\u2019`]?D\.?|CONT\.|CONTINUED|SUITE)\s*\)/gi, '').trim();
+  return s || name;
+}
+
 function importTextFile(file){
   const reader = new FileReader();
   reader.onload = ()=>{
@@ -119,7 +128,7 @@ function importTextFile(file){
       const t = raw.trim();
       if(!t){ expectDialogue = false; return; }
       const c = classifyScreenplayLine(t, null, expectDialogue);
-      const el = newElement(c.type, c.text);
+      const el = newElement(c.type, c.type === 'character' ? stripContdExt(c.text) : c.text);
       if(c.dual) el.dual = true;
       elements.push(el);
       expectDialogue = c.expect;
@@ -470,7 +479,7 @@ function pdfPagesToElements(pages){
       // chose qu'une action : scène, personnage et dialogue ont déjà leur espace.
       if(prev && prev.type === 'action' && c.type === 'action' && gap != null && lineGap > 0 && gap > lineGap * 1.6)
         elements.push(newElement('action',''));
-      const el = newElement(c.type, c.text);
+      const el = newElement(c.type, c.type === 'character' ? stripContdExt(c.text) : c.text);
       elements.push(el);
       expectDialogue = c.expect;
       prev = { el, x:l.x, type:c.type };
