@@ -37,7 +37,7 @@ function tpControlsHtmlAll(){
   return `
       <div class="tp-panel">
         <div class="tp-panel-head"><div class="tp-panel-icon">${icon('doc')}</div><h4>${L('Contenu','Content')}</h4></div>
-        <p class="tp-tip">${L('Astuce : tu peux aussi écrire directement sur la page. Clique sur un texte, puis règle sa police, sa taille et sa couleur dans la barre du haut.','Tip: you can also type straight on the page. Click a text, then set its font, size and color in the toolbar above.')}</p>
+        <p class="tp-tip" style="padding:5px 9px; font-size:12px; line-height:1.35;">${L('Astuce : écris directement sur la page, puis règle le texte dans la barre du haut.','Tip: type straight on the page, then style the text in the toolbar above.')}</p>
         <div class="tp-field">
           <label class="tp-field-label" for="tpProjectTitle">${L('Titre du scénario','Screenplay title')}</label>
           <input type="text" id="tpProjectTitle" placeholder="${L('Le titre de ton scénario','The title of your screenplay')}" value="${esc(p.title||'')}">
@@ -53,6 +53,10 @@ function tpControlsHtmlAll(){
           <textarea id="tpExtraText" rows="3" placeholder="${L('Ex. Adapté du roman de…','E.g. Adapted from the novel by…')}">${esc(p.titlePageExtra||'')}</textarea>
           <p class="tp-field-help">${L('Une phrase par ligne : adaptation, avertissement, citation, mention légale…','One line per sentence: adaptation, disclaimer, quote, legal notice…')}</p>
           <label class="tp-checkrow"><input type="checkbox" id="tpShowFoot" ${p.tpShowFoot?'checked':''}><span>${L('Afficher la version et la date en bas de page','Show version and date at the bottom of the page')}</span></label>
+          <div style="display:grid; grid-template-columns:1fr 1.6fr; gap:8px; margin-top:8px;">
+            <div><label class="tp-field-label" for="tpVersionText">${L('Version','Version')}</label><input type="text" id="tpVersionText" value="${esc(p.version||'')}" ${p.tpShowFoot?'':'disabled'}></div>
+            <div><label class="tp-field-label" for="tpDateText">${L('Date','Date')}</label><input type="text" id="tpDateText" value="${esc(p.date||'')}" ${p.tpShowFoot?'':'disabled'}></div>
+          </div>
         </div>
         <div class="tp-field">
           <label class="tp-field-label" for="tpFreeImgInput">${L('Image à la place du titre','Image in place of the title')}</label>
@@ -382,8 +386,12 @@ function onTPTabAttach(rebindOnly){
   });
   bind('tpShowFoot','change', e=>{
     S.project.tpShowFoot = !!e.target.checked;
+    ['tpVersionText','tpDateText'].forEach(id=>{ const f = document.getElementById(id); if(f) f.disabled = !e.target.checked; });
     scheduleAutosave(); refreshTPPreview();
   });
+  // Même champs « Version » et « Date » que dans les Paramètres : on écrit dans le projet.
+  bind('tpVersionText','input', e=>{ S.project.version = e.target.value; scheduleAutosave(); refreshTPPreview(); });
+  bind('tpDateText','input', e=>{ S.project.date = e.target.value; scheduleAutosave(); refreshTPPreview(); });
   bind('tpTitleHidden','change', e=>{
     ensureTPDesign(S.project).titleHidden = !!e.target.checked;
     scheduleAutosave(); refreshTPPreview();
