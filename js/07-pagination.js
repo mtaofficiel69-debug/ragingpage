@@ -195,16 +195,34 @@ function plLock(p){
 --------------------------------------------------------------------- */
 const PAGE_EPS = 1;
 const SPLIT_C = new Set(['action','text','dialogue','parenthetical','transition','shot']);
-function computePagination(container, format, apply, proj){
-  const allLines = Array.from(container.children).filter(n => n.classList && n.classList.contains('line'));
-  const lines = allLines.filter(n => n.dataset.type !== 'note');   // v49 : les notes sont hors flux (voir .line--note)
-  if(apply) allLines.forEach(d => { d.style.marginTop = ''; d.classList.remove('is-pagetop'); if(d.classList.contains('is-split')){ d.classList.remove('is-split', 'is-split-mid'); d.style.removeProperty('--sp-top'); d.style.removeProperty('--sp-h'); d.style.removeProperty('--sp-x'); d.style.removeProperty('--sp-y1'); } });
+function computePagination(container, format, apply, proj, inc){
+  const allLines = (inc && inc.allLines) || Array.from(container.children).filter(n => n.classList && n.classList.contains('line'));
+  const lines = (inc && inc.cur) || allLines.filter(n => n.dataset.type !== 'note');   // v49 : les notes sont hors flux (voir .line--note)
+  /* MODE INCRÉMENTAL (inc) : au lieu de tout remesurer, on ne traite qu'une FENÊTRE de lignes, qui commence
+     au début d'une page propre (rien n'y dépend de ce qui précède) et qui est assez longue pour que les sauts
+     de page se recalent sur l'ancien découpage. Les lignes hors fenêtre ne sont ni effacées, ni mesurées, ni
+     réécrites. Le calcul lui-même est strictement le même que pour le scénario entier. */
+  let win = lines, winAll = allLines, savedState = null;
+  const CLEAR = d => { d.style.marginTop = ''; d.classList.remove('is-pagetop'); if(d.classList.contains('is-split')){ d.classList.remove('is-split', 'is-split-mid'); d.style.removeProperty('--sp-top'); d.style.removeProperty('--sp-h'); d.style.removeProperty('--sp-x'); d.style.removeProperty('--sp-y1'); } };
+  const SPV = ['--sp-top', '--sp-h', '--sp-x', '--sp-y1'];
+  if(inc && lines.length){
+    win = lines.slice(inc.from, inc.to);
+    const a0 = allLines.indexOf(win[0]), a1 = allLines.indexOf(win[win.length - 1]);
+    winAll = allLines.slice(a0, a1 + 1);
+    savedState = inc.saved;                                    // état d'origine, conservé d'une tentative à l'autre
+    winAll.forEach(d => {
+      if(inc.seen.has(d)) return; inc.seen.add(d);
+      const mt = d.style.marginTop, pt = d.classList.contains('is-pagetop'), sp = d.classList.contains('is-split');
+      if(mt || pt || sp) savedState.set(d, { mt, pt, sp, spm: d.classList.contains('is-split-mid'), vars: SPV.map(v => d.style.getPropertyValue(v)) });
+    });
+  }
+  if(apply) winAll.forEach(CLEAR);
   if(!lines.length) return { pageCount:1, pages:[[]], pageOf:{}, spill:{}, geo:pageGeometry(container, format) };
 
   const geo = pageGeometry(container, format);
   const contentH = geo.contentH;
   // Carton « page entière » : sa boîte fait exactement la hauteur utile d'une feuille.
-  lines.forEach(d => { if(d.classList.contains('line--card')) d.style.minHeight = (d.dataset.full === '1') ? Math.floor(contentH - 2) + 'px' : ''; });
+  win.forEach(d => { if(d.classList.contains('line--card')) d.style.minHeight = (d.dataset.full === '1') ? Math.floor(contentH - 2) + 'px' : ''; });
   const dead = geo.mBottom + PAGE_GAP + geo.mTop;   // espace mort entre deux zones de texte
   const step = contentH + dead;
 
@@ -212,12 +230,12 @@ function computePagination(container, format, apply, proj){
   // v45 : mesures FRACTIONNAIRES (getBoundingClientRect) au lieu des entiers d'offsetTop/offsetHeight.
   // Un carton (22 pt x 1,35 = 39,6 px) arrondi à 40 px décalait chaque carton de 0,4 px : après quelques
   // cartons, le haut des pages dérivait et la pagination « cassait ».
-  const r0 = lines[0].getBoundingClientRect();
+  const r0 = win[0].getBoundingClientRect();
   const cssW = parseFloat(getComputedStyle(container).width);   // largeur CSS exacte (offsetWidth est arrondi)
   const sc0 = (cssW > 0) ? (container.getBoundingClientRect().width / cssW) : 1;
   const scl = (isFinite(sc0) && sc0 > 0 && Math.abs(sc0 - 1) > 0.002) ? sc0 : 1;
   const base0 = (r0.top - container.getBoundingClientRect().top) / scl;   // v49 : fractionnaire aussi (offsetTop est arrondi : 0,5 px d'erreur sur toute la page)
-  const m = lines.map(d => {
+  const m = win.map(d => {
     const r = d.getBoundingClientRect();
     if(!(r.height > 0)) return { d, top:d.offsetTop, h:d.offsetHeight };
     return { d, top: base0 + (r.top - r0.top) / scl, h: r.height / scl };
@@ -245,10 +263,12 @@ function computePagination(container, format, apply, proj){
   }
 
   // ---- État ----
-  const pages = [[]], pgIdx = [[]], filled = [false];
+  const startPg = inc ? inc.startPage : 0;
+  const pages = [], pgIdx = [], filled = [];
+  pages[startPg] = []; pgIdx[startPg] = []; filled[startPg] = false;
   const pageOf = {}, spill = {}, splits = [], breaks = [];
   const topOf = [], domBottom = [], firstOfPage = [];
-  let pageIdx = 0, y = 0;
+  let pageIdx = startPg, y = startPg * step;
   const pageTop = () => pageIdx * step;
   const limit = () => pageIdx * step + contentH + PAGE_EPS;
   const ensure = k => { if(!pages[k]){ pages[k] = []; pgIdx[k] = []; filled[k] = false; } };
@@ -394,23 +414,105 @@ function computePagination(container, format, apply, proj){
   }
   for(let k = 0; k < pages.length; k++) if(!pages[k]) pages[k] = [];
 
+  // ---- Pages « propres » : première ligne posée en haut de feuille, ni suite d'un bloc coupé, ni reprise de
+  // dialogue (« SUITE »), ni débordement. À partir d'une telle page, ce qui suit ne dépend plus de ce qui
+  // précède : c'est le point de recalage de la repagination incrémentale. ----
+  const cuePages = new Set(); splits.forEach(sp => { if(sp.kind === 'between' && sp.cue) cuePages.add(sp.startPage + 1); });
+  const cleanNew = k => {
+    if(k === startPg) return inc ? !!inc.old.clean[k] : true;
+    const f = pgIdx[k] && pgIdx[k][0];
+    return f !== undefined && firstOfPage[f] === true && !cuePages.has(k) && !spill[k];
+  };
+  let convK = -1, convOld = -1, convI = m.length - 1;
+  if(inc && inc.to < lines.length){
+    const O = inc.old;
+    for(let k = startPg + 1; k < pages.length - 1 && convK < 0; k++){
+      if(!cleanNew(k)) continue;
+      const fi = pgIdx[k][0];
+      if(inc.from + fi <= inc.safeAfter) continue;             // il faut être passé AU-DELÀ de ce qui a changé
+      const ko = m[fi].d._pgk;                                 // page de départ de cette ligne dans l'ancien découpage
+      if(ko === undefined || !O.clean[ko] || !O.pages[ko] || O.pages[ko][0] !== m[fi].d) continue;
+      let same = true;
+      for(let q = 0; q < 2 && same; q++){
+        if(q === 1 && k + 1 >= pages.length - 1) break;        // la dernière page de la fenêtre peut être tronquée
+        const pa = pages[k + q], pb = O.pages[ko + q];
+        if(!pa || !pb || pa.length !== pb.length || pa[0] !== pb[0] || pa[pa.length - 1] !== pb[pb.length - 1]) same = false;
+      }
+      if(same){ convK = k; convOld = ko; convI = fi; }
+    }
+    if(convK < 0) return { retry:true };                        // pas encore recalé : on élargit la fenêtre
+  }
+
   // Marges : seule la 1re ligne de chaque feuille est repoussée (les autres gardent leur marge naturelle).
   if(apply){
-    lines[0].style.marginTop = '0px';
-    for(let i = 1; i < m.length; i++) if(firstOfPage[i]){
+    const restoreNode = d => {
+      CLEAR(d);
+      const st = savedState && savedState.get(d);
+      if(!st) return;
+      if(st.mt) d.style.marginTop = st.mt;
+      if(st.pt) d.classList.add('is-pagetop');
+      if(st.sp){ d.classList.add('is-split'); if(st.spm) d.classList.add('is-split-mid'); SPV.forEach((v, q) => { if(st.vars[q]) d.style.setProperty(v, st.vars[q]); }); }
+    };
+    if(!inc || inc.from === 0) m[0].d.style.marginTop = '0px';
+    else restoreNode(m[0].d);                                   // page propre : sa marge n'a pas changé
+    for(let i = 1; i <= convI && i < m.length; i++) if(firstOfPage[i]){
       m[i].d.style.marginTop = (topOf[i] - domBottom[i-1]) + 'px';
       m[i].d.classList.add('is-pagetop');
     }
+    if(convK >= 0){                                              // après le recalage, tout est comme avant : on remet l'état d'origine
+      const cut = winAll.indexOf(m[convI].d);
+      for(let q = cut + 1; q < winAll.length; q++) restoreNode(winAll[q]);
+    }
+  }
+
+  // ---- Assemblage du résultat (fenêtre + parties inchangées de l'ancien découpage) ----
+  let PG = pages, outSplits = splits, outSpill = spill, outBreaks = breaks;
+  const cleanArr = [];
+  for(let k = 0; k < pages.length; k++) cleanArr[k] = (k < startPg) ? false : cleanNew(k);
+  let outClean = cleanArr;
+  if(inc){
+    const O = inc.old, dd = convK >= 0 ? convK - convOld : 0, endNew = convK >= 0 ? convK : pages.length;
+    const shiftSp = sp => { const c = Object.assign({}, sp); c.startPage += dd; ['top','newTop','moreY'].forEach(f => { if(typeof c[f] === 'number') c[f] += dd * step; }); return c; };
+    PG = O.pages.slice(0, startPg).concat(pages.slice(startPg, endNew), convK >= 0 ? O.pages.slice(convOld) : []);
+    outClean = O.clean.slice(0, startPg).concat(cleanArr.slice(startPg, endNew), convK >= 0 ? O.clean.slice(convOld) : []);
+    outSplits = O.splits.filter(sp => sp.startPage < startPg)
+      .concat(splits.filter(sp => sp.startPage < endNew), convK >= 0 ? O.splits.filter(sp => sp.startPage >= convOld).map(shiftSp) : []);
+    outSpill = {};
+    Object.keys(O.spill).forEach(k => { k = +k; if(k < startPg) outSpill[k] = true; else if(convK >= 0 && k >= convOld) outSpill[k + dd] = true; });
+    Object.keys(spill).forEach(k => { k = +k; if(k >= startPg && k < endNew) outSpill[k] = true; });
+    outBreaks = (O.breaks || []).filter(b => b.to - 1 <= startPg)
+      .concat(breaks.filter(b => b.to - 1 > startPg && b.to - 1 <= endNew), convK >= 0 ? (O.breaks || []).filter(b => b.to - 1 > convOld).map(b => Object.assign({}, b, { to: b.to + dd })) : []);
   }
   // Un bloc appartient à la page où il COMMENCE.
-  const seen = new Set();
-  pages.forEach((pg, k) => pg.forEach(d => { if(seen.has(d)) return; seen.add(d); mapPageIds(d, pageOf, k + 1); }));
+  let pageOut = pageOf;
+  if(inc){
+    // L'ancienne table est reprise telle quelle ; on ne réécrit que le tronçon recalculé et on décale la suite.
+    const O = inc.old, dd = convK >= 0 ? convK - convOld : 0, endNew = convK >= 0 ? convK : pages.length;
+    pageOut = Object.assign({}, O.pageOf);
+    (inc.removed || []).forEach(n => {
+      if(n.dataset && n.dataset.id) delete pageOut[n.dataset.id];
+      if(n.querySelectorAll) n.querySelectorAll('[data-id]').forEach(c => { delete pageOut[c.dataset.id]; });
+    });
+    if(dd !== 0) for(const key in pageOut){ if(pageOut[key] > convOld) pageOut[key] += dd; }
+    const seenW = new Set();
+    for(let k = startPg; k < endNew; k++) pages[k].forEach(d => { if(seenW.has(d)) return; seenW.add(d); mapPageIds(d, pageOut, k + 1); });
+  } else {
+    const seen = new Set();
+    PG.forEach((pg, k) => pg.forEach(d => { if(seen.has(d)) return; seen.add(d); mapPageIds(d, pageOut, k + 1); }));
+  }
   // v49 : une note est rattachée à la page de la ligne qui la précède (sinon de celle qui la suit).
-  { let lastPg = null; const pending = [];
+  if(allLines.length !== lines.length){
+    let lastPg = null; const pending = [];
     allLines.forEach(d => {
-      if(d.dataset.type === 'note'){ if(lastPg !== null) pageOf[d.dataset.id] = lastPg; else pending.push(d); }
-      else { const v = pageOf[d.dataset.id]; if(v !== undefined){ lastPg = v; pending.splice(0).forEach(n => { pageOf[n.dataset.id] = v; }); } }
-    }); }
+      if(d.dataset.type === 'note'){ if(lastPg !== null) pageOut[d.dataset.id] = lastPg; else pending.push(d); }
+      else { const v = pageOut[d.dataset.id]; if(v !== undefined){ lastPg = v; pending.splice(0).forEach(n => { pageOut[n.dataset.id] = v; }); } }
+    });
+  }
+  // Page de départ de chaque ligne (relue par la repagination suivante). À rebours : la 1re page l'emporte.
+  { const dd2 = (inc && convK >= 0) ? convK - convOld : 0;
+    const hi = (inc && convK >= 0 && dd2 === 0) ? convK - 1 : PG.length - 1;     // même numérotation qu'avant : la suite n'a pas bougé
+    for(let k = hi; k >= (inc ? startPg : 0); k--){ const pg = PG[k]; for(let q = 0; q < pg.length; q++) pg[q]._pgk = k; }
+  }
 
   // Export / impression : on coupe réellement le nœud (la copie de mesure est jetable).
   if(!apply) splits.forEach(sp => {
@@ -440,7 +542,8 @@ function computePagination(container, format, apply, proj){
     const at = pb.indexOf(A);
     if(at >= 0) pb.splice(at, 1, ...(sp.cue ? [mk(sp.cue), B] : [B]));
   });
-  return { pageCount: pages.length, pages, pageOf, spill, geo, splits, breaks, topOf, domBottom, firstOfPage, lines,
+  return { pageCount: PG.length, pages: PG, pageOf: pageOut, spill: outSpill, geo, splits: outSplits, breaks: outBreaks, topOf, domBottom, firstOfPage, lines,
+           clean: outClean, incRange: inc ? [startPg, convK >= 0 ? convK + 1 : PG.length] : null,
            debug:{ contentH, step, oneLine, linesPerPage: Math.floor((contentH + PAGE_EPS) / oneLine), blocks: m.length } };
 }
 
@@ -450,7 +553,13 @@ function computePagination(container, format, apply, proj){
    RÉELLE de la première ligne de chaque feuille. Si elle n'est pas exactement en haut de la zone de texte
    (police arrivée en retard, arrondi du navigateur, zoom…), on corrige sa marge de l'écart constaté, feuille
    après feuille. Garantie : une nouvelle page commence toujours sur sa première ligne de texte, au pixel près. */
-function pgVerifyAndHeal(res){
+function pgVerifyAndHeal(res, range){
+  /* PERFORMANCE. L'ancienne version corrigeait les feuilles UNE PAR UNE : chaque marge écrite obligeait le
+     navigateur à refaire toute la mise en page à la lecture suivante, soit un recalcul complet du document PAR
+     feuille décalée (plusieurs secondes sur 700 pages). On lit maintenant toutes les positions en une passe, on
+     calcule les corrections en tenant compte du décalage cumulé des précédentes, puis on les écrit d'un coup :
+     au plus 3 recalculs au total. Même seuil, mêmes marges. `range` : en repagination incrémentale, seules les
+     pages recalculées sont contrôlées (les autres n'ont pas bougé). */
   try{
     const page = document.getElementById('page'); if(!page || !res || !res.pages) return;
     const geo = res.geo, pageH = geo.pageH;
@@ -465,28 +574,157 @@ function pgVerifyAndHeal(res){
     // même chevauchement sur les coupes « dans une réplique » des pages suivantes.
     const cuePad = {};
     (res.splits || []).forEach(sp => { if(sp.kind === 'between' && sp.cue) cuePad[sp.startPage + 1] = (res.debug && res.debug.oneLine) || 0; });
-    for(let k = 1; k < res.pages.length; k++){
+    const targets = [];
+    const kLo = range ? Math.max(1, range[0]) : 1, kHi = range ? Math.min(res.pages.length, range[1] + 1) : res.pages.length;
+    for(let k = kLo; k < kHi; k++){
       const first = res.pages[k][0];
       if(!first || first.classList.contains('is-split')) continue;           // suite d'un bloc coupé : posée par la coupe
       if(first.dataset && first.dataset.synthetic) continue;
-      let guard = 0;
-      while(guard++ < 3){
-        const pr = page.getBoundingClientRect();
-        const want = geo.mTop + k * (pageH + PAGE_GAP) + (cuePad[k] || 0);
-        const got = (first.getBoundingClientRect().top - pr.top) / K;
-        const dlt = want - got;
-        if(Math.abs(dlt) <= 0.6) break;
-        viol.push({ page:k + 1, delta:+dlt.toFixed(2) });
-        const cur = parseFloat(first.style.marginTop) || 0;
-        first.style.marginTop = (cur + dlt) + 'px';
-        first.classList.add('is-pagetop');
-      }
+      targets.push({ k, first, want: geo.mTop + k * (pageH + PAGE_GAP) + (cuePad[k] || 0) });
+    }
+    const guard = new Array(targets.length).fill(0);
+    for(let pass = 0; pass < 3; pass++){
+      const pr = page.getBoundingClientRect();
+      const got = targets.map(t => (t.first.getBoundingClientRect().top - pr.top) / K);   // lecture seule : un seul recalcul
+      let cum = 0; const writes = [];
+      targets.forEach((t, q) => {
+        const dlt = t.want - (got[q] + cum);
+        if(Math.abs(dlt) <= 0.6 || guard[q] >= 3) return;
+        guard[q]++;
+        viol.push({ page:t.k + 1, delta:+dlt.toFixed(2) });
+        writes.push([t.first, (parseFloat(t.first.style.marginTop) || 0) + dlt]);
+        cum += dlt;
+      });
+      if(!writes.length) break;
+      writes.forEach(([d, v]) => { d.style.marginTop = v + 'px'; d.classList.add('is-pagetop'); });
     }
     window.__pgViolations = viol;
     if(viol.length && window.console) console.warn('[pagination] recalage de', viol.length, 'première(s) ligne(s) de page', viol.slice(0, 5));
   }catch(err){ /* la vérification ne doit jamais bloquer l'édition */ }
 }
-function paginateEditor(){
+
+/* =====================================================================
+   REPAGINATION INCRÉMENTALE
+   ---------------------------------------------------------------------
+   Refaire TOUTE la pagination à chaque Entrée coûtait un temps proportionnel à la taille du scénario :
+   effacer, mesurer, replacer des milliers de lignes — alors que l'on n'a touché qu'à une page. Les sauts de
+   page ne dépendent que de la hauteur des blocs, dans l'ordre. Donc : tout ce qui précède la page modifiée
+   est inchangé, et à partir du moment où un début de page retombe sur le même bloc qu'avant (et que rien
+   n'y est coupé ou repris d'une page précédente), tout ce qui suit est lui aussi inchangé. On ne recalcule
+   que le tronçon entre les deux, avec exactement le même algorithme ; en cas de doute on retombe sur le
+   calcul complet. Les scénarios courts gardent le calcul complet d'avant (rien ne change pour eux).
+===================================================================== */
+const PG_INC_MIN_LINES = 400;                 // en dessous (~30 pages) : calcul complet, comme avant
+let PG_MO = null, PG_MO_PAGE = null;
+const PG_DIRTY = new Set();                   // lignes touchées depuis la dernière pagination
+const PG_IGN_CLS = new Set(['line-active', 'hl', 'is-pagetop', 'is-split', 'is-split-mid']);
+function pgObserve(page){
+  if(PG_MO_PAGE === page) return;
+  if(PG_MO) PG_MO.disconnect();
+  PG_DIRTY.clear();
+  PG_MO = new MutationObserver(() => {});
+  PG_MO.observe(page, { subtree:true, childList:true, characterData:true, attributes:true, attributeOldValue:true, attributeFilter:['class', 'data-type', 'style'] });
+  PG_MO_PAGE = page;
+}
+function pgClsKey(str){ return (str || '').split(/\s+/).filter(c => c && !PG_IGN_CLS.has(c)).sort().join(' '); }
+/* Relève ce que le navigateur a vu bouger dans les lignes (frappe, collage, changement de type…), quel que soit le
+   code qui l'a fait. `skipUnit` : ligne dont on sait que la modification ne change pas la mise en page. */
+function pgCollectDirty(skipUnit){
+  if(!PG_MO) return;
+  const page = PG_MO_PAGE;
+  PG_MO.takeRecords().forEach(r => {
+    if(r.type === 'attributes'){
+      if(r.attributeName === 'class' && pgClsKey(r.oldValue) === pgClsKey(r.target.getAttribute('class'))) return;
+      if(r.attributeName === 'style' && r.oldValue === r.target.getAttribute('style')) return;
+    }
+    let n = r.target;
+    if(n === page) return;                                     // structure : détectée par comparaison des listes
+    while(n && n.parentNode !== page) n = n.parentNode;
+    if(n && n !== skipUnit) PG_DIRTY.add(n);
+  });
+}
+/* Nos propres écritures (marges, classes) ne sont pas des modifications du texte. */
+function pgMuteOwnMutations(){ if(PG_MO) PG_MO.takeRecords(); }
+function pgSignature(page){
+  const cs = getComputedStyle(page), stg = (S.project && S.project.settings) || {};
+  const ls = pageLockSet();
+  return [page.clientWidth, S.project.format, cs.fontFamily, cs.fontSize, cs.lineHeight, cs.paddingTop, cs.paddingBottom, cs.paddingLeft,
+          !!stg.autoContd, ls ? ls.size : 0, document.fonts ? document.fonts.status : ''].join('|');
+}
+/* Cherche le tronçon à recalculer. Renvoie null (calcul complet) ou { from, startPage, safeAfter, old, cur, allLines, removed }. */
+function pgPlan(page){
+  const P = S.pagination, old = P.res;
+  if(!old || !old.lines || P._resPage !== page || P._forceFull || !old.clean) return null;
+  const kids = page.children, allLines = [], cur = [];
+  for(let i = 0; i < kids.length; i++){
+    const n = kids[i];
+    if(!n.classList.contains('line')) continue;
+    allLines.push(n); if(n.getAttribute('data-type') !== 'note') cur.push(n);
+  }
+  const prev = old.lines;
+  if(cur.length < PG_INC_MIN_LINES || !prev.length) return null;
+  let removed = [];
+  let a = 0; const nmin = Math.min(prev.length, cur.length);
+  while(a < nmin && prev[a] === cur[a]) a++;
+  let lo = Infinity, hi = -Infinity;
+  if(a < prev.length || a < cur.length){                       // la liste des lignes a changé (insertion, suppression, fusion…)
+    let pe = prev.length - 1, ce = cur.length - 1;
+    while(pe >= a && ce >= a && prev[pe] === cur[ce]){ pe--; ce--; }
+    lo = Math.max(0, a - 1); hi = Math.min(cur.length - 1, Math.max(ce, a) + 1);
+    removed = prev.slice(a, pe + 1);
+  }
+  if(PG_DIRTY.size > 40) return null;
+  for(const n of PG_DIRTY){
+    if(n.dataset.type === 'note') continue;
+    const ix = cur.indexOf(n);
+    if(ix < 0) continue;                                       // ligne retirée : la comparaison des listes l'a déjà vue
+    lo = Math.min(lo, Math.max(0, ix - 1)); hi = Math.max(hi, Math.min(cur.length - 1, ix + 1));
+  }
+  if(lo === Infinity) return null;                           // aucune modification repérée : on ne devine pas, calcul complet
+  // 1re page propre au plus tard sur la page de la 1re ligne touchée, moins une page de sécurité
+  const anchor = cur[Math.min(lo, a > 0 ? a - 1 : lo)];
+  let rs = anchor._pgk;
+  if(rs === undefined || !old.pages[rs]) return null;
+  rs = Math.max(0, rs - 1);
+  while(rs > 0 && !old.clean[rs]) rs--;
+  const f = old.pages[rs] && old.pages[rs][0];
+  const from = f ? cur.indexOf(f) : -1;
+  if(from < 0 || from > lo) return null;
+  return { from, startPage: rs, safeAfter: hi, old, cur, allLines, removed };
+}
+function pgComputeEditor(page){
+  const P = S.pagination, fmt = S.project.format;
+  pgObserve(page);
+  pgCollectDirty(null);
+  let res = null;
+  let plan = null;
+  try{ plan = pgPlan(page); }catch(err){ plan = null; }
+  if(plan){
+    try{
+      const n = plan.cur.length, lpp = Math.max(20, n / Math.max(1, plan.old.pages.length));
+      const inc = { from:plan.from, startPage:plan.startPage, safeAfter:plan.safeAfter, old:plan.old, cur:plan.cur, allLines:plan.allLines, removed:plan.removed, saved:new Map(), seen:new Set(), to:n };
+      for(const extra of [3, 10, 40]){
+        const to = Math.min(n, Math.ceil(plan.safeAfter + 1 + (extra + 1) * lpp));
+        if(to >= n - lpp) break;                               // le reste du scénario est presque entièrement concerné : autant tout faire
+        inc.to = to;
+        const r = computePagination(page, fmt, true, undefined, inc);
+        if(!r.retry){ res = r; break; }
+      }
+      if(!res){ inc.to = n; res = computePagination(page, fmt, true, undefined, inc); }
+    }catch(err){ res = null; if(window.console) console.warn('[pagination] repli sur le calcul complet', err); }
+  }
+  /* La géométrie (largeur, police, interligne, réglages) n'est relue qu'APRÈS le calcul : la lire avant aurait
+     forcé le navigateur à refaire toute la mise en page une fois de plus. Si elle a changé depuis la
+     dernière pagination (fenêtre redimensionnée, police arrivée…), le tronçon calculé ne vaut rien : calcul complet. */
+  const sigNow = pgSignature(page);
+  if(plan && res && P._sig !== sigNow) res = null;
+  if(!res) res = computePagination(page, fmt, true);
+  P.res = res; P._resPage = page; P._sig = sigNow; P._forceFull = false;
+  PG_DIRTY.clear();
+  return res;
+}
+function paginateEditor(force){
+  if(force) S.pagination._forceFull = true;
   const page = document.getElementById('page');
   const stack = document.getElementById('pageStack');
   const sheets = document.getElementById('sheets');
@@ -494,9 +732,10 @@ function paginateEditor(){
   if(!page || !stack || !sheets || !zoom || !S.project) return;
 
   const st = ensureSettings(S.project);
-  const res = computePagination(page, S.project.format, true);
+  const res = pgComputeEditor(page);
   const { pageH } = res.geo;
-  pgVerifyAndHeal(res);
+  pgVerifyAndHeal(res, res.incRange);
+  pgMuteOwnMutations();
 
   // min-height (et non height) : si un bloc dépasse la hauteur d'une page,
   // la pile s'agrandit au lieu de rogner la fin du texte.
@@ -554,7 +793,14 @@ function paginateEditor(){
   S.pagination.pageOf = res.pageOf;
   S.pagination.debug = res.debug;
   updatePageIndicator();
-  try{ refreshSceneTools(); }catch(err){ /* les boutons de marge ne doivent jamais gêner la pagination */ }
+  /* Les accolades de sélection de scène relisent la position de chaque scène : sur un long scénario on les
+     remet à jour une fraction de seconde plus tard, sans bloquer la frappe (elles ne servent qu'à la souris). */
+  if(res.lines && res.lines.length > 1500){
+    clearTimeout(S.pagination._stT);
+    S.pagination._stT = setTimeout(() => { try{ if(S.view === 'editor' && S.tab === 'editor') refreshSceneTools(); }catch(err){} }, 250);
+  } else {
+    try{ refreshSceneTools(); }catch(err){ /* les boutons de marge ne doivent jamais gêner la pagination */ }
+  }
   refreshNav();   // les numéros de page affichés par le navigateur viennent d'ici
   if(window.__pgDebug) renderPgDebug(res);
 }
