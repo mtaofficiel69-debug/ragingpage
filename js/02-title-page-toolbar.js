@@ -376,6 +376,7 @@ function tpMarkSelection(){
   const shell = document.getElementById('tpPreviewShell'); if(!shell) return;
   shell.classList.toggle('tp-page-sel', tpSel==='page');
   shell.querySelectorAll('[data-tpk]').forEach(n=> n.classList.toggle('tp-sel', n.dataset.tpk===tpSel));
+  tpUpdateMoveHandle();
 }
 function tpSelect(k){
   if(k!=='page' && k!=='none' && !tpEl(k)) k = 'page';
@@ -443,6 +444,7 @@ function tpFitPreview(){
   // Le panneau de réglages (Contenu / Fond / Dessin) finit exactement au bord du bas du cadre de l'aperçu.
   const ctl = document.getElementById('tpControlsCol');
   if(ctl) ctl.style.height = (wide && mat) ? mat.offsetHeight+'px' : '';
+  tpUpdateMoveHandle();
 }
 function tpTbColor(id){
   if(tpSel==='none') return;
@@ -476,6 +478,7 @@ function tpTbReset(){
   const d = ensureTPDesign(S.project), e = tpEl(tpSel), def = defaultTPDesign();
   d[tpSel+'Font'] = ''; d[tpSel+'Color'] = ''; d[tpSel+'Align'] = '';
   if(d.fmt) delete d.fmt[tpSel];
+  if(d.pos) delete d.pos[tpSel];
   d[e.size] = def[e.size];
   tpStyleChanged();
 }
@@ -504,6 +507,8 @@ function tpDecoratePreview(shell, tp){
   mark('.tp-extra-wrap','extra',true,L('Phrases en plus…','Extra lines…'));
   mark('.tp-foot','foot');
   tpBindPreview(shell);
+  tpApplyPositions(tp);
+  tpMoveBind(shell);
   tpMarkSelection();
   tpFreeImgDecorate(shell, tp);
 }
@@ -783,6 +788,7 @@ function applyTPDesignVars(el, design){
   el.style.setProperty('--tp-pattern-size', pat.size);
   el.style.setProperty('--tp-img-opacity', design.bgImageOpacity);
   tpApplyElementStyles(el, design);   // v51 : style propre à chaque élément
+  tpApplyPositions(el, design);       // position libre de chaque texte (voir 15-title-page.js)
 }
 function tpExtraLinesHtml(text){
   // Une ligne vide sépare deux blocs (comme sur une page de titre pro) : on la garde comme une
@@ -836,6 +842,7 @@ function buildTitlePageEl(p){
     html += `<div class="tp-free-img" data-free-img="1" style="left:${f.x}%;top:${f.y}%;width:${f.w}%;height:${f.h}%;"><img src="${f.src}" alt="" draggable="false"></div>`;
   }
   tp.innerHTML = html;
+  tpApplyPositions(tp, design);   // les textes déplacés gardent leur place : aperçu, plein écran, impression, PDF
   return tp;
 }
 
