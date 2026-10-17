@@ -76,7 +76,9 @@ function navListHtml(){
   const cur = currentSceneId();
   const blocks = getSceneBlocks().filter(b=>b.sceneId);
   const rows = blocks.map(b=>{
-    const el = findEl(b.sceneId);
+    // L'élément de la scène est déjà le premier du bloc : inutile de le rechercher
+    // dans tout le scénario à chaque scène (coût qui explosait avec les longs scripts).
+    const el = b.elements[0];
     if(!el) return '';
     const txt = (el.text || '').trim();
     if(q && txt.toLowerCase().indexOf(q) < 0) return '';
@@ -1013,4 +1015,3 @@ function computeStats(){
   const pages = Math.max(1, Math.round(weightedLines/55));
   return { words, chars, dialogues, scenes, pages, readMin: pages };
 }
-
