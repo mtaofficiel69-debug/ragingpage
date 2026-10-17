@@ -530,7 +530,16 @@ function ensureTPDesign(p){
 }
 
 function snapshot(){
-  return JSON.parse(JSON.stringify(S.project.elements));
+  /* Copie profonde SANS passer par JSON.stringify/parse du scénario entier (le coût de chaque Entrée croissait
+     avec la taille du scénario). Les éléments sont de petits objets plats : on copie chacun, et seules les
+     valeurs imbriquées (ex. le style d'un carton) sont dupliquées en profondeur. Résultat identique. */
+  const src = S.project.elements, out = new Array(src.length);
+  for(let i = 0; i < src.length; i++){
+    const c = Object.assign({}, src[i]);
+    for(const k in c){ const v = c[k]; if(v !== null && typeof v === 'object') c[k] = JSON.parse(JSON.stringify(v)); }
+    out[i] = c;
+  }
+  return out;
 }
 function pushUndo(){
   S.undoStack.push(snapshot());
@@ -760,7 +769,10 @@ function refreshContdMarks(){
   page.querySelectorAll('.line--character').forEach(div=>{
     if(div.dataset.id === skipId) return;
     const m = marks[div.dataset.id];
-    if(m) div.dataset.contd = m; else delete div.dataset.contd;
+    // On n'écrit l'attribut que s'il change : réécrire la même valeur sur des milliers de lignes
+    // obligeait le navigateur à recalculer leurs styles à chaque Entrée.
+    const cur = div.dataset.contd;
+    if(m){ if(cur !== m) div.dataset.contd = m; } else if(cur !== undefined) delete div.dataset.contd;
   });
 }
 
