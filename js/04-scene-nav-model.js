@@ -397,7 +397,7 @@ function newProject(title, format, kind, seriesMeta){
     sceneMeta:{}, personalNotes:'', graveyard:[], versions:[],
     tagDefs:{}, structure:{ beats:[] },
     settings:{ showSceneNumbers:true, numberStart:1, titlePageEnabled:true,
-               showPageNumbers:true, numberFirstPage:false, pageNumberStart:1, showContinued:true,
+               showPageNumbers:true, numberFirstPage:true, pageNumberStart:1, showContinued:true,
                numbersLocked:false, lineSpacing:'standard',
                autoContd:true, contdMark:'auto', watermarkText:'', scriptFont:'courier-prime' },
     titlePageDesign: defaultTPDesign(),
