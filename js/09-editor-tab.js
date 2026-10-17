@@ -11,6 +11,7 @@ function renderEditorTab(){
   const contdOf = contdMap(S.project.elements);
   if(S.focusMode) page.classList.add('focus-mode');
   appendFlow(page, S.project.elements, el=> buildLineDiv(el, numbers, contdOf));
+  page.addEventListener('keydown', pgThrottleEnterRepeat, true);   // Entrée maintenue cadencée (capture : passe avant onLineKeydown)
   page.addEventListener('keydown', onLineKeydown);
   page.addEventListener('input', onLineInput);
   page.addEventListener('focusin', onLineFocus);
@@ -292,7 +293,7 @@ function onLineInput(e){
   // définitive. Les appeler ici visait l'ancienne mise en page.
   // 'typing' : simple frappe dans cette ligne — la repagination n'a lieu que si sa hauteur a changé.
   const h0 = S.pagination._h0;
-  if(h0 && h0.unit !== div) S.pagination._full = true;   // la frappe ne vient pas du bloc mesuré : repagination complète
+  if(h0 && h0.unit !== div) S.pagination._noSkip = true;   // la frappe ne vient pas du bloc mesuré : pas de saut de la pagination
   schedulePaginate('typing');
   scheduleAutosave();
 }
@@ -317,11 +318,13 @@ function renumberScenes(){
   // content — so updating it here never touches the line's child nodes
   // and can never disturb an in-progress caret/selection.
   const numbers = sceneNumbers();
+  const byId = new Map(); S.project.elements.forEach(e => byId.set(e.id, e));   // findEl() par scène = recherche linéaire répétée
   document.querySelectorAll('#page .line--scene').forEach(div=>{
-    const el = findEl(div.dataset.id);
+    const el = byId.get(div.dataset.id);
     if(el && S.project.settings.showSceneNumbers && numbers[el.id]){
-      div.dataset.sceneNum = numbers[el.id]+'.';
-    } else {
+      const v = numbers[el.id]+'.';
+      if(div.dataset.sceneNum !== v) div.dataset.sceneNum = v;
+    } else if(div.dataset.sceneNum !== undefined){
       delete div.dataset.sceneNum;
     }
   });
