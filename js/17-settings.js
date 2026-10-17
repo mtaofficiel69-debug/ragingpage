@@ -15,6 +15,21 @@ function settingsCloudHtml(){
   const i = h.indexOf(m, h.indexOf(m) + 1);
   return i > 0 ? h.slice(i) + h.slice(0, i) : h; // Google Drive d'abord, puis le coffre-fort
 }
+/* Aperçu de la numérotation d'après ce qui est coché / saisi (mêmes règles que computePageLabels et l'export). */
+function setPageNumPreviewText(show, first, startRaw){
+  if(!show) return L('Aucun numéro de page ne sera affiché.','No page number will be shown.');
+  const v = parseInt(startRaw, 10), start = isNaN(v) ? 1 : Math.max(0, v);
+  const parts = [0, 1, 2, 3].map(k => 'p. ' + (k + 1) + ' → ' + ((k > 0 || first) ? (start + k) + '.' : L('sans numéro','no number')));
+  return L('Aperçu : ','Preview: ') + parts.join(' · ') + ' …';
+}
+function setPageNumPreviewRefresh(e){
+  const t = e.target; if(!t || !(t.id === 'setPageNum' || t.id === 'setPageNumFirst' || t.id === 'setPageStart')) return;
+  const out = document.getElementById('setPageNumPreview'); if(!out) return;
+  const g = id => document.getElementById(id);
+  out.textContent = setPageNumPreviewText(g('setPageNum').checked, g('setPageNumFirst').checked, g('setPageStart').value);
+}
+document.addEventListener('input', setPageNumPreviewRefresh);
+document.addEventListener('change', setPageNumPreviewRefresh);
 function renderSettings(){
   const p = S.project;
   return `<div class="cards-toolbar"><div class="pane-title" style="margin:0;">${L('Paramètres','Settings')}</div></div>
@@ -111,7 +126,10 @@ ${[['projet',L('Projet','Project')],['page',L('Mise en page','Layout')],['backup
           <input type="checkbox" id="setPageNumFirst" ${p.settings.numberFirstPage?'checked':''}> ${L('Numéroter aussi la première page','Also number the first page')}
         </label>
       </div>
-      <div class="field"><label>${L('Première page numérotée','First numbered page')}</label><input type="text" id="setPageStart" value="${p.settings.pageNumberStart}" style="max-width:100px;"></div>
+      <p class="sset-sub">${L('Par défaut, la page 1 n\u2019affiche jamais de numéro, mais elle compte : la page 2 porte le n° 2. Coche la case pour afficher aussi le numéro de la page 1.','By default, page 1 never shows a number, but it still counts: page 2 is numbered 2. Tick the box to show the number on page 1 as well.')}</p>
+      <div class="field"><label>${L('Numéro de la page 1','Number of page 1')}</label><input type="text" id="setPageStart" value="${p.settings.pageNumberStart}" style="max-width:100px;"></div>
+      <p class="sset-sub">${L('Le numéro que porte la page 1, qu\u2019elle l\u2019affiche ou non (1 par défaut) : toutes les pages suivantes s\u2019ajustent. Mets 0 pour que la page 2 porte le n° 1.','The number carried by page 1, whether it shows it or not (1 by default): every following page adjusts. Enter 0 for page 2 to be numbered 1.')}</p>
+      <p class="sset-sub" id="setPageNumPreview" style="font-weight:600;">${setPageNumPreviewText(p.settings.showPageNumbers, p.settings.numberFirstPage, p.settings.pageNumberStart)}</p>
       <div class="sset-sep"></div>
       <div class="sset-label">${L('Continuité','Continuity')}</div>
       <div class="sset-row">
@@ -241,7 +259,8 @@ function saveSettings(){
   p.settings.autoContd = document.getElementById('setAutoContd').checked;
   const contdMarkEl = document.getElementById('setContdMark');
   p.settings.contdMark = contdMarkEl ? contdMarkEl.value : 'auto';
-  p.settings.pageNumberStart = parseInt(document.getElementById('setPageStart').value,10) || 1;
+  const psv = parseInt(document.getElementById('setPageStart').value,10);
+  p.settings.pageNumberStart = isNaN(psv) ? 1 : Math.max(0, psv);   // 0 permis : la page 2 porte alors le n° 1
   const lsEl = document.getElementById('setLineSpacing');
   if(lsEl){ p.settings.lineSpacing = lsEl.value === 'comfort' ? 'comfort' : 'standard'; applyLineSpacing(p); }
   const wmEl = document.getElementById('setWatermark');
@@ -416,4 +435,3 @@ function deleteCommentEditor(id){
   refreshCommentMarker(id);
   scheduleAutosave();
 }
-
