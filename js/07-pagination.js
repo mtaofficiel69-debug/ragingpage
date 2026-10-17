@@ -142,10 +142,14 @@ function plInfo(pages, k){
   if(c && (!key || key === c)) return { key:'', ckey:c };
   return { key, ckey:'' };
 }
+/* Numéroter la première page : COCHÉ par défaut (nouveaux scénarios, scénarios importés, anciens projets sans réglage).
+   Seul un choix explicite de l'utilisateur (false) la décoche. */
+function normPageNumFirst(st){ if(st && typeof st.numberFirstPage !== 'boolean') st.numberFirstPage = true; return st; }
 /* Numéro affiché de chaque page + pages figées qui n'existent plus (omises). */
 function computePageLabels(pages, proj){
   proj = proj || S.project;
   /* Numéro de la page 1 (qu'elle l'affiche ou non) : 1 par défaut, donc la page 2 porte le n° 2. 0 est permis (la page 2 porte alors le n° 1). */
+  normPageNumFirst(ensureSettings(proj));
   const ps = ensureSettings(proj).pageNumberStart, start = (typeof ps === 'number' && isFinite(ps)) ? ps : 1, pl = proj.pageLock;
   if(!pl || !Array.isArray(pl.pages) || !pl.pages.length)
     return { labels: pages.map((_, k)=> String(start + k)), omitted: [] };
@@ -732,7 +736,7 @@ function paginateEditor(force){
   const zoom = document.getElementById('pageZoom');
   if(!page || !stack || !sheets || !zoom || !S.project) return;
 
-  const st = ensureSettings(S.project);
+  const st = normPageNumFirst(ensureSettings(S.project));
   const res = pgComputeEditor(page);
   const { pageH } = res.geo;
   pgVerifyAndHeal(res, res.incRange);
