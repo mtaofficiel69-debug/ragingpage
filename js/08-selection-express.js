@@ -410,6 +410,13 @@ document.addEventListener('keydown', e=>{
 function firstSceneOfEachPage(pages, numbers, spill){
   const out = {};
   let last = null;                     // dernière entête de scène rencontrée
+  // Table id -> élément construite une seule fois : findEl() parcourait tout le scénario pour CHAQUE
+  // scène de CHAQUE page, soit un coût qui grandissait avec le carré de la longueur du script.
+  let byId = null;
+  const elOf = id => {
+    if(!byId){ byId = new Map(); S.project.elements.forEach(e => { if(!byId.has(e.id)) byId.set(e.id, e); }); }
+    return byId.get(id);
+  };
   pages.forEach((linesOfPage, k) => {
     const hasContent = linesOfPage.length > 0 || (spill && spill[k]);
     const opensWithScene = linesOfPage.length && linesOfPage[0].dataset.type === 'scene';
@@ -418,7 +425,7 @@ function firstSceneOfEachPage(pages, numbers, spill){
     }
     linesOfPage.forEach(div => {
       if(div.dataset.type !== 'scene') return;
-      const el = findEl(div.dataset.id);
+      const el = elOf(div.dataset.id);
       if(!el) return;
       const n = numbers[el.id];
       last = n ? ('SCÈNE ' + n) : ((el.text || '').trim().toUpperCase().slice(0, 40) || 'SCÈNE');
@@ -440,11 +447,46 @@ function pageContWord(pos){
    sans jamais attendre une pause dans la frappe comme le faisait l'ancien
    debounce à 110ms (c'est ce délai qui donnait l'impression qu'une page
    vide mettait du temps à disparaître). */
-function schedulePaginate(){
+/* ---- Frappe sans changement de hauteur : aucune repagination ----
+   Les sauts de page ne dépendent que de la HAUTEUR de chaque bloc. Taper une lettre au milieu d'une
+   réplique ou d'une action ne change cette hauteur que lorsque la ligne passe à une rangée de plus (ou de
+   moins) : le reste du temps, la mise en page est rigoureusement la même et la refaire (mesurer des
+   milliers de lignes, réécrire les marges, tout relire pour vérifier) ne servait à rien — c'est ce qui
+   faisait ramer l'écriture sur un très long scénario. On mémorise donc la hauteur du bloc juste AVANT la
+   frappe ; si elle est inchangée juste après, on saute la repagination. Au moindre doute (autre type de
+   ligne, bloc coupé entre deux pages, autre changement demandé dans la même image, hauteur différente),
+   la repagination complète a lieu exactement comme avant. */
+const PG_TYPING_SKIP = new Set(['dialogue','action','parenthetical','text','transition']);
+function pgNoteBeforeInput(e){
+  if(S.view !== 'editor' || S.tab !== 'editor') return;
+  const page = document.getElementById('page');
+  const t = e.target && e.target.closest ? e.target.closest('.line') : null;
+  if(!page || !t || t.parentNode !== page) return;
+  const h0 = S.pagination._h0;
+  // Plusieurs frappes dans la même image : on garde la hauteur d'AVANT la première.
+  if(h0 && h0.unit === t && S.pagination.pending != null) return;
+  S.pagination._h0 = { unit: t, h: t.getBoundingClientRect().height };
+}
+function pgTypingUnchanged(h0){
+  if(!h0 || !h0.unit || !h0.unit.isConnected) return false;
+  const page = document.getElementById('page'), u = h0.unit;
+  if(!page || u.parentNode !== page) return false;
+  if(!PG_TYPING_SKIP.has(u.dataset.type)) return false;
+  if(u.classList.contains('is-split')) return false;   // bloc coupé entre deux pages : toujours repaginé
+  return Math.abs(u.getBoundingClientRect().height - h0.h) < 0.01;
+}
+function schedulePaginate(typing){
+  if(typing !== 'typing') S.pagination._full = true;
   if(S.pagination.pending != null) return;
   S.pagination.pending = requestAnimationFrame(() => {
     S.pagination.pending = null;
+    const full = S.pagination._full, h0 = S.pagination._h0;
+    S.pagination._full = false; S.pagination._h0 = null;
     if(S.view !== 'editor' || S.tab !== 'editor') return;
+    if(!full && pgTypingUnchanged(h0)){
+      if(focusedLine()){ ensureCaretVisible(); updatePageIndicator(); }
+      return;
+    }
     paginateEditor();
     // CORRECTIF. La pagination vient peut-être de déplacer le bloc en cours
     // d'édition (il a grossi et ne tient plus sur la page). On ne replace la
@@ -462,6 +504,7 @@ function schedulePaginate(){
    coûte rien à voir (quelques ms, mesuré). */
 function repaginateNow(){
   if(S.pagination.pending != null){ cancelAnimationFrame(S.pagination.pending); S.pagination.pending = null; }
+  S.pagination._full = false; S.pagination._h0 = null;   // la repagination complète ci-dessous remplace toute frappe en attente
   if(S.view === 'editor' && S.tab === 'editor') paginateEditor();
 }
 
