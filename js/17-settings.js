@@ -32,7 +32,6 @@ document.addEventListener('input', setPageNumPreviewRefresh);
 document.addEventListener('change', setPageNumPreviewRefresh);
 function renderSettings(){
   const p = S.project;
-  normPageNumFirst(ensureSettings(p));
   return `<div class="cards-toolbar"><div class="pane-title" style="margin:0;">${L('Paramètres','Settings')}</div></div>
   <div style="padding:8px 24px 60px;max-width:600px;">
     <div class="fmt-choice sset-nav">
@@ -127,7 +126,7 @@ ${[['projet',L('Projet','Project')],['page',L('Mise en page','Layout')],['backup
           <input type="checkbox" id="setPageNumFirst" ${p.settings.numberFirstPage?'checked':''}> ${L('Numéroter la première page (afficher « 1. » sur la page 1)','Number the first page (show \u201c1.\u201d on page 1)')}
         </label>
       </div>
-      <p class="sset-sub">${L('Cochée par défaut, pour les nouveaux scénarios comme pour les scénarios importés : la page 1 affiche son numéro, comme toutes les autres pages. Décoche la case seulement si tu veux que la page 1 reste sans numéro : elle compte quand même, la page 2 porte alors le n° 2.','Ticked by default, for new and imported screenplays alike: page 1 shows its number like every other page. Untick it only if you want page 1 to stay unnumbered: it still counts, so page 2 is numbered 2.')}</p>
+      <p class="sset-sub">${L('Cochée par défaut pour les nouveaux scénarios et les scénarios importés : la page 1 affiche son numéro, comme toutes les autres pages. Décoche la case seulement si tu veux que la page 1 reste sans numéro : elle compte quand même, la page 2 porte alors le n° 2.','Ticked by default for new and imported screenplays: page 1 shows its number like every other page. Untick it only if you want page 1 to stay unnumbered: it still counts, so page 2 is numbered 2.')}</p>
       <div class="field"><label>${L('Numéro de la page 1','Number of page 1')}</label><input type="text" id="setPageStart" value="${p.settings.pageNumberStart}" style="max-width:100px;"></div>
       <p class="sset-sub">${L('Le numéro que porte la page 1, qu\u2019elle l\u2019affiche ou non (1 par défaut) : toutes les pages suivantes s\u2019ajustent. Mets 0 pour que la page 2 porte le n° 1.','The number carried by page 1, whether it shows it or not (1 by default): every following page adjusts. Enter 0 for page 2 to be numbered 1.')}</p>
       <p class="sset-sub" id="setPageNumPreview" style="font-weight:600;">${setPageNumPreviewText(p.settings.showPageNumbers, p.settings.numberFirstPage, p.settings.pageNumberStart)}</p>
