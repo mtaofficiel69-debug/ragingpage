@@ -146,8 +146,12 @@ function plInfo(pages, k){
 function computePageLabels(pages, proj){
   proj = proj || S.project;
   const start = (ensureSettings(proj).pageNumberStart) || 1, pl = proj.pageLock;
+  /* « Première page numérotée » = le numéro que porte la première page qui AFFICHE un numéro. Quand la première page
+     n'est pas numérotée, elle compte « avant » le départ (page 0 pour un départ à 1, comme dans Word) :
+     la 2e page porte alors le numéro de départ, la 3e le suivant — et non plus départ + 1. */
+  const off = ensureSettings(proj).numberFirstPage ? 0 : 1;
   if(!pl || !Array.isArray(pl.pages) || !pl.pages.length)
-    return { labels: pages.map((_, k)=> String(start + k)), omitted: [] };
+    return { labels: pages.map((_, k)=> String(start + k - off)), omitted: [] };
   const idx = {}, cidx = {};
   pl.pages.forEach((x, i)=>{
     if(x.first) idx[x.first] = i;
