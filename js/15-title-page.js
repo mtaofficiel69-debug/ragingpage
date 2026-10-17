@@ -421,3 +421,240 @@ function afterTPChangeLight(){
   const tp = document.querySelector('#tpPreviewShell .titlepage');
   if(tp) applyTPDesignVars(tp, ensureTPDesign(S.project));
 }
+
+/* =====================================================================
+   PAGE DE TITRE — DÉPLACEMENT LIBRE DES TEXTES
+   ---------------------------------------------------------------------
+   Chaque texte de la page de titre (titre, sous-titre, « Écrit par »,
+   nom de l'auteur, phrases en plus, bas de page) se place où l'on veut.
+   - On saisit le texte sélectionné par sa poignée ronde (à gauche) ; le
+     sous-titre, « Écrit par » et le bas de page se saisissent aussi
+     directement sur le texte (ces blocs ne se tapent pas, donc aucun
+     conflit avec le curseur).
+   - Aimantation façon WriterDuet / Figma : centre de la page, marges,
+     bords et centres des autres textes, avec des repères bleus.
+       Maj = un seul axe · Alt / Ctrl / ⌘ = sans aimantation · Échap =
+       annuler le geste · double-clic sur la poignée = replacer.
+   - Texte sélectionné sans curseur dedans : les flèches le décalent
+     (Maj = par grands pas).
+   - Les positions sont des décalages en % de la page (design.pos), stockés
+     dans le projet comme le reste du design. Elles s'appliquent par un
+     simple transform sur chaque bloc : l'aperçu, le plein écran, l'impression
+     et l'export PDF (qui relève la géométrie réelle) sont donc identiques,
+     et un texte jamais déplacé garde exactement sa place d'avant.
+===================================================================== */
+const TP_POS_SEL = {title:'.tp-title', sub:'.tp-sub', by:'.tp-author-label', author:'.tp-author-name', extra:'.tp-extra-wrap', foot:'.tp-foot'};
+(function(){
+  if(document.getElementById('tpMoveCss')) return;
+  const st = document.createElement('style'); st.id = 'tpMoveCss';
+  st.textContent = `
+  .tp-move-h{position:absolute; z-index:6; width:calc(22px * var(--tp-hs,1)); height:calc(22px * var(--tp-hs,1)); box-sizing:border-box; display:flex; align-items:center; justify-content:center; background:#fff; color:var(--accent-2,#1F6FA0); border:calc(2px * var(--tp-hs,1)) solid var(--accent); border-radius:50%; box-shadow:0 calc(2px * var(--tp-hs,1)) calc(8px * var(--tp-hs,1)) #00000033; cursor:grab; touch-action:none; user-select:none; -webkit-user-select:none; line-height:0;}
+  .tp-move-h:hover{background:#EAF4FB;}
+  .tp-move-h svg{width:56%; height:56%; display:block; pointer-events:none;}
+  .tp-moving, .tp-moving *{cursor:grabbing !important; user-select:none !important; -webkit-user-select:none !important;}
+  .tp-editing [data-tpk="sub"].tp-sel, .tp-editing [data-tpk="by"].tp-sel, .tp-editing [data-tpk="foot"].tp-sel{cursor:move;}
+  .tp-guide{position:absolute; z-index:5; pointer-events:none; background:var(--accent);}
+  .tp-guide.v{top:0; bottom:0; width:calc(1px * var(--tp-hs,1)); margin-left:calc(-.5px * var(--tp-hs,1));}
+  .tp-guide.h{left:0; right:0; height:calc(1px * var(--tp-hs,1)); margin-top:calc(-.5px * var(--tp-hs,1));}`;
+  document.head.appendChild(st);
+})();
+function tpPosOf(d, k){
+  const q = d && d.pos && d.pos[k];
+  return { x: q && isFinite(+q.x) ? +q.x : 0, y: q && isFinite(+q.y) ? +q.y : 0 };
+}
+function tpSetPos(d, k, x, y){
+  const r = v => Math.round(v * 100) / 100;
+  if(!d.pos || typeof d.pos !== 'object') d.pos = {};
+  x = r(x); y = r(y);
+  if(!x && !y) delete d.pos[k]; else d.pos[k] = { x, y };
+}
+/* Pose (ou retire) le décalage de chaque bloc. Idempotent : appelé à la construction de la page, à chaque changement de style et après chaque re-décoration. */
+function tpApplyPositions(tp, d){
+  if(!tp) return;
+  d = d || ensureTPDesign(S.project);
+  for(const k in TP_POS_SEL){
+    const n = tp.querySelector(TP_POS_SEL[k]); if(!n) continue;
+    const q = tpPosOf(d, k);
+    n.style.transform = (q.x || q.y) ? `translate(calc(var(--page-w,21cm) * ${q.x/100}), calc(var(--page-h,29.7cm) * ${q.y/100}))` : '';
+  }
+}
+function tpTextRects(n){
+  let out = [];
+  try{ const rg = document.createRange(); rg.selectNodeContents(n); out = [...rg.getClientRects()].filter(q => q.width > 0 && q.height > 0); }catch(err){}
+  if(!out.length) out = [n.getBoundingClientRect()];
+  return out;
+}
+function tpTextRect(n){
+  const rs = tpTextRects(n);
+  return { left:Math.min(...rs.map(q=>q.left)), top:Math.min(...rs.map(q=>q.top)), right:Math.max(...rs.map(q=>q.right)), bottom:Math.max(...rs.map(q=>q.bottom)) };
+}
+function tpHitText(e, n){
+  const tol = 8;
+  return tpTextRects(n).some(q => e.clientX >= q.left - tol && e.clientX <= q.right + tol && e.clientY >= q.top - tol && e.clientY <= q.bottom + tol);
+}
+function tpPageBox(rect, q){
+  return { l:(q.left - rect.left) / rect.width * 100, r:(q.right - rect.left) / rect.width * 100,
+           t:(q.top - rect.top) / rect.height * 100, b:(q.bottom - rect.top) / rect.height * 100 };
+}
+function tpClamp(v, lo, hi){ return lo > hi ? v : Math.max(lo, Math.min(hi, v)); }
+function tpSnap(edges, targets, thr){
+  let best = null;
+  edges.forEach(a => targets.forEach(t => {
+    const df = t - a;
+    if(Math.abs(df) <= thr && (!best || Math.abs(df) < Math.abs(best.d))) best = { d:df, t };
+  }));
+  return best;
+}
+/* Repères d'aimantation : milieu de la page, marges de la page, bords et centres des autres textes (en % de la page). */
+function tpSnapTargets(tp, n, rect, sc){
+  const cs = getComputedStyle(tp);
+  const mL = (parseFloat(cs.paddingLeft) || 0) * sc / rect.width * 100, mR = (parseFloat(cs.paddingRight) || 0) * sc / rect.width * 100;
+  const mT = (parseFloat(cs.paddingTop) || 0) * sc / rect.height * 100, mB = (parseFloat(cs.paddingBottom) || 0) * sc / rect.height * 100;
+  const X = [50, mL, 100 - mR], Y = [50, mT, 100 - mB];
+  tp.querySelectorAll('[data-tpk]').forEach(o => {
+    if(o === n || o.classList.contains('tp-title-off') || !(o.textContent || '').trim()) return;
+    const b = tpPageBox(rect, tpTextRect(o));
+    if(!(b.r - b.l > 0)) return;
+    X.push(b.l, (b.l + b.r) / 2, b.r); Y.push(b.t, (b.t + b.b) / 2, b.b);
+  });
+  return { X, Y };
+}
+function tpGuides(tp, gx, gy){
+  [['v', gx], ['h', gy]].forEach(it => {
+    let g = tp.querySelector('.tp-guide.' + it[0]);
+    if(it[1] == null){ if(g) g.remove(); return; }
+    if(!g){ g = document.createElement('div'); g.className = 'tp-guide ' + it[0]; tp.appendChild(g); }
+    if(it[0] === 'v') g.style.left = it[1] + '%'; else g.style.top = it[1] + '%';
+  });
+}
+/* Un geste de déplacement : `cap` est l'élément qui capte le pointeur (la poignée, ou le texte lui-même). */
+function tpMoveStart(e, k, n, tp, cap, opts){
+  const d = ensureTPDesign(S.project);
+  const rect = tp.getBoundingClientRect(); if(!rect.width || !rect.height) return;
+  const sc = rect.width / (tp.offsetWidth || rect.width);
+  const base = tpPosOf(d, k);
+  const box = tpPageBox(rect, tpTextRect(n));
+  const tg = tpSnapTargets(tp, n, rect, sc);
+  const sx = e.clientX, sy = e.clientY, needThr = !!(opts && opts.threshold);
+  let moved = false;
+  try{ cap.setPointerCapture(e.pointerId); }catch(err){}
+  const move = ev => {
+    const rdx = ev.clientX - sx, rdy = ev.clientY - sy;
+    if(!moved){
+      if(needThr && Math.hypot(rdx, rdy) < 4) return;
+      moved = true; tp.classList.add('tp-moving');
+      if(needThr){ try{ const s = window.getSelection && window.getSelection(); if(s && s.removeAllRanges) s.removeAllRanges(); }catch(err){} }
+    }
+    let dx = rdx / rect.width * 100, dy = rdy / rect.height * 100, lockX = false, lockY = false;
+    if(ev.shiftKey){ if(Math.abs(dx) >= Math.abs(dy)){ dy = 0; lockY = true; } else { dx = 0; lockX = true; } }
+    let gx = null, gy = null;
+    if(!(ev.altKey || ev.ctrlKey || ev.metaKey)){
+      if(!lockX){ const s = tpSnap([box.l + dx, (box.l + box.r) / 2 + dx, box.r + dx], tg.X, 6 / rect.width * 100); if(s){ dx += s.d; gx = s.t; } }
+      if(!lockY){ const s = tpSnap([box.t + dy, (box.t + box.b) / 2 + dy, box.b + dy], tg.Y, 6 / rect.height * 100); if(s){ dy += s.d; gy = s.t; } }
+    }
+    dx = tpClamp(dx, Math.min(-box.l, 0), Math.max(100 - box.r, 0));   // le texte reste sur la page
+    dy = tpClamp(dy, Math.min(-box.t, 0), Math.max(100 - box.b, 0));
+    tpSetPos(d, k, base.x + dx, base.y + dy);
+    tpApplyPositions(tp, d);
+    tpGuides(tp, gx, gy);
+    tpUpdateMoveHandle();
+  };
+  const key = ev => { if(ev.key === 'Escape'){ ev.preventDefault(); ev.stopPropagation(); end(true); } };
+  const up = () => end(false);
+  const end = cancel => {
+    cap.removeEventListener('pointermove', move); cap.removeEventListener('pointerup', up); cap.removeEventListener('pointercancel', up);
+    document.removeEventListener('keydown', key, true);
+    try{ cap.releasePointerCapture(e.pointerId); }catch(err){}
+    tp.classList.remove('tp-moving'); tpGuides(tp, null, null);
+    if(cancel){ tpSetPos(d, k, base.x, base.y); tpApplyPositions(tp, d); tpUpdateMoveHandle(); return; }
+    if(moved){
+      scheduleAutosave();
+      // le clic qui suit un glissement ne doit pas changer la sélection
+      const sup = ev => { ev.stopPropagation(); ev.preventDefault(); };
+      document.addEventListener('click', sup, { capture:true, once:true });
+      setTimeout(() => document.removeEventListener('click', sup, true), 30);
+    }
+  };
+  cap.addEventListener('pointermove', move); cap.addEventListener('pointerup', up); cap.addEventListener('pointercancel', up);
+  document.addEventListener('keydown', key, true);
+}
+function tpMakeMoveHandle(tp){
+  const h = document.createElement('div'); h.className = 'tp-move-h';
+  h.title = L('Glisser pour déplacer · Maj : un seul axe · Alt : sans aimantation · Double-clic : replacer', 'Drag to move · Shift: one axis · Alt: no snapping · Double-click: reset');
+  h.innerHTML = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 1.5v13M1.5 8h13M8 1.5L6 3.5M8 1.5l2 2M8 14.5l-2-2M8 14.5l2-2M1.5 8l2-2M1.5 8l2 2M14.5 8l-2-2M14.5 8l-2 2"/></svg>';
+  h.addEventListener('pointerdown', e => {
+    if(e.button !== undefined && e.button !== 0) return;
+    const k = h.dataset.k, n = tpEl(k) ? tp.querySelector('[data-tpk="' + k + '"]') : null; if(!n) return;
+    e.preventDefault(); e.stopPropagation();
+    tpMoveStart(e, k, n, tp, h, null);
+  });
+  h.addEventListener('mousedown', e => { e.preventDefault(); e.stopPropagation(); });
+  h.addEventListener('click', e => e.stopPropagation());
+  h.addEventListener('dblclick', e => {
+    e.preventDefault(); e.stopPropagation();
+    const k = h.dataset.k; if(!tpEl(k)) return;
+    const d = ensureTPDesign(S.project);
+    tpSetPos(d, k, 0, 0); tpApplyPositions(tp, d); tpUpdateMoveHandle(); scheduleAutosave();
+  });
+  tp.appendChild(h);
+  return h;
+}
+/* La poignée suit le texte sélectionné (sélection, frappe, changement de taille, zoom de l'aperçu). */
+function tpUpdateMoveHandle(){
+  const shell = document.getElementById('tpPreviewShell');
+  const tp = shell ? shell.querySelector('.titlepage') : null; if(!tp) return;
+  let h = tp.querySelector('.tp-move-h'), n = null;
+  if(!S.tpDrawMode && tpEl(tpSel)){
+    n = tp.querySelector('[data-tpk="' + tpSel + '"]');
+    if(n && n.classList.contains('tp-title-off')) n = null;
+  }
+  if(!n){ if(h) h.remove(); return; }
+  if(!h) h = tpMakeMoveHandle(tp);
+  h.dataset.k = tpSel;
+  const rect = tp.getBoundingClientRect(); if(!rect.width) return;
+  const W = tp.offsetWidth || rect.width, H = tp.offsetHeight || rect.height, sc = rect.width / W;
+  const hs = parseFloat(tp.style.getPropertyValue('--tp-hs')) || 1, size = 22 * hs, pad = 3 * hs;
+  const q = tpTextRect(n);
+  let left = (q.left - rect.left) / sc - size - 12 * hs;
+  if(left < pad) left = (q.right - rect.left) / sc + 12 * hs;
+  left = tpClamp(left, pad, W - size - pad);
+  const top = tpClamp(((q.top + q.bottom) / 2 - rect.top) / sc - size / 2, pad, H - size - pad);
+  h.style.left = left + 'px'; h.style.top = top + 'px';
+}
+/* Saisie directe pour les blocs qui ne se tapent pas (sous-titre, « Écrit par », bas de page). Au toucher : poignée seulement. */
+function tpMoveBind(shell){
+  if(shell._tpMvBound) return; shell._tpMvBound = true;
+  shell.addEventListener('pointerdown', e => {
+    if(S.tpDrawMode || (e.button !== undefined && e.button !== 0) || e.pointerType === 'touch') return;
+    const n = e.target && e.target.closest ? e.target.closest('[data-tpk]') : null;
+    if(!n || n.isContentEditable) return;
+    const k = n.dataset.tpk; if(!tpEl(k) || !tpHitText(e, n)) return;
+    const tp = n.closest('.titlepage'); if(!tp) return;
+    e.preventDefault();
+    tpSelect(k);
+    tpMoveStart(e, k, n, tp, n, { threshold:true });
+  });
+}
+/* Flèches : décalent le texte sélectionné quand le curseur n'est dans aucun champ (Maj = grands pas). */
+function tpNudge(k, ddx, ddy){
+  const shell = document.getElementById('tpPreviewShell');
+  const tp = shell ? shell.querySelector('.titlepage') : null;
+  const n = tp && tpEl(k) ? tp.querySelector('[data-tpk="' + k + '"]') : null; if(!n) return;
+  const d = ensureTPDesign(S.project), rect = tp.getBoundingClientRect(); if(!rect.width || !rect.height) return;
+  const box = tpPageBox(rect, tpTextRect(n));
+  ddx = tpClamp(ddx, Math.min(-box.l, 0), Math.max(100 - box.r, 0));
+  ddy = tpClamp(ddy, Math.min(-box.t, 0), Math.max(100 - box.b, 0));
+  const b = tpPosOf(d, k);
+  tpSetPos(d, k, b.x + ddx, b.y + ddy);
+  tpApplyPositions(tp, d); tpUpdateMoveHandle(); scheduleAutosave();
+}
+document.addEventListener('keydown', e => {
+  if(!S || S.tab !== 'titlepage' || S.tpDrawMode || tpFsEl || !document.getElementById('tpRoot')) return;
+  if(!tpEl(tpSel) || e.metaKey || e.ctrlKey || e.altKey) return;
+  const t = e.target;
+  if(t && ((t.matches && t.matches('input, textarea, select')) || t.isContentEditable)) return;
+  const dir = { ArrowLeft:[-1, 0], ArrowRight:[1, 0], ArrowUp:[0, -1], ArrowDown:[0, 1] }[e.key]; if(!dir) return;
+  e.preventDefault();
+  const st = e.shiftKey ? 2.5 : 0.25;
+  tpNudge(tpSel, dir[0] * st, dir[1] * st);
+});
