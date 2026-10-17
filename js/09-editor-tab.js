@@ -20,6 +20,7 @@ function renderEditorTab(){
   page.addEventListener('focusout', ()=>{ setTimeout(refreshContdMarks, 0); });
   page.addEventListener('mousedown', onPageMouseDown);
   page.addEventListener('beforeinput', onBeforeInput);
+  page.addEventListener('beforeinput', pgNoteBeforeInput);   // hauteur du bloc avant la frappe (voir schedulePaginate)
   page.addEventListener('paste', onPagePaste);
   page.addEventListener('cut', onPageCut);
   c.addEventListener('scroll', onEditorScroll);
@@ -289,7 +290,10 @@ function onLineInput(e){
   // Le recadrage de la vue et l'indicateur sont désormais rejoués à
   // l'intérieur de schedulePaginate(), une fois les blocs à leur place
   // définitive. Les appeler ici visait l'ancienne mise en page.
-  schedulePaginate();
+  // 'typing' : simple frappe dans cette ligne — la repagination n'a lieu que si sa hauteur a changé.
+  const h0 = S.pagination._h0;
+  if(h0 && h0.unit !== div) S.pagination._full = true;   // la frappe ne vient pas du bloc mesuré : repagination complète
+  schedulePaginate('typing');
   scheduleAutosave();
 }
 function autoDetect(el, div){
