@@ -393,7 +393,7 @@
   }, true);
 
   /* =====================================================================
-     3. MUSIQUE YOUTUBE
+     3.  YOUTUBE
   ===================================================================== */
   function music(){ if(!S.project.music) S.project.music = {}; return S.project.music; }
   function ytTime(s){
@@ -434,7 +434,7 @@
     if(!live()) return;
     if(!id){ const f = focusedLine(); id = (f && f.dataset.id) || (typeof lastFocusedLineId !== 'undefined' ? lastFocusedLineId : null); }
     if(id && !findEl(id)) id = null;
-    if(!id){ toast(L('Place d\u2019abord le curseur sur la ligne qui parle de la musique.', 'First place the cursor on the line that mentions the music.')); return; }
+    if(!id){ toast(L('Place d\u2019abord le curseur sur la ligne qui parle de la .', 'First place the cursor on the line that mentions the music.')); return; }
     const cur = music()[id] || null;
     musicClose();
     const html = `<div class="modal-backdrop" id="rpMusicBackdrop" data-act="rpMusicBg">
@@ -588,7 +588,7 @@
   moreMenuHtml = function(){
     let h = __moreMenu81.apply(this, arguments);
     const mark = '<div class="tb-more-title">' + L('Analyse', 'Insights') + '</div>';
-    const add = `<button class="btn" data-act="rpMusicOpen" title="Ctrl+Alt+Y">${svg('<path d="M6 12V4l7-1.5V10.5"/><circle cx="4.5" cy="12" r="1.7"/><circle cx="11.5" cy="10.5" r="1.7"/>', 16)} ${L('Musique YouTube sur la ligne…', 'YouTube music on the line…')}</button>`;
+    const add = `<button class="btn" data-act="rpMusicOpen" title="Ctrl+Alt+Y">${svg('<path d="M6 12V4l7-1.5V10.5"/><circle cx="4.5" cy="12" r="1.7"/><circle cx="11.5" cy="10.5" r="1.7"/>', 16)} ${L('Musique sur la ligne…', 'YouTube music on the line…')}</button>`;
     const i = h.indexOf(mark);
     return i >= 0 ? h.slice(0, i) + add + h.slice(i) : h + add;
   };
