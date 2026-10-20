@@ -5,11 +5,11 @@ function openExportMenu(){
   const html = `<div class="modal-backdrop" id="exportBackdrop" data-act="closeExportMenu">
     <div class="modal" style="max-width:400px;" data-stop="1">
       <h2>${L('Exporter','Export')}</h2>
-      <button class="btn" style="width:100%;margin-bottom:8px;justify-content:flex-start;" data-act="printScript">${icon('doc')} ${L('PDF (imprimer / aperçu du navigateur)','PDF (print / browser preview)')}</button>
-      <button class="btn" style="width:100%;margin-bottom:8px;justify-content:flex-start;" data-act="exportTXT">${icon('doc')} ${L('Texte (.txt)','Text (.txt)')}</button>
-      <button class="btn" style="width:100%;margin-bottom:8px;justify-content:flex-start;" data-act="exportFountain">${icon('doc')} Fountain (.fountain)</button>
-      <button class="btn" style="width:100%;margin-bottom:8px;justify-content:flex-start;" data-act="exportFDX">${icon('doc')} Final Draft (.fdx)</button>
-      <button class="btn" style="width:100%;margin-bottom:8px;justify-content:flex-start;" data-act="wdOpenSides">${icon('doc')} ${L('Sides pour un acteur…','Actor sides…')}</button>
+      <button class="btn" style="width:100%;margin-bottom:8px;justify-content:flex-start;" data-act="printScript">${icon('printer')} ${L('PDF (imprimer / aperçu du navigateur)','PDF (print / browser preview)')}</button>
+      <button class="btn" style="width:100%;margin-bottom:8px;justify-content:flex-start;" data-act="exportTXT">${icon('filetext')} ${L('Texte (.txt)','Text (.txt)')}</button>
+      <button class="btn" style="width:100%;margin-bottom:8px;justify-content:flex-start;" data-act="exportFountain">${icon('drop')} Fountain (.fountain)</button>
+      <button class="btn" style="width:100%;margin-bottom:8px;justify-content:flex-start;" data-act="exportFDX">${icon('film')} Final Draft (.fdx)</button>
+      <button class="btn" style="width:100%;margin-bottom:8px;justify-content:flex-start;" data-act="wdOpenSides">${icon('user')} ${L('Sides pour un acteur…','Actor sides…')}</button>
       <div style="border-top:1px solid var(--hair);margin:14px 0 12px;"></div>
       <button class="btn" style="width:100%;justify-content:flex-start;" data-act="exportBackup">${icon('save')} ${L('Sauvegarde complète (.smmproj)','Full backup (.smmproj)')}</button>
       <p style="font-size:12.5px;color:var(--ink-soft);margin-top:10px;line-height:1.5;">${L('Les notes, outlines et tags ne sont jamais inclus dans les exports.<br>La <strong>sauvegarde complète</strong>, elle, contient tout le projet (notes, outlines, tags, versions, cimetière, page de titre) dans un fichier à garder hors du navigateur. Pour la rouvrir : « Importer », sur l\u2019accueil.','Notes, outlines and tags are never included in exports.<br>The <strong>full backup</strong>, on the other hand, contains the entire project (notes, outlines, tags, versions, graveyard, title page) in a file to keep outside the browser. To reopen it: \u201cImport\u201d, on the home screen.')}</p>
@@ -223,4 +223,3 @@ function printScript(){
 
   setTimeout(()=>{ window.print(); }, 60);
 }
-
