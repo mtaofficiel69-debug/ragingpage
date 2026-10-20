@@ -59,11 +59,11 @@ function openSeriesExportMenu(seriesId){
         <button class="btn btn-sm" data-act="seriesExportSelectAll" data-id="1">${L('Tout cocher','Check all')}</button>
         <button class="btn btn-sm" data-act="seriesExportSelectAll" data-id="0">${L('Tout décocher','Uncheck all')}</button>
       </div>
-      <button class="btn" style="width:100%;margin-bottom:8px;justify-content:flex-start;" data-act="doSeriesExport" data-id="${seriesId}" data-mode="pdfMerged">${icon('doc')} ${L('PDF (un seul fichier fusionné)','PDF (one merged file)')}</button>
-      <button class="btn" style="width:100%;margin-bottom:8px;justify-content:flex-start;" data-act="doSeriesExport" data-id="${seriesId}" data-mode="pdfSeparate">${icon('doc')} ${L('PDF (un fichier par épisode)','PDF (one file per episode)')}</button>
-      <button class="btn" style="width:100%;margin-bottom:8px;justify-content:flex-start;" data-act="doSeriesExport" data-id="${seriesId}" data-mode="txt">${icon('doc')} ${L('Texte (.txt), un seul fichier','Text (.txt), one file')}</button>
-      <button class="btn" style="width:100%;margin-bottom:8px;justify-content:flex-start;" data-act="doSeriesExport" data-id="${seriesId}" data-mode="fountain">${icon('doc')} ${L('Fountain (.fountain), un seul fichier','Fountain (.fountain), one file')}</button>
-      <button class="btn" style="width:100%;margin-bottom:8px;justify-content:flex-start;" data-act="doSeriesExport" data-id="${seriesId}" data-mode="fdx">${icon('doc')} ${L('Final Draft (.fdx), un fichier par épisode','Final Draft (.fdx), one file per episode')}</button>
+      <button class="btn" style="width:100%;margin-bottom:8px;justify-content:flex-start;" data-act="doSeriesExport" data-id="${seriesId}" data-mode="pdfMerged">${icon('files')} ${L('PDF (un seul fichier fusionné)','PDF (one merged file)')}</button>
+      <button class="btn" style="width:100%;margin-bottom:8px;justify-content:flex-start;" data-act="doSeriesExport" data-id="${seriesId}" data-mode="pdfSeparate">${icon('pdf')} ${L('PDF (un fichier par épisode)','PDF (one file per episode)')}</button>
+      <button class="btn" style="width:100%;margin-bottom:8px;justify-content:flex-start;" data-act="doSeriesExport" data-id="${seriesId}" data-mode="txt">${icon('filetext')} ${L('Texte (.txt), un seul fichier','Text (.txt), one file')}</button>
+      <button class="btn" style="width:100%;margin-bottom:8px;justify-content:flex-start;" data-act="doSeriesExport" data-id="${seriesId}" data-mode="fountain">${icon('drop')} ${L('Fountain (.fountain), un seul fichier','Fountain (.fountain), one file')}</button>
+      <button class="btn" style="width:100%;margin-bottom:8px;justify-content:flex-start;" data-act="doSeriesExport" data-id="${seriesId}" data-mode="fdx">${icon('film')} ${L('Final Draft (.fdx), un fichier par épisode','Final Draft (.fdx), one file per episode')}</button>
       <p style="font-size:12.5px;color:var(--ink-soft);margin-top:14px;">${L('Les notes, outlines et tags ne sont jamais inclus dans les exports.','Notes, outlines and tags are never included in exports.')}</p>
       <div class="modal-actions"><button class="btn" data-act="closeSeriesExportMenu">${L('Fermer','Close')}</button></div>
     </div></div>`;
