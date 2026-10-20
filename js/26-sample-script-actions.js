@@ -1043,14 +1043,14 @@ function moreMenuHtml(){
   return `${T(L('Écriture','Writing'))}
     ${dualBtnHtml('')}
     <button class="btn" data-act="openReplace">${icon('findrep')} Rechercher / remplacer</button>
-    <button class="btn" data-act="openSynonyms">${icon('book')} Synonymes</button>
-    <button class="btn" data-act="wdOpenRename">${icon('findrep')} ${L('Renommer partout…','Rename everywhere…')}</button>
-    <button class="btn" data-act="wdOpenVariants">${icon('findrep')} ${L('Variantes de noms…','Name variants…')}</button>
+    <button class="btn" data-act="openSynonyms">${icon('bubbles')} Synonymes</button>
+    <button class="btn" data-act="wdOpenRename">${icon('cursor')} ${L('Renommer partout…','Rename everywhere…')}</button>
+    <button class="btn" data-act="wdOpenVariants">${icon('copy')} ${L('Variantes de noms…','Name variants…')}</button>
     <button class="btn" data-act="openRevisions" title="Ctrl+Alt+R">${icon('palette')} ${L('Révisions colorées','Colour revisions')}</button>
     <button class="btn" data-act="toggleRevMark" title="Ctrl+Alt+M">${icon('flag')} ${L('Marquer / démarquer la ligne','Mark / unmark line')}</button>
     ${T(L('Analyse','Insights'))}
-    <button class="btn" data-act="wdOpenOrphans">${icon('doc')} ${L('Pages presque vides…','Nearly-empty pages…')}</button>
-    <button class="btn" data-act="wdOpenSession">${icon('doc')} ${L('Ma session d\u2019écriture…','My writing session…')}</button>
+    <button class="btn" data-act="wdOpenOrphans">${icon('emptypage')} ${L('Pages presque vides…','Nearly-empty pages…')}</button>
+    <button class="btn" data-act="wdOpenSession">${icon('pulse')} ${L('Ma session d\u2019écriture…','My writing session…')}</button>
     ${T(L('Affichage','View'))}
     <div class="tb-font-row">${icon('font')}<span>${L('Police','Font')}</span>${scriptFontSelectHtml('')}</div>
     ${themeToggleBtnHtml('')}
