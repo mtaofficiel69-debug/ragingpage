@@ -158,6 +158,7 @@ function renderHome(){
             <li>${icon('save')}<span>${L('Tes données restent sur ton ordinateur','Your work stays on your computer')}</span></li>
           </ul>
           <div class="wd-ver" style="margin-top:16px;"><span style="display:inline-flex;align-items:center;gap:6px;padding:3px 10px 3px 8px;border-radius:999px;background:var(--tag-chip-bg);color:var(--ink-soft);font-size:11.5px;font-weight:600;letter-spacing:.02em;line-height:1.4;font-variant-numeric:tabular-nums;"><i style="width:5px;height:5px;border-radius:50%;background:var(--accent);opacity:.8;flex:none;"></i>v1.12</span></div>
+          <a class="wd-ato" href="https://alternativeto.net/software/raging-page/about/?utm_source=badge&utm_medium=referral" target="_blank" rel="noopener" title="${L('Raging Page sur AlternativeTo','Raging Page on AlternativeTo')}" style="display:block;width:150px;margin-top:14px;opacity:.92;"><img src="https://alternativeto.net/static/badges/badge-compact-color.svg" alt="Raging Page | AlternativeTo" width="150" height="49" style="display:block;width:150px;height:auto;"></a>
         </div>
       </aside>
       <main class="wd-main">
