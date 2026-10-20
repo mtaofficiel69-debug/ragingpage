@@ -46,11 +46,11 @@ function renderEditorShell(){
     <div class="main-col">
       <div class="topbar">
         <div class="topbar-left">
-          <button class="btn btn-sm btn-ghost" data-act="goHome" title="${L('Retour au portfolio','Back to portfolio')}">${icon('doc')} <span class="tb-lbl">${L('Portfolio','Portfolio')}</span></button>
+          <button class="btn btn-sm btn-ghost" data-act="goHome" title="${L('Retour au portfolio','Back to portfolio')}">${icon('home')} <span class="tb-lbl">${L('Portfolio','Portfolio')}</span></button>
           <span class="tb-div"></span>
-          <button class="btn btn-sm" data-act="insertScene" title="${L('Insérer une nouvelle entête de scène','Insert a new scene heading')}">${icon('doc')} + <span class="tb-lbl">${L('Scène','Scene')}</span></button>
-          <button class="btn btn-sm" data-act="insertCard" title="${L('Insérer un carton : texte placé où tu veux (milieu de page, gros titre, cadre…), taille et style réglables','Insert a title card: text placed anywhere (centered, big title, frame…) with adjustable size and style')}">${icon('doc')} + <span class="tb-lbl">${L('Carton','Card')}</span></button>
-          <button class="btn btn-sm" data-act="openLayout" title="${L('Aligner / placer librement la ligne en cours : alignement, retrait gauche et droit (sans carton)','Align / freely place the current line: alignment, left and right indent (no card needed)')}">${icon('doc')} <span class="tb-lbl">${L('Aligner','Align')}</span></button>
+          <button class="btn btn-sm" data-act="insertScene" title="${L('Insérer une nouvelle entête de scène','Insert a new scene heading')}">${icon('scene')} + <span class="tb-lbl">${L('Scène','Scene')}</span></button>
+          <button class="btn btn-sm" data-act="insertCard" title="${L('Insérer un carton : texte placé où tu veux (milieu de page, gros titre, cadre…), taille et style réglables','Insert a title card: text placed anywhere (centered, big title, frame…) with adjustable size and style')}">${icon('card')} + <span class="tb-lbl">${L('Carton','Card')}</span></button>
+          <button class="btn btn-sm" data-act="openLayout" title="${L('Aligner / placer librement la ligne en cours : alignement, retrait gauche et droit (sans carton)','Align / freely place the current line: alignment, left and right indent (no card needed)')}">${icon('align')} <span class="tb-lbl">${L('Aligner','Align')}</span></button>
           <span class="tb-div"></span>
           <button class="btn btn-sm btn-ghost" data-act="doUndo" title="${L('Annuler (Ctrl+Z)','Undo (Ctrl+Z)')}">${icon('undo')}</button>
           <button class="btn btn-sm btn-ghost" data-act="doRedo" title="${L('Rétablir (Ctrl+Shift+Z)','Redo (Ctrl+Shift+Z)')}">${icon('redo')}</button>
@@ -144,4 +144,3 @@ function renderTabBody(){
   if(S.tab==='editor' && S.navOpen) renderNavPane();
   attachTabEvents();
 }
-
