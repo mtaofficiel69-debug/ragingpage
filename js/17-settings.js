@@ -17,19 +17,138 @@ function settingsCloudHtml(){
 }
 /* Aperçu de la numérotation d'après ce qui est coché / saisi (mêmes règles que computePageLabels et l'export). */
 function setPageNumPreviewText(show, first, startRaw){
-  if(!show) return L('Aucun numéro de page ne sera affiché.','No page number will be shown.');
+  const fp = ensureFreePages(S.project), nF = fp.front.length, nB = fp.back.length;
+  if(!show && !nF && !nB) return L('Aucun numéro de page ne sera affiché.','No page number will be shown.');
   const v = parseInt(startRaw, 10), start = isNaN(v) ? 1 : Math.max(0, v);
-  const parts = [0, 1, 2, 3].map(k => 'p. ' + (k + 1) + ' → ' + ((k > 0 || first) ? (start + k) + '.' : L('sans numéro','no number')));
-  return L('Aperçu : ','Preview: ') + parts.join(' · ') + ' …';
+  const free = n => n + ' ' + L('page' + (n > 1 ? 's' : '') + ' libre' + (n > 1 ? 's' : ''), 'free page' + (n > 1 ? 's' : '')) + ' ' + L('(sans numéro)', '(no number)');
+  const parts = [];
+  if(nF) parts.push(free(nF));
+  if(show) parts.push(L('scénario : ','script: ') + [0, 1, 2].map(k => 'p. ' + (k + 1) + ' → ' + ((k > 0 || first) ? (start + k) + '.' : L('sans numéro','no number'))).join(' · ') + ' ...');
+  else parts.push(L('scénario : aucun numéro affiché','script: no number shown'));
+  if(nB) parts.push(free(nB));
+  return L('Aperçu du PDF : ','PDF preview: ') + parts.join('  |  ');
+}
+function setPageNumPreviewRender(){
+  const out = document.getElementById('setPageNumPreview'); if(!out) return;
+  const g = id => document.getElementById(id);
+  if(!g('setPageNum') || !g('setPageNumFirst') || !g('setPageStart')) return;
+  out.textContent = setPageNumPreviewText(g('setPageNum').checked, g('setPageNumFirst').checked, g('setPageStart').value);
 }
 function setPageNumPreviewRefresh(e){
   const t = e.target; if(!t || !(t.id === 'setPageNum' || t.id === 'setPageNumFirst' || t.id === 'setPageStart')) return;
-  const out = document.getElementById('setPageNumPreview'); if(!out) return;
-  const g = id => document.getElementById(id);
-  out.textContent = setPageNumPreviewText(g('setPageNum').checked, g('setPageNumFirst').checked, g('setPageStart').value);
+  setPageNumPreviewRender();
 }
 document.addEventListener('input', setPageNumPreviewRefresh);
 document.addEventListener('change', setPageNumPreviewRefresh);
+
+/* =====================================================================
+   PAGES LIBRES (hors numérotation) — voir ensureFreePages() dans 03-state-storage.js
+   Les modifications sont enregistrées au fil de l'eau (pas besoin du bouton « Enregistrer les paramètres »). */
+function fpInfo(it){
+  let n = 1;
+  try{ n = freePageSheetCount(S.project, it); }catch(e){ n = 1; }
+  return {
+    over: n > 1,
+    text: n > 1
+      ? L('⚠ Trop long pour une page : la suite passe sur ' + (n - 1) + ' feuille' + (n > 2 ? 's' : '') + ' de plus à l\u2019export (sans numéro).', '⚠ Too long for one page: the rest runs onto ' + (n - 1) + ' more sheet' + (n > 2 ? 's' : '') + ' on export (no number).')
+      : L('Tient sur une page.','Fits on one page.')
+  };
+}
+function freePagesListHtml(p){
+  const fp = ensureFreePages(p);
+  const sect = (kind, title, hint, addLbl) => {
+    const arr = fp[kind], full = (kind === 'front' && arr.length >= FREE_PAGES_MAX_FRONT);
+    const cards = arr.map((it, i) => {
+      const inf = fpInfo(it);
+      return `
+      <div style="border:1px solid var(--hair);border-radius:var(--radius);padding:10px;margin-bottom:8px;">
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;">
+          <b style="font-size:13px;flex:1;">${L('Page libre','Free page')} ${i + 1}</b>
+          <button type="button" class="btn btn-sm" data-fp="up" data-kind="${kind}" data-id="${it.id}" title="${L('Monter','Move up')}" ${i === 0 ? 'disabled' : ''}>↑</button>
+          <button type="button" class="btn btn-sm" data-fp="down" data-kind="${kind}" data-id="${it.id}" title="${L('Descendre','Move down')}" ${i === arr.length - 1 ? 'disabled' : ''}>↓</button>
+          <button type="button" class="btn btn-sm" data-fp="del" data-kind="${kind}" data-id="${it.id}">${L('Supprimer','Delete')}</button>
+        </div>
+        <textarea class="fp-text" data-kind="${kind}" data-id="${it.id}" rows="6" style="width:100%;box-sizing:border-box;font-family:var(--script-font,var(--mono));font-size:13px;resize:vertical;" placeholder="${L('Texte libre (laisse vide pour une page blanche)','Free text (leave empty for a blank page)')}">${esc(it.text)}</textarea>
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:6px;">
+          <label class="opt-label"><input type="checkbox" class="fp-center" data-kind="${kind}" data-id="${it.id}" ${it.align === 'center' ? 'checked' : ''}> ${L('Centrer le texte','Center the text')}</label>
+          <span class="sset-hint fp-info" data-kind="${kind}" data-id="${it.id}" style="margin:0;${inf.over ? 'color:var(--accent);' : ''}">${inf.text}</span>
+        </div>
+      </div>`;
+    }).join('');
+    return `<div style="margin-bottom:14px;">
+      <div style="font-size:13px;font-weight:600;">${title}</div>
+      <p class="sset-hint" style="margin:2px 0 8px;">${hint}</p>
+      ${cards || `<p class="sset-hint" style="margin:0 0 8px;font-style:italic;">${L('Aucune page pour l\u2019instant.','No page yet.')}</p>`}
+      <button type="button" class="btn btn-sm" data-fp="add" data-kind="${kind}" ${full ? 'disabled' : ''}>+ ${addLbl}</button>
+      ${full ? `<span class="sset-hint" style="margin-left:8px;">${L('Maximum atteint (' + FREE_PAGES_MAX_FRONT + ').','Maximum reached (' + FREE_PAGES_MAX_FRONT + ').')}</span>` : ''}
+    </div>`;
+  };
+  return sect('front', L('Avant le scénario (' + FREE_PAGES_MAX_FRONT + ' pages maximum)','Before the script (' + FREE_PAGES_MAX_FRONT + ' pages maximum)'),
+              L('Elles se placent juste après la page de titre, puis le scénario commence à la page 1.','They come right after the title page, then the script starts at page 1.'),
+              L('Ajouter une page avant le scénario','Add a page before the script'))
+       + sect('back', L('Après le scénario','After the script'),
+              L('Elles se placent après la dernière page du scénario, dans l\u2019ordre ci-dessous.','They come after the last page of the script, in the order below.'),
+              L('Ajouter une page après le scénario','Add a page after the script'));
+}
+function fpFind(kind, id){
+  const arr = ensureFreePages(S.project)[kind]; if(!arr) return null;
+  const i = arr.findIndex(x => x.id === id);
+  return i < 0 ? null : { arr, i, it: arr[i] };
+}
+function fpTouch(){ if(!S.project) return; S.project.updatedAt = Date.now(); scheduleAutosave(); }
+function fpUpdateInfo(el){
+  const f = fpFind(el.dataset.kind, el.dataset.id); if(!f) return;
+  const inf = fpInfo(f.it);
+  el.textContent = inf.text;
+  el.style.color = inf.over ? 'var(--accent)' : '';
+}
+function fpRender(focusId){
+  const box = document.getElementById('fpLists'); if(!box || !S.project) return;
+  box.innerHTML = freePagesListHtml(S.project);
+  setPageNumPreviewRender();
+  if(focusId){ const ta = box.querySelector('.fp-text[data-id="' + focusId + '"]'); if(ta) ta.focus(); }
+}
+function fpAction(act, kind, id){
+  if(!S.project) return;
+  const fp = ensureFreePages(S.project);
+  if(act === 'add'){
+    if(!fp[kind]) return;
+    if(kind === 'front' && fp.front.length >= FREE_PAGES_MAX_FRONT){ toast(L('Maximum ' + FREE_PAGES_MAX_FRONT + ' pages avant le scénario.','Maximum ' + FREE_PAGES_MAX_FRONT + ' pages before the script.')); return; }
+    const it = { id: uid('fp'), text:'', align:'left' };
+    fp[kind].push(it); fpTouch(); fpRender(it.id); return;
+  }
+  const f = fpFind(kind, id); if(!f) return;
+  if(act === 'del'){
+    if(f.it.text.trim() && !confirm(L('Supprimer cette page et son texte ?','Delete this page and its text?'))) return;
+    f.arr.splice(f.i, 1);
+  } else if(act === 'up' && f.i > 0){
+    f.arr.splice(f.i - 1, 0, f.arr.splice(f.i, 1)[0]);
+  } else if(act === 'down' && f.i < f.arr.length - 1){
+    f.arr.splice(f.i + 1, 0, f.arr.splice(f.i, 1)[0]);
+  } else return;
+  fpTouch(); fpRender();
+}
+document.addEventListener('click', e => {
+  const b = e.target && e.target.closest ? e.target.closest('[data-fp]') : null;
+  if(!b || b.disabled) return;
+  e.preventDefault();
+  e.stopPropagation();
+  fpAction(b.dataset.fp, b.dataset.kind, b.dataset.id);
+});
+const __fpInfoTimers = {};
+document.addEventListener('input', e => {
+  const t = e.target; if(!t || !t.classList || !t.classList.contains('fp-text')) return;
+  const f = fpFind(t.dataset.kind, t.dataset.id); if(!f) return;
+  f.it.text = t.value; fpTouch();
+  const info = document.querySelector('.fp-info[data-id="' + t.dataset.id + '"]');
+  if(info){ clearTimeout(__fpInfoTimers[t.dataset.id]); __fpInfoTimers[t.dataset.id] = setTimeout(() => fpUpdateInfo(info), 300); }
+});
+document.addEventListener('change', e => {
+  const t = e.target; if(!t || !t.classList || !t.classList.contains('fp-center')) return;
+  const f = fpFind(t.dataset.kind, t.dataset.id); if(!f) return;
+  f.it.align = t.checked ? 'center' : 'left'; fpTouch();
+  const info = document.querySelector('.fp-info[data-id="' + t.dataset.id + '"]'); if(info) fpUpdateInfo(info);
+});
 function renderSettings(){
   const p = S.project;
   return `<div class="cards-toolbar"><div class="pane-title" style="margin:0;">${L('Paramètres','Settings')}</div></div>
@@ -115,7 +234,11 @@ ${[['projet',L('Projet','Project')],['page',L('Mise en page','Layout')],['backup
     </div>
     <div class="panel-block"><h4>${L('Pagination','Pagination')}</h4>
       <p class="sset-sub">${L('Les sauts de page suivent les dimensions réelles du papier (' + (p.format==='us'?'Letter':'A4') + ') : le PDF reproduit exactement les pages de l\u2019éditeur.','Page breaks follow the real paper dimensions (' + (p.format==='us'?'Letter':'A4') + '): the PDF reproduces exactly the pages shown in the editor.')}</p>
-      <div class="sset-label">${L('Numéros de page','Page numbers')}</div>
+      <div class="sset-label">${L('Pages hors numérotation','Pages outside the numbering')}</div>
+      <p class="sset-sub">${L('Des pages de texte libre (dédicace, citation, synopsis, remerciements...) qui ne portent jamais de numéro et ne comptent pas : le scénario commence toujours à la page 1. Elles n\u2019apparaissent qu\u2019à l\u2019export PDF.','Free-text pages (dedication, quote, synopsis, acknowledgments...) that never carry a number and are not counted: the script always starts at page 1. They only appear in the PDF export.')}</p>
+      <div id="fpLists">${freePagesListHtml(p)}</div>
+      <div class="sset-sep"></div>
+      <div class="sset-label">${L('Numéros de page du scénario','Script page numbers')}</div>
       <div class="sset-row">
         <label class="opt-label">
           <input type="checkbox" id="setPageNum" ${p.settings.showPageNumbers?'checked':''}> ${L('Afficher les numéros de page','Show page numbers')}
@@ -123,12 +246,12 @@ ${[['projet',L('Projet','Project')],['page',L('Mise en page','Layout')],['backup
       </div>
       <div class="sset-row">
         <label class="opt-label">
-          <input type="checkbox" id="setPageNumFirst" ${p.settings.numberFirstPage?'checked':''}> ${L('Numéroter la première page (afficher « 1. » sur la page 1)','Number the first page (show \u201c1.\u201d on page 1)')}
+          <input type="checkbox" id="setPageNumFirst" ${p.settings.numberFirstPage?'checked':''}> ${L('Afficher le numéro sur la première page du scénario','Show the number on the first page of the script')}
         </label>
       </div>
-      <p class="sset-sub">${L('Cochée par défaut pour les nouveaux scénarios et les scénarios importés : la page 1 affiche son numéro, comme toutes les autres pages. Décoche la case seulement si tu veux que la page 1 reste sans numéro : elle compte quand même, la page 2 porte alors le n° 2.','Ticked by default for new and imported screenplays: page 1 shows its number like every other page. Untick it only if you want page 1 to stay unnumbered: it still counts, so page 2 is numbered 2.')}</p>
-      <div class="field"><label>${L('Numéro de la page 1','Number of page 1')}</label><input type="text" id="setPageStart" value="${p.settings.pageNumberStart}" style="max-width:100px;"></div>
-      <p class="sset-sub">${L('Le numéro que porte la page 1, qu\u2019elle l\u2019affiche ou non (1 par défaut) : toutes les pages suivantes s\u2019ajustent. Mets 0 pour que la page 2 porte le n° 1.','The number carried by page 1, whether it shows it or not (1 by default): every following page adjusts. Enter 0 for page 2 to be numbered 1.')}</p>
+      <p class="sset-sub">${L('Décochée, la première page du scénario n\u2019affiche pas son numéro, mais elle compte : la suivante porte le n° 2.','Unticked, the first page of the script shows no number but still counts: the next one is numbered 2.')}</p>
+      <div class="field"><label>${L('Numéro de la première page du scénario','Number of the first script page')}</label><input type="text" id="setPageStart" value="${p.settings.pageNumberStart}" style="max-width:100px;"></div>
+      <p class="sset-sub">${L('1 par défaut. Les pages libres ci-dessus ne comptent pas : le scénario commence toujours ici. Mets 0 pour que la page suivante porte le n° 1.','1 by default. The free pages above are not counted: the script always starts here. Enter 0 for the next page to be numbered 1.')}</p>
       <p class="sset-sub" id="setPageNumPreview" style="font-weight:600;">${setPageNumPreviewText(p.settings.showPageNumbers, p.settings.numberFirstPage, p.settings.pageNumberStart)}</p>
       <div class="sset-sep"></div>
       <div class="sset-label">${L('Continuité','Continuity')}</div>
