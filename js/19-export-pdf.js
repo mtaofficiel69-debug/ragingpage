@@ -268,6 +268,7 @@ function pdfReadSheet(sheet){
     // relever comme un bloc normal produirait une boîte fausse.
     watermark: (sheet.querySelector('.sheet-watermark') || {}).textContent || null,
     images: [],
+    topImages: [],   // v90 : le dessin libre de la page de titre se pose PAR-DESSUS le texte, comme à l'écran
     blocks: [],
     rules: []
   };
@@ -284,7 +285,7 @@ function pdfReadSheet(sheet){
       w = img.naturalWidth * scale; h = img.naturalHeight * scale;
       x += (r.width - w) / 2; y += (r.height - h) / 2;
     }
-    page.images.push({
+    (img.classList && img.classList.contains('tp-drawing-layer') ? page.topImages : page.images).push({
       src: img.src, opacity: parseFloat(ics.opacity) || 1,
       xPt: x * PX_TO_PT, yPt: y * PX_TO_PT, wPt: w * PX_TO_PT, hPt: h * PX_TO_PT
     });
@@ -497,6 +498,15 @@ function pdfPaintPage(doc, page){
       lines.forEach((ln, i)=> doc.text(ln, x, b.yPt + i * b.lineHeightPt, { align:b.align, baseline:'alphabetic' }));
     }
     doc.restoreGraphicsState();
+  });
+
+  (page.topImages || []).forEach(im=>{
+    try{
+      doc.saveGraphicsState();
+      if(im.opacity < 1){ try{ doc.setGState(new doc.GState({ opacity:im.opacity })); }catch(e){} }
+      doc.addImage(im.src, im.xPt, im.yPt, im.wPt, im.hPt);
+      doc.restoreGraphicsState();
+    }catch(e){ /* une image illisible ne doit pas faire échouer tout l'export */ }
   });
 
   if(page.watermark){
