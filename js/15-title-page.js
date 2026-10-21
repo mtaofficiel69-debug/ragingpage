@@ -86,25 +86,7 @@ function tpControlsHtmlAll(){
         <div id="tpDrawControls">${tpDrawControlsHtml()}</div>
       </div>`;
 }
-function tpDrawControlsHtml(){
-  const design = ensureTPDesign(S.project);
-  if(S.tpDrawMode){
-    const colors = ['#23262E','#3699D4','#1F6FA0','#2F9E44','#2F2E44','#ffffff'];
-    const colorSwatches = colors.map(c=>`<button class="tp-swatch ${S.tpPenColor===c?'active':''}" style="background:${c}" data-act="tpSetPenColor" data-id="${c}"></button>`).join('');
-    const sizes = [3,6,12,20];
-    const sizeBtns = sizes.map(s=>`<button class="tp-pen-size ${S.tpPenSize===s?'active':''}" data-act="tpSetPenSize" data-id="${s}" style="width:${12+s*0.6}px;height:${12+s*0.6}px;"></button>`).join('');
-    return `<div class="tp-draw-toolbar"><span style="font-size:12.5px;color:var(--ink-soft);">${L('Couleur','Color')}</span>${colorSwatches}</div>
-    <div class="tp-draw-toolbar"><span style="font-size:12.5px;color:var(--ink-soft);">${L('Épaisseur','Thickness')}</span>${sizeBtns}</div>
-    <div class="tp-draw-toolbar">
-      <button class="btn btn-sm btn-ghost" data-act="tpClearDrawing">${L('Effacer','Clear')}</button>
-      <button class="btn btn-sm btn-primary" data-act="tpFinishDraw">${L('Terminer le dessin','Finish drawing')}</button>
-    </div>`;
-  }
-  return `<div class="tp-draw-toolbar">
-    <button class="btn btn-sm" data-act="tpToggleDraw">${icon('pen')} ${L('Dessiner sur la page','Draw on the page')}</button>
-    ${design.drawing?`<button class="btn btn-sm btn-danger" data-act="tpClearDrawing">${L('Effacer le dessin','Clear the drawing')}</button>`:''}
-  </div>`;
-}
+/* tpDrawControlsHtml() : voir le moteur de dessin (v90), en bas de ce fichier. */
 /* Rebuilds the preview shell from scratch (background image / drawing
    layers + text). Only called when those layers actually need to change
    — plain style tweaks go through afterTPChange() instead so an
@@ -112,31 +94,14 @@ function tpDrawControlsHtml(){
 function refreshTPPreview(){
   const shell = document.getElementById('tpPreviewShell'); if(!shell) return;
   const p = S.project;
+  if(TPD.cv) tpdDetach();
   shell.innerHTML = '';
-  const tp = buildTitlePageEl(p);
+  const tp = buildTitlePageEl(p, {live:S.tpDrawMode});   // v90 : en mode dessin, le canevas remplace l'image du dessin (jamais deux couches)
   shell.appendChild(tp);
   tpCanvas = null; tpCtx = null;
   tpDecoratePreview(shell, tp);   // v51 : texte modifiable directement sur la page
   tpFitPreview();
-  if(S.tpDrawMode){
-    const canvas = document.createElement('canvas');
-    canvas.id = 'tpDrawCanvas'; canvas.width = 1000; canvas.height = 1414;
-    tp.appendChild(canvas);
-    tpCanvas = canvas; tpCtx = canvas.getContext('2d');
-    const design = ensureTPDesign(p);
-    if(design.drawing){
-      const img = new Image();
-      img.onload = ()=>{ if(tpCtx) tpCtx.drawImage(img, 0, 0, canvas.width, canvas.height); };
-      img.src = design.drawing;
-    }
-    canvas.addEventListener('mousedown', tpPenDown);
-    canvas.addEventListener('mousemove', tpPenMove);
-    canvas.addEventListener('mouseup', tpPenUp);
-    canvas.addEventListener('mouseleave', tpPenUp);
-    canvas.addEventListener('touchstart', tpPenDown, {passive:false});
-    canvas.addEventListener('touchmove', tpPenMove, {passive:false});
-    canvas.addEventListener('touchend', tpPenUp, {passive:false});
-  }
+  if(S.tpDrawMode && !tpFsEl) tpdAttach(tp);   // v90 : les traits sont des données du projet : reconstruire l'aperçu ne perd plus rien
 }
 /* Style-only change (font, size, color, alignment, pattern): re-apply the
    CSS variables straight onto the existing preview element and refresh
@@ -165,37 +130,8 @@ function tpRemoveImage(){
   scheduleAutosave(); refreshTPPreview();
   const controls = document.getElementById('tpControlsCol'); if(controls) tpRebuildControls();
 }
-function tpToggleDraw(){
-  S.tpDrawMode = true; refreshTPPreview();
-  const dc = document.getElementById('tpDrawControls'); if(dc) dc.innerHTML = tpDrawControlsHtml();
-}
-function tpFinishDraw(){
-  if(tpCanvas) ensureTPDesign(S.project).drawing = tpCanvas.toDataURL('image/png');
-  S.tpDrawMode = false; scheduleAutosave(); refreshTPPreview();
-  const controls = document.getElementById('tpControlsCol'); if(controls) tpRebuildControls();
-}
-function tpClearDrawing(){
-  if(S.tpDrawMode && tpCtx){ tpCtx.clearRect(0,0,tpCanvas.width,tpCanvas.height); }
-  else{ ensureTPDesign(S.project).drawing = null; scheduleAutosave(); refreshTPPreview(); }
-  const dc = document.getElementById('tpDrawControls'); if(dc) dc.innerHTML = tpDrawControlsHtml();
-}
-function tpSetPenColor(id){ S.tpPenColor = id; const dc=document.getElementById('tpDrawControls'); if(dc) dc.innerHTML = tpDrawControlsHtml(); }
-function tpSetPenSize(id){ S.tpPenSize = parseInt(id,10); const dc=document.getElementById('tpDrawControls'); if(dc) dc.innerHTML = tpDrawControlsHtml(); }
 let tpCanvas = null, tpCtx = null, tpPenDownFlag = false;
-function tpCanvasPoint(e){
-  const rect = tpCanvas.getBoundingClientRect();
-  const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-  const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-  return { x:(clientX-rect.left)*(tpCanvas.width/rect.width), y:(clientY-rect.top)*(tpCanvas.height/rect.height) };
-}
-function tpPenDown(e){ e.preventDefault(); tpPenDownFlag = true; const pt = tpCanvasPoint(e); tpCtx.beginPath(); tpCtx.moveTo(pt.x, pt.y); }
-function tpPenMove(e){
-  if(!tpPenDownFlag || !tpCtx) return; e.preventDefault();
-  const pt = tpCanvasPoint(e);
-  tpCtx.strokeStyle = S.tpPenColor; tpCtx.lineWidth = S.tpPenSize * 1.6; tpCtx.lineCap='round'; tpCtx.lineJoin='round';
-  tpCtx.lineTo(pt.x, pt.y); tpCtx.stroke();
-}
-function tpPenUp(e){ if(e) e.preventDefault(); tpPenDownFlag = false; }
+/* tpToggleDraw, tpFinishDraw, tpClearDrawing, tpSetPenColor, tpSetPenSize et la saisie au stylet / à la souris / au doigt : voir le moteur de dessin (v90), en bas de ce fichier. */
 /* =====================================================================
    v79 — IMAGE LIBRE SUR LA PAGE DE TITRE
    Une image (n'importe quel format que le navigateur sait lire) posée à la place du titre : on la glisse où on veut,
@@ -332,7 +268,8 @@ function tpFreeImgRemove(){
 }
 function onTPTabAttach(rebindOnly){
   if(S.tab!=='titlepage') return;
-  if(!rebindOnly){ tpCloseMenus(); refreshTPPreview(); tpRenderToolbar(); tpFitPreview(); requestAnimationFrame(tpFitPreview); }
+  if(!rebindOnly){ tpCloseMenus(); if(S.tpDrawMode && !tpFsEl){ try{ tpdFlush(); }catch(e){} S.tpDrawMode = false; }   // v90 : revenir sur l'onglet ne laisse pas un mode dessin fantôme (les traits sont déjà enregistrés)
+    refreshTPPreview(); tpRenderToolbar(); tpFitPreview(); requestAnimationFrame(tpFitPreview); }
   const bind = (id, evt, fn) => { const el=document.getElementById(id); if(el) el.addEventListener(evt, fn); };
   // Renommer le projet depuis la page de titre. Même effet que le champ
   // « Titre » des Paramètres : on écrit dans le projet, l'aperçu se
@@ -658,3 +595,649 @@ document.addEventListener('keydown', e => {
   const st = e.shiftKey ? 2.5 : 0.25;
   tpNudge(tpSel, dir[0] * st, dir[1] * st);
 });
+
+/* =====================================================================
+   v90 — DESSIN SUR LA PAGE DE TITRE : moteur par traits
+   ---------------------------------------------------------------------
+   Avant, le dessin était une simple image : un seul crayon, une poignée
+   de couleurs, et deux gestes possibles — tout garder ou tout effacer.
+   Il pouvait aussi disparaître : les traits en cours n'étaient enregistrés
+   qu'en cliquant sur « Terminer », et toute reconstruction de l'aperçu
+   (taper dans un champ, quitter l'onglet…) repartait de l'ancienne image.
+
+   Maintenant chaque trait est une donnée à part entière (design.strokes) :
+     · il est enregistré dès qu'il est tracé — rien ne se perd, même si on
+       quitte l'onglet ou si l'aperçu est reconstruit ;
+     · on peut revenir en arrière trait par trait (Ctrl/⌘ Z), refaire
+       (Ctrl/⌘ Maj Z), et « Tout effacer » lui-même s'annule ;
+     · les traits sont des coordonnées en fraction de la largeur de la page :
+       le dessin reste net à n'importe quel zoom, au plein écran comme au PDF.
+   design.drawing reste l'image (PNG transparent) que lisent l'aperçu,
+   l'impression et l'export PDF : elle est reconstruite à partir des traits,
+   donc tout le reste de l'application fonctionne exactement comme avant.
+   Un dessin fait avec l'ancienne version est gardé tel quel comme fond
+   (design.strokesBase) : on dessine par-dessus, on peut même le gommer.
+===================================================================== */
+const TPD_TOOLS = [
+  {id:'pen',    fr:'Stylo',      en:'Pen',         mul:1,   alpha:1,   key:'p'},
+  {id:'marker', fr:'Feutre',     en:'Marker',      mul:1.7, alpha:.84, key:'m'},
+  {id:'pencil', fr:'Crayon',     en:'Pencil',      mul:1.1, alpha:1,   key:'c'},
+  {id:'brush',  fr:'Pinceau',    en:'Brush',       mul:1.6, alpha:1,   key:'b'},
+  {id:'hl',     fr:'Surligneur', en:'Highlighter', mul:3.6, alpha:.38, key:'h'},
+  {id:'eraser', fr:'Gomme',      en:'Eraser',      mul:1.8, alpha:1,   key:'e'}
+];
+const TPD_ICON = {
+  pen:'<path d="M3 13.2l.9-3.4L11.3 2.4l2.3 2.3-7.4 7.4z"/><path d="M10 3.7l2.3 2.3M3 13.2l3.2-.9"/>',
+  marker:'<path d="M4.4 14.2l-1.9.3.4-2.2 7.3-7.3 1.8 1.8z"/><path d="M9.2 4.9l2.1-2.1 2.3 2.3-2.1 2.1"/><path d="M2.5 14.6h4"/>',
+  pencil:'<path d="M3 13l.7-3.1 7.2-7.2 2.4 2.4-7.2 7.2z"/><path d="M9.3 4.3l2.4 2.4"/><path d="M2.4 14.6h11"/>',
+  brush:'<path d="M13.6 2.4c-3.2.4-5.7 2.8-6.8 5.5l1.6 1.6c2.6-1 5.1-3.5 5.2-7.1z"/><path d="M6.8 8c-2 0-3.6 1.2-3.6 3.2 0 1-.6 1.7-1.4 2.2 2.6.7 6.1-.2 6.1-3.5"/>',
+  hl:'<path d="M9.6 2.4l4 4-5.1 5.1-4-4z"/><path d="M4.5 7.5L3 11l2.7-.6M2.4 14.2h7.6"/>',
+  eraser:'<path d="M3.2 10.4l5.7-6.2 4 3.6-4.6 5.1H5.6z"/><path d="M7.6 6.9l4 3.6M8.5 13.4h5.6"/>',
+  undo:'<path d="M3.6 6.4h5.9a3.4 3.4 0 010 6.8H6.2"/><path d="M6.2 3.4L3.2 6.4l3 3"/>',
+  redo:'<path d="M12.4 6.4H6.5a3.4 3.4 0 000 6.8h3.3"/><path d="M9.8 3.4l3 3-3 3"/>',
+  trash:'<path d="M2.8 4.4h10.4M6.4 4.4V2.9h3.2v1.5M4.3 4.4l.6 8.8h6.2l.6-8.8M7 6.8v4M9 6.8v4"/>',
+  hand:'<path d="M5.3 8.4V3.9a1 1 0 012 0V7.2M7.3 7.2V2.9a1 1 0 012 0V7.2M9.3 7.2V3.9a1 1 0 012 0V9.6c0 2.5-1.5 4-4.1 4-1.8 0-2.7-.8-3.7-2.3L2.4 9a1 1 0 011.6-1.2l1.3 1.6"/>',
+  eye:'<path d="M10.6 2.4a1.8 1.8 0 012.6 2.5l-2 2 .7.7-1 1-4.2-4.2 1-1 .7.7zM8.6 7.5l-5 5v1h1l5-5"/>',
+  full:'<path d="M2 6V2h4M10 2h4v4M14 10v4h-4M6 14H2v-4"/>',
+  fit:'<path d="M2.5 6V3.5H5M11 3.5h2.5V6M13.5 10v2.5H11M5 12.5H2.5V10"/><rect x="5.2" y="5.2" width="5.6" height="5.6" rx=".8"/>',
+  check:'<path d="M3 8.5l3.2 3.2L13 4.8"/>'
+};
+function tpdIco(n, sz){ return `<svg width="${sz||16}" height="${sz||16}" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">${TPD_ICON[n]||''}</svg>`; }
+
+const TPD_PREF_KEY = 'scriptmm_tp_pen';
+const TPD = {
+  tool:'pen', color:'#23262E', alpha:1, recent:[],
+  sizes:{pen:4, marker:4, pencil:5, brush:5, hl:5, eraser:8},
+  hand:false, space:false, seenPen:false, pop:null, clearArmed:false, clearTimer:0,
+  dref:null, undo:[], redo:[],
+  cur:null, pid:null, cv:null, ctx:null, lv:null, lctx:null, comm:null, cctx:null, ring:null, tp:null,
+  W:0, H:0, raf:0, rasterTimer:0, resizeTimer:0, base:null, baseSrc:''
+};
+(function(){
+  try{
+    const o = JSON.parse(localStorage.getItem(TPD_PREF_KEY) || 'null'); if(!o || typeof o !== 'object') return;
+    if(TPD_TOOLS.some(t=>t.id===o.tool)) TPD.tool = o.tool;
+    if(/^#[0-9a-f]{6}$/i.test(o.color||'')) TPD.color = o.color;
+    if(isFinite(+o.alpha)) TPD.alpha = Math.max(.1, Math.min(1, +o.alpha));
+    if(o.sizes) for(const k in TPD.sizes) if(isFinite(+o.sizes[k])) TPD.sizes[k] = Math.max(1, Math.min(60, Math.round(+o.sizes[k])));
+    if(Array.isArray(o.recent)) TPD.recent = o.recent.filter(c=>/^#[0-9a-f]{6}$/i.test(c)).slice(0,10);
+  }catch(e){}
+})();
+function tpdSavePrefs(){
+  try{ localStorage.setItem(TPD_PREF_KEY, JSON.stringify({tool:TPD.tool, color:TPD.color, alpha:TPD.alpha, sizes:TPD.sizes, recent:TPD.recent})); }catch(e){}
+  S.tpPenColor = TPD.color; S.tpPenSize = TPD.sizes[TPD.tool];
+}
+function tpdToolOf(id){ return TPD_TOOLS.find(t=>t.id===(id||TPD.tool)) || TPD_TOOLS[0]; }
+function tpdRatio(){ return S.project && S.project.format==='us' ? 11/8.5 : 29.7/21; }
+function tpdD(){
+  const d = ensureTPDesign(S.project);
+  if(!Array.isArray(d.strokes)){ d.strokes = []; d.strokesBase = d.drawing || null; d.strokesRev = 1; d.drawingRev = 1; }
+  if(!isFinite(d.strokesRev)) d.strokesRev = 1;
+  if(TPD.dref !== d){ TPD.dref = d; TPD.undo = []; TPD.redo = []; }
+  return d;
+}
+function tpdHas(d){ return Array.isArray(d.strokes) ? (d.strokes.length > 0 || !!d.strokesBase) : !!d.drawing; }
+
+/* ---------- rendu des traits (même code à l'écran, dans l'image enregistrée, au PDF) ---------- */
+function tpdRng(seed){
+  let a = seed | 0;
+  return function(){ a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+}
+function tpdSmoothPath(ctx, P, W){
+  ctx.beginPath(); ctx.moveTo(P[0][0]*W, P[0][1]*W);
+  if(P.length === 2){ ctx.lineTo(P[1][0]*W, P[1][1]*W); return; }
+  for(let i = 1; i < P.length - 1; i++){
+    const mx = (P[i][0] + P[i+1][0]) / 2 * W, my = (P[i][1] + P[i+1][1]) / 2 * W;
+    ctx.quadraticCurveTo(P[i][0]*W, P[i][1]*W, mx, my);
+  }
+  const l = P[P.length-1]; ctx.lineTo(l[0]*W, l[1]*W);
+}
+/* Trait à largeur variable (pinceau, stylo sensible à la pression) : un ruban rempli d'un seul tenant, donc sans surépaisseur si le trait est translucide. */
+function tpdRibbon(ctx, P, W, wf, base){
+  // 1) lissage de la ligne centrale (Chaikin) et des largeurs
+  let pts = P.map((q,i)=>({x:q[0]*W, y:q[1]*W, w:wf[i]*base}));
+  for(let it = 0; it < 2; it++){
+    const out = [pts[0]];
+    for(let i = 0; i < pts.length - 1; i++){
+      const a = pts[i], b = pts[i+1];
+      out.push({x:.75*a.x+.25*b.x, y:.75*a.y+.25*b.y, w:.75*a.w+.25*b.w}, {x:.25*a.x+.75*b.x, y:.25*a.y+.75*b.y, w:.25*a.w+.75*b.w});
+    }
+    out.push(pts[pts.length-1]); pts = out;
+  }
+  const n = pts.length, Lp = [], Rp = [];
+  for(let i = 0; i < n; i++){
+    const a = pts[Math.max(0, i-1)], b = pts[Math.min(n-1, i+1)];
+    let dx = b.x - a.x, dy = b.y - a.y; const d = Math.hypot(dx, dy) || 1; dx /= d; dy /= d;
+    const hw = Math.max(.3, pts[i].w / 2);
+    Lp.push([pts[i].x - dy*hw, pts[i].y + dx*hw]); Rp.push([pts[i].x + dy*hw, pts[i].y - dx*hw]);
+  }
+  ctx.beginPath(); ctx.moveTo(Lp[0][0], Lp[0][1]);
+  for(let i = 1; i < n; i++) ctx.lineTo(Lp[i][0], Lp[i][1]);
+  for(let i = n - 1; i >= 0; i--) ctx.lineTo(Rp[i][0], Rp[i][1]);
+  ctx.closePath();
+  // les bouts arrondis tournent dans le même sens que le ruban : en remplissage « non-zéro », deux sens opposés se creuseraient
+  let area = 0; const ring = Lp.concat(Rp.slice().reverse());
+  for(let i = 0; i < ring.length; i++){ const a = ring[i], b = ring[(i + 1) % ring.length]; area += a[0]*b[1] - b[0]*a[1]; }
+  const ccw = area < 0, f = pts[0], l = pts[n-1];
+  ctx.moveTo(f.x + Math.max(.3, f.w/2), f.y); ctx.arc(f.x, f.y, Math.max(.3, f.w/2), 0, Math.PI*2, ccw);
+  ctx.moveTo(l.x + Math.max(.3, l.w/2), l.y); ctx.arc(l.x, l.y, Math.max(.3, l.w/2), 0, Math.PI*2, ccw);
+  ctx.fill();
+}
+function tpdPencil(ctx, P, W, w, a, seed){
+  const rnd = tpdRng(seed || 1);
+  ctx.globalAlpha = Math.min(1, .5 * a);
+  const hasPr = P.some(q=>q[2] > 0);
+  let cnt = 0; ctx.beginPath();
+  const stamp = (x, y, pw)=>{
+    const k = Math.max(2, Math.round(pw * .5));
+    for(let j = 0; j < k; j++){
+      const r = Math.sqrt(rnd()) * pw * .5, th = rnd() * Math.PI * 2, dr = Math.max(.35, pw * .1 * (.6 + rnd() * .8));
+      const px = x + r * Math.cos(th), py = y + r * Math.sin(th);
+      ctx.moveTo(px + dr, py); ctx.arc(px, py, dr, 0, Math.PI*2);
+    }
+    if(++cnt >= 28){ ctx.fill(); ctx.beginPath(); cnt = 0; }
+  };
+  const wAt = i => hasPr && P[i][2] > 0 ? w * (.35 + .9 * P[i][2]) : w;
+  if(P.length === 1){ for(let r = 0; r < 6; r++) stamp(P[0][0]*W, P[0][1]*W, w); }
+  for(let i = 0; i < P.length - 1; i++){
+    const x0 = P[i][0]*W, y0 = P[i][1]*W, x1 = P[i+1][0]*W, y1 = P[i+1][1]*W;
+    const len = Math.hypot(x1 - x0, y1 - y0), step = Math.max(.7, w * .16), steps = Math.max(1, Math.ceil(len / step));
+    for(let s = 0; s < steps; s++){ const t = s / steps; stamp(x0 + (x1-x0)*t, y0 + (y1-y0)*t, wAt(i) + (wAt(i+1) - wAt(i)) * t); }
+  }
+  if(cnt) ctx.fill();
+}
+function tpdStroke(ctx, s, W){
+  const P = s.p; if(!P || !P.length) return;
+  const w = Math.max(.7, s.w * W), a = s.a == null ? 1 : s.a;
+  ctx.save();
+  ctx.lineCap = s.t === 'hl' ? 'butt' : 'round'; ctx.lineJoin = 'round';
+  const col = s.t === 'eraser' ? '#000' : s.c;
+  if(s.t === 'eraser') ctx.globalCompositeOperation = 'destination-out';
+  ctx.strokeStyle = col; ctx.fillStyle = col; ctx.globalAlpha = a;
+  if(s.t === 'pencil'){ tpdPencil(ctx, P, W, w, a, s.s); ctx.restore(); return; }
+  const press = P.some(q=>q[2] > 0);
+  if(P.length === 1){
+    const pw = press && P[0][2] > 0 ? w * (.35 + .9 * P[0][2]) : w;
+    ctx.beginPath(); ctx.arc(P[0][0]*W, P[0][1]*W, s.t === 'hl' ? pw/2 : Math.max(.35, pw/2), 0, Math.PI*2); ctx.fill();
+  }else if(s.t === 'brush' || (s.t === 'pen' && press)){
+    const n = P.length; let f = P.map((q,i)=>{
+      if(q[2] > 0) return .25 + 1.0 * q[2];
+      const a0 = P[Math.max(0,i-1)], b0 = P[Math.min(n-1,i+1)];
+      return 1.15 - Math.min(.8, Math.hypot(b0[0]-a0[0], b0[1]-a0[1]) * 25);
+    });
+    for(let pass = 0; pass < 3; pass++) f = f.map((v,i)=>(f[Math.max(0,i-1)] + v + f[Math.min(n-1,i+1)]) / 3);
+    if(s.t === 'brush') f = f.map((v,i)=> v * (.45 + .55 * Math.min(1, (i + 1) / 5)) * (.3 + .7 * Math.min(1, (n - i) / 6)));
+    tpdRibbon(ctx, P, W, f, w);
+  }else{
+    ctx.lineWidth = w; tpdSmoothPath(ctx, P, W); ctx.stroke();
+  }
+  ctx.restore();
+}
+function tpdPaintAll(ctx, W, H, d, base){
+  ctx.clearRect(0, 0, W, H);
+  if(d.strokesBase && base) ctx.drawImage(base, 0, 0, W, H);
+  (d.strokes || []).forEach(s=>tpdStroke(ctx, s, W));
+}
+/* Simplifie un trait fini (Douglas-Peucker) : moins de points, même dessin. */
+function tpdSimplify(P, eps){
+  if(P.length < 3) return P;
+  const keep = new Uint8Array(P.length); keep[0] = keep[P.length-1] = 1;
+  const st = [[0, P.length-1]];
+  while(st.length){
+    const [i0, i1] = st.pop(); let md = 0, mi = -1;
+    const ax = P[i0][0], ay = P[i0][1], bx = P[i1][0], by = P[i1][1], dx = bx - ax, dy = by - ay, L = Math.hypot(dx, dy) || 1e-9;
+    for(let i = i0 + 1; i < i1; i++){
+      const dd = Math.abs((P[i][0]-ax)*dy - (P[i][1]-ay)*dx) / L;
+      if(dd > md){ md = dd; mi = i; }
+    }
+    if(md > eps && mi > 0){ keep[mi] = 1; st.push([i0, mi], [mi, i1]); }
+  }
+  return P.filter((q,i)=>keep[i]);
+}
+
+/* ---------- image enregistrée (design.drawing) reconstruite à partir des traits ---------- */
+function tpdBaseReady(d){ return !d.strokesBase || (TPD.base && TPD.baseSrc === d.strokesBase && TPD.base.complete && TPD.base.naturalWidth); }
+function tpdLoadBase(d){
+  return new Promise(res=>{
+    if(!d.strokesBase){ res(); return; }
+    if(tpdBaseReady(d)){ res(); return; }
+    const im = new Image();
+    im.onload = ()=>{ TPD.base = im; TPD.baseSrc = d.strokesBase; res(); };
+    im.onerror = ()=>res();
+    im.src = d.strokesBase;
+  });
+}
+function tpdBuildRaster(d){
+  if(!Array.isArray(d.strokes)) return true;
+  if(!d.strokes.length && !d.strokesBase){ d.drawing = null; d.drawingRev = d.strokesRev; return true; }
+  if(!tpdBaseReady(d)) return false;
+  const W = 2400, H = Math.round(W * tpdRatio());
+  const cv = document.createElement('canvas'); cv.width = W; cv.height = H;
+  tpdPaintAll(cv.getContext('2d'), W, H, d, TPD.base);
+  try{ d.drawing = cv.toDataURL('image/png'); }catch(e){ return false; }
+  d.drawingRev = d.strokesRev; return true;
+}
+/* Appelée par buildTitlePageEl : l'image affichée / imprimée / exportée est toujours à jour avec les traits. */
+function tpdSyncRaster(d){
+  if(!d || !Array.isArray(d.strokes) || d.drawingRev === d.strokesRev) return;
+  if(tpdBuildRaster(d)) return;
+  // fond d'un ancien dessin pas encore décodé : on le charge, puis on reconstruit
+  tpdLoadBase(d).then(()=>{ if(tpdBuildRaster(d)){ scheduleAutosave(); if(S.tab==='titlepage' && !S.tpDrawMode && document.getElementById('tpPreviewShell')) refreshTPPreview(); } });
+}
+function tpdFlush(){
+  clearTimeout(TPD.rasterTimer); TPD.rasterTimer = 0;
+  if(!S.project) return;
+  const d = ensureTPDesign(S.project);
+  if(Array.isArray(d.strokes) && d.drawingRev !== d.strokesRev) tpdBuildRaster(d);
+}
+function tpdChanged(){
+  const d = tpdD(); d.strokesRev++;
+  clearTimeout(TPD.rasterTimer); TPD.rasterTimer = setTimeout(()=>{ TPD.rasterTimer = 0; tpdFlush(); }, 220);
+  scheduleAutosave(); tpdSyncBars();
+}
+window.addEventListener('pagehide', ()=>{ try{ tpdFlush(); }catch(e){} });
+document.addEventListener('visibilitychange', ()=>{ if(document.hidden){ try{ tpdFlush(); }catch(e){} } });
+
+/* ---------- canevas : accroche / décroche sur une page (aperçu ou plein écran) ---------- */
+function tpdTargetW(tp){
+  const r = tp.getBoundingClientRect(), dpr = Math.min(2, window.devicePixelRatio || 1);
+  return Math.round(Math.max(1400, Math.min(3000, (r.width || 600) * dpr)));
+}
+function tpdSizeCanvases(W){
+  const H = Math.round(W * tpdRatio());
+  TPD.W = W; TPD.H = H;
+  [TPD.cv, TPD.lv, TPD.comm].forEach(c=>{ if(c){ c.width = W; c.height = H; } });
+}
+function tpdRebuild(){
+  if(!TPD.cv) return;
+  const d = tpdD();
+  tpdPaintAll(TPD.cctx, TPD.W, TPD.H, d, TPD.base);
+  TPD.ctx.clearRect(0, 0, TPD.W, TPD.H); TPD.ctx.drawImage(TPD.comm, 0, 0);
+  TPD.lctx.clearRect(0, 0, TPD.W, TPD.H);
+}
+function tpdAttach(tp){
+  tpdDetach();
+  const d = tpdD();
+  TPD.tp = tp;
+  const mk = id => { const c = document.createElement('canvas'); if(id) c.id = id; return c; };
+  TPD.cv = mk('tpDrawCanvas'); TPD.lv = mk('tpDrawLive'); TPD.comm = mk();
+  TPD.ctx = TPD.cv.getContext('2d'); TPD.lctx = TPD.lv.getContext('2d'); TPD.cctx = TPD.comm.getContext('2d');
+  tpdSizeCanvases(tpdTargetW(tp));
+  tp.appendChild(TPD.cv); tp.appendChild(TPD.lv);
+  TPD.ring = document.createElement('div'); TPD.ring.className = 'tp-d-ring'; tp.appendChild(TPD.ring);
+  const cv = TPD.cv;
+  cv.addEventListener('pointerdown', tpdDown);
+  cv.addEventListener('pointermove', tpdMove);
+  cv.addEventListener('pointerup', tpdUp);
+  cv.addEventListener('pointercancel', tpdUp);
+  cv.addEventListener('pointerleave', ()=>{ if(TPD.ring) TPD.ring.style.display = 'none'; });
+  cv.addEventListener('contextmenu', e=>e.preventDefault());
+  tpCanvas = cv; tpCtx = TPD.ctx;
+  tpdRebuild();
+  if(d.strokesBase && !tpdBaseReady(d)) tpdLoadBase(d).then(()=>{ if(TPD.cv === cv){ tpdRebuild(); } });
+  tpdSyncBars();
+}
+function tpdDetach(){
+  if(TPD.raf){ cancelAnimationFrame(TPD.raf); TPD.raf = 0; }
+  [TPD.cv, TPD.lv, TPD.ring].forEach(n=>{ if(n && n.parentNode) n.parentNode.removeChild(n); });
+  TPD.cv = TPD.lv = TPD.ring = TPD.comm = TPD.ctx = TPD.lctx = TPD.cctx = TPD.tp = null; TPD.cur = null;
+  tpCanvas = null; tpCtx = null;
+}
+/* Le zoom / la taille de la page change : on redessine les traits à la bonne résolution (jamais flou, jamais démesuré). */
+function tpdMaybeResize(){
+  if(!TPD.cv || !TPD.tp) return;
+  clearTimeout(TPD.resizeTimer);
+  TPD.resizeTimer = setTimeout(()=>{
+    if(!TPD.cv || !TPD.tp || TPD.cur) return;
+    const W = tpdTargetW(TPD.tp);
+    if(Math.abs(W - TPD.W) / TPD.W > .25){ tpdSizeCanvases(W); tpdRebuild(); }
+  }, 240);
+}
+function tpdCancelStroke(){
+  if(!TPD.cur) return;
+  TPD.cur = null; if(TPD.lctx) TPD.lctx.clearRect(0, 0, TPD.W, TPD.H);
+  tpdLive();
+}
+
+/* ---------- saisie ---------- */
+function tpdPt(e){
+  const r = TPD.cv.getBoundingClientRect();
+  const x = (e.clientX - r.left) / r.width, y = (e.clientY - r.top) / r.height * tpdRatio();
+  return [Math.round(x*10000)/10000, Math.round(y*10000)/10000, e.pointerType === 'pen' ? Math.round((e.pressure || .5)*100)/100 : 0];
+}
+function tpdAdd(e){
+  const q = tpdPt(e), P = TPD.cur.p, l = P[P.length-1];
+  if(l && Math.hypot(q[0]-l[0], q[1]-l[1]) < .0008) return;
+  P.push(q);
+}
+function tpdDown(e){
+  if(!S.tpDrawMode || !TPD.cv) return;
+  if(e.pointerType === 'mouse' && e.button !== 0) return;
+  if(e.pointerType === 'pen') TPD.seenPen = true;
+  if(e.pointerType === 'touch' && TPD.seenPen) return;      // paume ignorée quand on dessine au stylet
+  if(TPD.hand || TPD.space) return;
+  e.preventDefault();
+  if(TPD.pop){ tpdClosePop(); }
+  if(TPD.cur) return;
+  const t = tpdToolOf(), d = tpdD();
+  const sz = TPD.sizes[t.id];
+  TPD.cur = {t:t.id, c:TPD.color, w:Math.round(sz * .0016 * t.mul * 100000) / 100000, a:t.id === 'eraser' ? 1 : Math.round(t.alpha * TPD.alpha * 100) / 100, s:(Math.random() * 1e9) | 0, p:[]};
+  TPD.pid = e.pointerId;
+  try{ TPD.cv.setPointerCapture(e.pointerId); }catch(err){}
+  tpdAdd(e); tpdLive();
+}
+function tpdMove(e){
+  if(TPD.ring && TPD.tp && e.pointerType !== 'touch') tpdRing(e);
+  if(!TPD.cur || e.pointerId !== TPD.pid) return;
+  e.preventDefault();
+  const list = e.getCoalescedEvents ? e.getCoalescedEvents() : null;
+  if(list && list.length) list.forEach(ev=>tpdAdd(ev)); else tpdAdd(e);
+  tpdLive();
+}
+function tpdUp(e){
+  if(!TPD.cur || (e && e.pointerId !== TPD.pid)) return;
+  if(e) e.preventDefault();
+  const s = TPD.cur; TPD.cur = null;
+  const hasPr = s.p.some(q=>q[2] > 0);
+  if(s.t !== 'brush' && !hasPr) s.p = tpdSimplify(s.p, .00025);
+  const d = tpdD();
+  d.strokes.push(s);
+  TPD.undo.push({k:'add', s}); if(TPD.undo.length > 400) TPD.undo.shift(); TPD.redo = [];
+  tpdStroke(TPD.cctx, s, TPD.W);
+  TPD.ctx.clearRect(0, 0, TPD.W, TPD.H); TPD.ctx.drawImage(TPD.comm, 0, 0);
+  TPD.lctx.clearRect(0, 0, TPD.W, TPD.H);
+  tpdChanged();
+}
+function tpdLive(){
+  if(TPD.raf) return;
+  TPD.raf = requestAnimationFrame(()=>{
+    TPD.raf = 0; if(!TPD.cv) return;
+    if(!TPD.cur){ return; }
+    if(TPD.cur.t === 'eraser'){ TPD.ctx.clearRect(0, 0, TPD.W, TPD.H); TPD.ctx.drawImage(TPD.comm, 0, 0); tpdStroke(TPD.ctx, TPD.cur, TPD.W); }
+    else{ TPD.lctx.clearRect(0, 0, TPD.W, TPD.H); tpdStroke(TPD.lctx, TPD.cur, TPD.W); }
+  });
+}
+/* Cercle de la taille du trait sous la souris / le stylet. */
+function tpdRing(e){
+  const tp = TPD.tp, ring = TPD.ring; if(!tp || !ring) return;
+  const r = tp.getBoundingClientRect(), sc = r.width / (tp.offsetWidth || r.width) || 1;
+  const t = tpdToolOf(), dia = Math.max(6 / sc, TPD.sizes[t.id] * .0016 * t.mul * (tp.offsetWidth || r.width));
+  ring.style.display = 'block';
+  ring.style.width = ring.style.height = dia + 'px';
+  ring.style.left = ((e.clientX - r.left) / sc) + 'px'; ring.style.top = ((e.clientY - r.top) / sc) + 'px';
+  ring.style.borderWidth = (1.5 / sc) + 'px';
+}
+
+/* ---------- actions ---------- */
+function tpdAfterHistory(){
+  tpdRebuild(); tpdChanged();
+}
+function tpdUndo(){
+  const d = tpdD(); tpdCancelStroke();
+  const a = TPD.undo.pop(); if(!a) return;
+  if(a.k === 'add'){ const i = d.strokes.lastIndexOf(a.s); if(i >= 0) d.strokes.splice(i, 1); }
+  else if(a.k === 'clear'){ d.strokes = a.strokes.slice(); d.strokesBase = a.base; }
+  TPD.redo.push(a); tpdAfterHistory();
+}
+function tpdRedo(){
+  const d = tpdD(); tpdCancelStroke();
+  const a = TPD.redo.pop(); if(!a) return;
+  if(a.k === 'add') d.strokes.push(a.s);
+  else if(a.k === 'clear'){ d.strokes = []; d.strokesBase = null; }
+  TPD.undo.push(a); tpdAfterHistory();
+}
+/* « Tout effacer » : deux clics (le premier demande confirmation) et, de toute façon, il s'annule comme un trait. */
+function tpdClear(){
+  if(!TPD.clearArmed){
+    TPD.clearArmed = true; clearTimeout(TPD.clearTimer);
+    TPD.clearTimer = setTimeout(()=>{ TPD.clearArmed = false; tpdSyncBars(); tpdRefreshPanel(); }, 3500);
+    tpdSyncBars(); tpdRefreshPanel(); return;
+  }
+  TPD.clearArmed = false; clearTimeout(TPD.clearTimer);
+  const d = tpdD(); tpdCancelStroke();
+  if(!tpdHas(d)){ tpdSyncBars(); tpdRefreshPanel(); return; }
+  TPD.undo.push({k:'clear', strokes:d.strokes.slice(), base:d.strokesBase}); TPD.redo = [];
+  d.strokes = []; d.strokesBase = null;
+  if(TPD.cv) tpdRebuild();
+  tpdChanged(); tpdFlush();
+  if(!TPD.cv){ refreshTPPreview(); }
+  tpdRefreshPanel();
+}
+function tpdSetTool(id){
+  if(!TPD_TOOLS.some(t=>t.id===id)) return;
+  TPD.tool = id; TPD.hand = false; tpdSavePrefs(); tpdClosePop(true); tpdRenderBars();
+}
+function tpdSetColor(c){
+  if(!/^#[0-9a-f]{6}$/i.test(c||'')) return;
+  c = c.toLowerCase(); TPD.color = c;
+  TPD.recent = [c, ...TPD.recent.filter(x=>x !== c)].slice(0, 10);
+  if(TPD.tool === 'eraser') TPD.tool = 'pen';
+  tpdSavePrefs(); tpdRenderBars();
+}
+function tpdSetSize(v, live){
+  const n = Math.max(1, Math.min(60, Math.round(+v) || 1));
+  TPD.sizes[TPD.tool] = n; tpdSavePrefs();
+  document.querySelectorAll('.tp-d-sizev').forEach(x=>x.textContent = n);
+  document.querySelectorAll('#tpdSize').forEach(x=>{ if(+x.value !== n) x.value = n; });
+  tpdPreviewDot();
+}
+function tpdSetAlpha(v){
+  TPD.alpha = Math.max(.1, Math.min(1, (+v || 100) / 100)); tpdSavePrefs();
+  document.querySelectorAll('.tp-d-alphav').forEach(x=>x.textContent = Math.round(TPD.alpha*100) + '%');
+  tpdPreviewDot();
+}
+function tpdPreviewDot(){
+  const t = tpdToolOf(), px = Math.max(2, Math.min(40, TPD.sizes[t.id] * .0016 * t.mul * 560));
+  document.querySelectorAll('.tp-d-dot').forEach(x=>{
+    x.style.width = x.style.height = px + 'px';
+    x.style.background = t.id === 'eraser' ? 'transparent' : TPD.color;
+    x.style.border = t.id === 'eraser' ? '1.5px dashed var(--ink-soft)' : '0';
+    x.style.opacity = t.id === 'eraser' ? 1 : Math.max(.15, t.alpha * TPD.alpha);
+  });
+}
+function tpdClosePop(noRender){ if(!TPD.pop) return; TPD.pop = null; if(!noRender) tpdRenderBars(); }
+function tpdTogglePop(name, bar){
+  TPD.pop = (TPD.pop && TPD.pop.name === name && TPD.pop.bar === bar) ? null : {name, bar};
+  tpdRenderBars();
+}
+
+/* ---------- barre d'outils (aperçu et plein écran partagent le même code) ---------- */
+function tpdHsl(h, s, l){
+  s /= 100; l /= 100; const k = n => (n + h / 30) % 12, a = s * Math.min(l, 1 - l), f = n => l - a * Math.max(-1, Math.min(k(n) - 3, Math.min(9 - k(n), 1)));
+  return '#' + [f(0), f(8), f(4)].map(v=>Math.round(v * 255).toString(16).padStart(2, '0')).join('');
+}
+function tpdPaletteColors(){
+  const out = ['#ffffff','#e9edf2','#c9ced6','#9aa1ad','#5c6270','#3a3f4b','#23262e','#000000','#dceefb','#3699d4','#1f6fa0','#2f2e44'];
+  [88, 74, 60, 46, 32].forEach(l=>{ for(let h = 0; h < 360; h += 30) out.push(tpdHsl(h, l >= 74 ? 85 : 78, l)); });
+  return out;
+}
+function tpdColorPopHtml(){
+  const cur = TPD.color.toLowerCase();
+  const sw = c => `<button type="button" class="tp-swatch ${cur === c ? 'active' : ''}" style="background:${c}" data-tpd="color:${c}" title="${c}"></button>`;
+  const rec = TPD.recent.length ? `<div class="tp-d-lbl">${L('Récentes','Recent')}</div><div class="tp-d-sw tp-d-sw-r">${TPD.recent.map(sw).join('')}</div>` : '';
+  const eye = window.EyeDropper ? `<button type="button" class="tp-tb-btn" data-tpd="eyedrop" title="${L('Prendre une couleur à l\u2019écran','Pick a color from the screen')}">${tpdIco('eye')}</button>` : '';
+  return `<div class="tp-tb-pop tp-d-pop tp-d-pop-color">${rec}<div class="tp-d-lbl">${L('Toutes les couleurs','All colors')}</div><div class="tp-d-sw">${tpdPaletteColors().map(sw).join('')}</div>
+    <div class="tp-tb-pop-row"><span>${L('Autre couleur','Custom color')}</span><span class="tp-d-cust"><input type="color" id="tpdColorPick" value="${/^#[0-9a-f]{6}$/i.test(cur) ? cur : '#23262e'}" aria-label="${L('Autre couleur','Custom color')}"><input type="text" id="tpdHex" class="tp-d-hex" value="${cur}" maxlength="7" spellcheck="false" aria-label="Hex">${eye}</span></div></div>`;
+}
+function tpdStrokePopHtml(){
+  const t = tpdToolOf(), er = t.id === 'eraser';
+  return `<div class="tp-tb-pop tp-d-pop tp-d-pop-stroke">
+    <div class="tp-d-prev"><span class="tp-d-dot"></span></div>
+    <div class="tp-d-row"><label for="tpdSize">${L('Taille','Size')}</label><input type="range" id="tpdSize" min="1" max="60" step="1" value="${TPD.sizes[t.id]}"><span class="tp-d-sizev">${TPD.sizes[t.id]}</span></div>
+    ${er ? '' : `<div class="tp-d-row"><label for="tpdAlpha">${L('Opacité','Opacity')}</label><input type="range" id="tpdAlpha" min="10" max="100" step="5" value="${Math.round(TPD.alpha*100)}"><span class="tp-d-alphav">${Math.round(TPD.alpha*100)}%</span></div>`}
+    <div class="tp-d-keys">${L('Raccourcis : [ et ] changent la taille','Shortcuts: [ and ] change the size')}</div></div>`;
+}
+function tpdBarHtml(bar){
+  const fs = bar === 'fs', draw = !!S.tpDrawMode, sep = '<span class="tp-tb-sep"></span>';
+  const d = S.project ? ensureTPDesign(S.project) : null;
+  if(draw && S.project) tpdD();
+  const zoom = fs ? `${draw ? sep : ''}<span class="tp-d-zoom"><button type="button" class="tp-tb-btn" data-tpd="zoomOut" title="${L('Dézoomer (−)','Zoom out (−)')}">−</button><button type="button" class="tp-tb-btn tp-d-zv" data-tpd="zoomFit" title="${L('Ajuster à l\u2019écran (0)','Fit to screen (0)')}">${Math.round((TPFS.z || 1) * 100)}%</button><button type="button" class="tp-tb-btn" data-tpd="zoomIn" title="${L('Zoomer (+)','Zoom in (+)')}">+</button><button type="button" class="tp-tb-btn" data-tpd="zoomFit" title="${L('Ajuster à l\u2019écran (0)','Fit to screen (0)')}">${tpdIco('fit')}</button></span>` : '';
+  if(!draw){
+    return `<button type="button" class="tp-tb-btn txt tp-d-go" data-tpd="draw">${tpdIco('pen')}<span>${L('Dessiner sur la page','Draw on the page')}</span></button>${sep}<span class="tp-d-zoom"><button type="button" class="tp-tb-btn" data-tpd="zoomOut" title="${L('Dézoomer (−)','Zoom out (−)')}">−</button><button type="button" class="tp-tb-btn tp-d-zv" data-tpd="zoomFit" title="${L('Ajuster à l\u2019écran (0)','Fit to screen (0)')}">${Math.round((TPFS.z || 1) * 100)}%</button><button type="button" class="tp-tb-btn" data-tpd="zoomIn" title="${L('Zoomer (+)','Zoom in (+)')}">+</button><button type="button" class="tp-tb-btn" data-tpd="zoomFit" title="${L('Ajuster à l\u2019écran (0)','Fit to screen (0)')}">${tpdIco('fit')}</button></span>`;
+  }
+  const tools = TPD_TOOLS.map(t=>`<button type="button" class="tp-tb-btn tp-d-tool ${TPD.tool === t.id && !TPD.hand ? 'on' : ''}" data-tpd="tool:${t.id}" aria-pressed="${TPD.tool === t.id && !TPD.hand ? 'true' : 'false'}" title="${L(t.fr, t.en)} (${t.key.toUpperCase()})">${tpdIco(t.id)}</button>`).join('');
+  const hand = fs ? `<button type="button" class="tp-tb-btn tp-d-tool ${TPD.hand ? 'on' : ''}" data-tpd="hand" aria-pressed="${TPD.hand ? 'true' : 'false'}" title="${L('Déplacer la vue (Espace + glisser)','Move the view (Space + drag)')}">${tpdIco('hand')}</button>` : '';
+  const pop = n => TPD.pop && TPD.pop.name === n && TPD.pop.bar === bar;
+  const er = TPD.tool === 'eraser', t = tpdToolOf();
+  const colorW = `<span class="tp-col-wrap"><button type="button" class="tp-tb-btn ${pop('color') ? 'on' : ''}" data-tpd="pop:color" title="${L('Couleur','Color')}"${er ? ' style="opacity:.55"' : ''}><span class="tp-tb-dot" style="background:${TPD.color}"></span><span class="tp-fm-caret">▾</span></button>${pop('color') ? tpdColorPopHtml() : ''}</span>`;
+  const strokeW = `<span class="tp-col-wrap"><button type="button" class="tp-tb-btn ${pop('stroke') ? 'on' : ''}" data-tpd="pop:stroke" title="${L('Taille et opacité du trait','Stroke size and opacity')}"><span class="tp-d-dotbox"><span class="tp-d-dot"></span></span><span class="tp-fm-caret">▾</span></button>${pop('stroke') ? tpdStrokePopHtml() : ''}</span>`;
+  const can = d && tpdHas(d);
+  const hist = `<button type="button" class="tp-tb-btn" data-tpd="undo" title="${L('Annuler le trait (Ctrl/⌘ Z)','Undo stroke (Ctrl/⌘ Z)')}"${TPD.undo.length ? '' : ' disabled'}>${tpdIco('undo')}</button><button type="button" class="tp-tb-btn" data-tpd="redo" title="${L('Refaire (Ctrl/⌘ Maj Z)','Redo (Ctrl/⌘ Shift Z)')}"${TPD.redo.length ? '' : ' disabled'}>${tpdIco('redo')}</button>`;
+  const clr = `<button type="button" class="tp-tb-btn tp-d-clear ${TPD.clearArmed ? 'armed' : ''}" data-tpd="clear" title="${L('Tout effacer (s\u2019annule avec Ctrl/⌘ Z)','Clear everything (undo with Ctrl/⌘ Z)')}"${can || TPD.clearArmed ? '' : ' disabled'}>${tpdIco('trash')}${TPD.clearArmed ? `<span>${L('Confirmer ?','Confirm?')}</span>` : ''}</button>`;
+  const full = fs ? '' : `<button type="button" class="tp-tb-btn" data-tpd="fs" title="${L('Dessiner en plein écran, avec zoom','Draw full screen, with zoom')}">${tpdIco('full')}</button>`;
+  return `${tools}${hand}${sep}${colorW}${strokeW}${sep}${hist}${sep}${clr}${fs ? '' : sep}${full}${zoom}${sep}<button type="button" class="tp-tb-btn txt tp-d-done" data-tpd="finish">${tpdIco('check')}<span>${L('Terminer','Done')}</span></button>`;
+}
+function tpdPlacePop(bar){
+  const pop = bar.querySelector('.tp-d-pop'); if(!pop) return;
+  pop.style.left = '0'; pop.style.right = 'auto';
+  const r = pop.getBoundingClientRect(), vw = window.innerWidth;
+  let dx = 0; if(r.right > vw - 10) dx = vw - 10 - r.right; if(r.left + dx < 10) dx = 10 - r.left;
+  if(dx) pop.style.left = dx + 'px';
+}
+function tpdRenderBars(){
+  const main = document.getElementById('tpToolbar');
+  if(main && S.tpDrawMode){
+    main.innerHTML = tpdBarHtml('main');
+    const pills = document.getElementById('tpPills'); if(pills) pills.innerHTML = '';
+    tpdPlacePop(main);
+  }
+  const fb = document.getElementById('tpFsToolbar');
+  if(fb){ fb.innerHTML = tpdBarHtml('fs'); tpdPlacePop(fb); }
+  if(tpFsEl) tpFsEl.classList.toggle('tp-fs-pan', !!(TPD.hand || TPD.space));
+  tpdPreviewDot(); tpdSyncBars();
+  if(typeof tpFsApply === 'function' && tpFsEl) tpFsApply(true);
+}
+/* Met à jour l'état des boutons sans reconstruire la barre (un menu ouvert ne se referme pas). */
+function tpdSyncBars(){
+  const d = S.project ? ensureTPDesign(S.project) : null;
+  const can = d && tpdHas(d);
+  document.querySelectorAll('[data-tpd="undo"]').forEach(b=>b.disabled = !TPD.undo.length);
+  document.querySelectorAll('[data-tpd="redo"]').forEach(b=>b.disabled = !TPD.redo.length);
+  document.querySelectorAll('[data-tpd="clear"]').forEach(b=>{
+    b.disabled = !(can || TPD.clearArmed);
+    const armed = TPD.clearArmed;
+    if(b.classList.contains('armed') !== armed){
+      b.classList.toggle('armed', armed);
+      b.innerHTML = tpdIco('trash') + (armed ? `<span>${L('Confirmer ?','Confirm?')}</span>` : '');
+    }
+  });
+}
+
+/* ---------- panneau « Dessin » (colonne de droite) ---------- */
+function tpdRefreshPanel(){
+  const dc = document.getElementById('tpDrawControls'); if(dc) dc.innerHTML = tpDrawControlsHtml();
+}
+function tpDrawControlsHtml(){
+  const d = ensureTPDesign(S.project), can = tpdHas(d);
+  const clr = `<button type="button" class="btn btn-sm ${TPD.clearArmed ? 'btn-danger' : 'btn-ghost'}" data-tpd="clear"${can || TPD.clearArmed ? '' : ' disabled'}>${TPD.clearArmed ? L('Confirmer : tout effacer ?','Confirm: clear everything?') : L('Tout effacer','Clear everything')}</button>`;
+  if(S.tpDrawMode){
+    return `<p class="tp-tip" style="padding:9px 12px; font-size:12.5px; line-height:1.55;">${L('Les outils sont dans la barre du haut : stylo, feutre, crayon, pinceau, surligneur, gomme, toutes les couleurs, taille et opacité.','The tools are in the top bar: pen, marker, pencil, brush, highlighter, eraser, every color, size and opacity.')}<br><b>Ctrl/⌘ Z</b> ${L('annule le dernier trait','undoes the last stroke')} · <b>Ctrl/⌘ Maj Z</b> ${L('le refait','redoes it')}.</p>
+    <div class="tp-draw-toolbar">
+      <button type="button" class="btn btn-sm" data-tpd="fs">${tpdIco('full', 14)} ${L('Dessiner en plein écran','Draw full screen')}</button>
+      ${clr}
+    </div>
+    <div class="tp-draw-toolbar"><button type="button" class="btn btn-sm btn-primary" data-tpd="finish">${L('Terminer le dessin','Finish drawing')}</button></div>`;
+  }
+  return `<div class="tp-draw-toolbar">
+    <button type="button" class="btn btn-sm" data-tpd="draw">${icon('pen')} ${L('Dessiner sur la page','Draw on the page')}</button>
+    ${can ? clr.replace(L('Tout effacer','Clear everything'), L('Effacer le dessin','Clear the drawing')) : ''}
+  </div>`;
+}
+
+/* ---------- entrée / sortie du mode dessin ---------- */
+function tpToggleDraw(){
+  if(S.tpDrawMode) return;
+  tpCloseMenus(); tpdD();
+  S.tpDrawMode = true; TPD.pop = null;
+  tpdSavePrefs();
+  refreshTPPreview(); tpRenderToolbar(); tpdRefreshPanel();
+  if(tpFsEl) tpFsRebuildPage();
+  tpdRenderBars();
+}
+function tpFinishDraw(){
+  if(!S.tpDrawMode) return;
+  tpdCancelStroke(); tpdFlush(); tpdDetach();
+  S.tpDrawMode = false; TPD.pop = null; TPD.hand = false; TPD.clearArmed = false;
+  scheduleAutosave();
+  if(tpFsEl) tpFsRebuildPage();
+  refreshTPPreview(); tpRebuildControls(); tpRenderToolbar(); tpdRenderBars();
+}
+function tpClearDrawing(){ tpdClear(); }
+function tpSetPenColor(id){ tpdSetColor(id); }
+function tpSetPenSize(id){ tpdSetSize(id); }
+
+/* ---------- clics, saisie, clavier ---------- */
+document.addEventListener('click', e=>{
+  const b = e.target && e.target.closest ? e.target.closest('[data-tpd]') : null; if(!b || b.disabled) return;
+  e.preventDefault();
+  const v = String(b.dataset.tpd), i = v.indexOf(':'), a = i < 0 ? v : v.slice(0, i), arg = i < 0 ? '' : v.slice(i + 1);
+  const bar = b.closest('.tp-fs-tb') ? 'fs' : 'main';
+  switch(a){
+    case 'tool': tpdSetTool(arg); break;
+    case 'hand': TPD.hand = !TPD.hand; tpdClosePop(true); tpdRenderBars(); break;
+    case 'pop': tpdTogglePop(arg, bar); break;
+    case 'color': tpdSetColor(arg); TPD.pop = null; tpdRenderBars(); break;
+    case 'undo': tpdUndo(); break;
+    case 'redo': tpdRedo(); break;
+    case 'clear': tpdClear(); break;
+    case 'finish': tpFinishDraw(); break;
+    case 'draw': tpToggleDraw(); break;
+    case 'fs': tpFullscreen(); break;
+    case 'fsexit': tpFullscreenExit(); break;
+    case 'zoomIn': tpFsZoom(1.25); break;
+    case 'zoomOut': tpFsZoom(1 / 1.25); break;
+    case 'zoomFit': tpFsFitReset(); break;
+    case 'eyedrop':
+      try{ new window.EyeDropper().open().then(r=>{ if(r && r.sRGBHex) tpdSetColor(r.sRGBHex); }).catch(()=>{}); }catch(err){}
+      break;
+  }
+});
+document.addEventListener('input', e=>{
+  const t = e.target; if(!t) return;
+  if(t.id === 'tpdSize') tpdSetSize(t.value, true);
+  else if(t.id === 'tpdAlpha') tpdSetAlpha(t.value);
+  else if(t.id === 'tpdColorPick'){
+    TPD.color = String(t.value).toLowerCase(); if(TPD.tool === 'eraser') TPD.tool = 'pen'; tpdSavePrefs();
+    document.querySelectorAll('.tp-tb .tp-tb-dot').forEach(x=>x.style.background = TPD.color);
+    const hx = document.getElementById('tpdHex'); if(hx) hx.value = TPD.color;
+    tpdPreviewDot();
+  }
+});
+document.addEventListener('change', e=>{
+  const t = e.target; if(!t) return;
+  if(t.id === 'tpdColorPick'){ TPD.recent = [TPD.color, ...TPD.recent.filter(x=>x !== TPD.color)].slice(0, 10); tpdSavePrefs(); tpdRenderBars(); }
+  else if(t.id === 'tpdHex'){
+    let v = String(t.value).trim(); if(v[0] !== '#') v = '#' + v;
+    if(/^#[0-9a-f]{3}$/i.test(v)) v = '#' + v.slice(1).split('').map(c=>c + c).join('');
+    if(/^#[0-9a-f]{6}$/i.test(v)){ tpdSetColor(v); } else t.value = TPD.color;
+  }
+});
+document.addEventListener('mousedown', e=>{
+  if(TPD.pop && e.target && e.target.closest && !e.target.closest('.tp-col-wrap, .tp-d-pop')) tpdClosePop();
+}, true);
+document.addEventListener('keydown', e=>{
+  if(!S || !(S.tpDrawMode || tpFsEl)) return;
+  if(S.tab !== 'titlepage' && !tpFsEl) return;
+  const t = e.target, typing = t && ((t.matches && t.matches('input, textarea, select')) || t.isContentEditable);
+  const k = String(e.key || '');
+  if(k === 'Escape' && TPD.pop){ e.preventDefault(); e.stopPropagation(); tpdClosePop(); return; }
+  if(typing) return;
+  const mod = e.ctrlKey || e.metaKey;
+  if(S.tpDrawMode && mod && !e.altKey && k.toLowerCase() === 'z'){ e.preventDefault(); e.stopPropagation(); e.shiftKey ? tpdRedo() : tpdUndo(); return; }
+  if(S.tpDrawMode && mod && !e.altKey && k.toLowerCase() === 'y'){ e.preventDefault(); e.stopPropagation(); tpdRedo(); return; }
+  if(mod || e.altKey) return;
+  if(k === ' ' && tpFsEl){ e.preventDefault(); TPD.space = true; if(tpFsEl) tpFsEl.classList.add('tp-fs-pan'); return; }
+  if(tpFsEl){
+    if(k === '+' || k === '='){ e.preventDefault(); tpFsZoom(1.25); return; }
+    if(k === '-' || k === '_'){ e.preventDefault(); tpFsZoom(1 / 1.25); return; }
+    if(k === '0'){ e.preventDefault(); tpFsFitReset(); return; }
+  }
+  if(!S.tpDrawMode) return;
+  const tool = TPD_TOOLS.find(x=>x.key === k.toLowerCase());
+  if(tool){ e.preventDefault(); e.stopPropagation(); tpdSetTool(tool.id); return; }
+  if(k === '[' || k === ']'){ e.preventDefault(); tpdSetSize(TPD.sizes[TPD.tool] + (k === ']' ? 1 : -1) * (TPD.sizes[TPD.tool] >= 20 ? 3 : 1)); }
+}, true);
+document.addEventListener('keyup', e=>{
+  if(e.key === ' ' && TPD.space){ TPD.space = false; if(tpFsEl) tpFsEl.classList.remove('tp-fs-pan'); }
+}, true);
+window.addEventListener('blur', ()=>{ TPD.space = false; if(tpFsEl) tpFsEl.classList.remove('tp-fs-pan'); });
