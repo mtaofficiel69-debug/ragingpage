@@ -570,7 +570,64 @@ function buildPdfStage(p, numbers){
   });
   document.body.appendChild(stage);
   try{ revDecorateSheets(sheets.filter(s=>!s.isTitle).map(s=>s.el), p); }catch(e){}
+  /* Pages libres (hors numérotation) : après la page de titre / avant le scénario, et après la dernière page.
+     Ajoutées APRÈS la décoration des révisions : elles n'en font pas partie. Jamais de numéro de page. */
+  try{
+    const fp = ensureFreePages(p);
+    const make = list => { const out = []; list.forEach(it => freePageSheets(p, stage, it).forEach(el => out.push({ el, isTitle:false, isFree:true }))); return out; };
+    const front = make(fp.front), back = make(fp.back);
+    if(front.length) sheets.splice(p.settings.titlePageEnabled ? 1 : 0, 0, ...front);
+    if(back.length) sheets.push(...back);
+  }catch(e){ /* un souci sur les pages libres ne doit jamais empêcher l'export du scénario */ }
   return { stage, sheets };
+}
+/* Construit les feuilles d'UNE page libre (plusieurs si le texte dépasse une page : la suite n'est pas perdue,
+   elle passe sur une feuille de plus, toujours sans numéro). Les feuilles sont posées dans `stage` pour être
+   mesurées ; une ligne du texte = un bloc, comme dans l'éditeur (police et marges du scénario). */
+function freePageSheets(p, stage, item){
+  const sheets = [];
+  const mk = () => {
+    const sh = document.createElement('div');
+    sh.className = 'print-page';
+    if(p.settings && p.settings.watermarkText){
+      const wm = document.createElement('div'); wm.className = 'sheet-watermark';
+      wm.textContent = p.settings.watermarkText; sh.appendChild(wm);
+    }
+    stage.appendChild(sh); sheets.push(sh); return sh;
+  };
+  const lines = String(item.text || '').replace(/\r\n?/g, '\n').split('\n');
+  while(lines.length && !lines[lines.length - 1].trim()) lines.pop();   // lignes vides de fin : pas de feuille de plus pour du vide
+  let sh = mk(), count = 0;
+  const addLine = t => {
+    const d = document.createElement('div');
+    d.className = 'line line--text pg-first';
+    d.style.marginTop = '0';
+    if(item.align === 'center') d.style.textAlign = 'center';
+    d.textContent = t === '' ? '\u00A0' : t;                            // une ligne vide garde sa hauteur
+    sh.appendChild(d); count++; return d;
+  };
+  const fits = d => {
+    const cs = getComputedStyle(sh), r = sh.getBoundingClientRect();
+    const bottom = r.top + sh.clientHeight - (parseFloat(cs.paddingBottom) || 0);
+    return d.getBoundingClientRect().bottom <= bottom + PAGE_EPS;
+  };
+  lines.forEach(t => {
+    let d = addLine(t);
+    if(count > 1) d.classList.remove('pg-first');
+    if(count > 1 && !fits(d)){ sh.removeChild(d); sh = mk(); count = 0; addLine(t); }
+  });
+  return sheets;
+}
+/* Nombre de feuilles qu'occupera une page libre à l'export (1 = elle tient). Sert à l'indication des Paramètres. */
+function freePageSheetCount(p, item){
+  const st = document.createElement('div');
+  st.className = FORMATS[p.format].cls;
+  st.style.cssText = 'position:fixed; left:-20000px; top:0; z-index:-1; pointer-events:none;';
+  document.body.appendChild(st);
+  let n = 1;
+  try{ n = Math.max(1, freePageSheets(p, st, item).length); }catch(e){ n = 1; }
+  st.remove();
+  return n;
 }
 
 async function exportPDF(){
