@@ -783,7 +783,8 @@ function tpFullscreen(){
   if(typeof tpdRenderBars === 'function') tpdRenderBars();
   tpFsFitReset();
   if(S.tpDrawMode) tpdAttach(tpFsPageEl());
-  try{ if(ov.requestFullscreen){ const r = ov.requestFullscreen(); if(r && r.catch) r.catch(()=>{}); } }catch(err){}
+  // En dessin, pas de plein écran du navigateur : la couche couvre déjà toute l'application, et on évite le bandeau noir « appuyez sur Échap ».
+  if(!S.tpDrawMode){ try{ if(ov.requestFullscreen){ const r = ov.requestFullscreen(); if(r && r.catch) r.catch(()=>{}); } }catch(err){} }
 }
 function tpFullscreenExit(){
   const ov = tpFsEl; if(!ov) return; tpFsEl = null;
