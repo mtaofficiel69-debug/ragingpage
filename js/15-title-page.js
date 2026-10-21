@@ -7,7 +7,7 @@ function renderTitlePageDesign(){
   return `
   <div class="tp-root" id="tpRoot">
   <div class="cards-toolbar"><div class="pane-title" style="margin:0;">${L('Page de titre','Title page')}</div>
-    <div class="tp-hd-r"><span style="font-size:13px;color:var(--ink-soft);">${L('N\u2019apparaît jamais dans le corps du scénario','Never appears in the body of the screenplay')}</span><button type="button" class="btn btn-sm" data-act="tpFullscreen" title="${L('Voir la page de titre seule, en plein écran','View the title page alone, full screen')}"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="margin-right:6px;vertical-align:-2px"><path d="M2 6V2h4M10 2h4v4M14 10v4h-4M6 14H2v-4"/></svg>${L('Plein écran','Full screen')}</button></div></div>
+    <div class="tp-hd-r"><span style="font-size:13px;color:var(--ink-soft);">${L('N\u2019apparaît jamais dans le corps du scénario','Never appears in the body of the screenplay')}</span><button type="button" class="btn btn-sm" data-tpd="draw" title="${L('Dessiner sur la page de titre (s\u2019ouvre en plein écran)','Draw on the title page (opens full screen)')}">${icon('pen')} ${L('Dessiner','Draw')}</button><button type="button" class="btn btn-sm" data-act="tpFullscreen" title="${L('Voir la page de titre seule, en plein écran','View the title page alone, full screen')}"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="margin-right:6px;vertical-align:-2px"><path d="M2 6V2h4M10 2h4v4M14 10v4h-4M6 14H2v-4"/></svg>${L('Plein écran','Full screen')}</button></div></div>
   <div class="tp-tb-wrap"><div class="tp-tb" id="tpToolbar"></div><div class="tp-pills" id="tpPills"></div></div>
   <div class="tp-design-wrap">
     <div class="tp-preview-col">
@@ -646,6 +646,7 @@ function tpdIco(n, sz){ return `<svg width="${sz||16}" height="${sz||16}" viewBo
 
 const TPD_PREF_KEY = 'scriptmm_tp_pen';
 const TPD = {
+  autoFs:false, hintTimer:0,
   tool:'pen', color:'#23262E', alpha:1, recent:[],
   sizes:{pen:4, marker:4, pencil:5, brush:5, hl:5, eraser:8},
   hand:false, space:false, seenPen:false, pop:null, clearArmed:false, clearTimer:0,
@@ -911,6 +912,8 @@ function tpdAdd(e){
   P.push(q);
 }
 function tpdDown(e){
+  if(tpFsEl){ const h = tpFsEl.querySelector('.tp-fs-hint'); if(h) h.classList.remove('show'); }   // l\u2019aide se range dès qu\u2019on dessine
+  if(tpFsEl){ const h = tpFsEl.querySelector('.tp-fs-hint'); if(h) h.classList.remove('show'); }   // l\u2019aide se range dès qu\u2019on dessine
   if(!S.tpDrawMode || !TPD.cv) return;
   if(e.pointerType === 'mouse' && e.button !== 0) return;
   if(e.pointerType === 'pen') TPD.seenPen = true;
@@ -1006,6 +1009,21 @@ function tpdClear(){
 function tpdSetTool(id){
   if(!TPD_TOOLS.some(t=>t.id===id)) return;
   TPD.tool = id; TPD.hand = false; tpdSavePrefs(); tpdClosePop(true); tpdRenderBars();
+  const t = tpdToolOf(id); tpdHint(`<b>${L(t.fr, t.en)}</b> · ${L('taille et couleur dans la barre','size and color in the bar')}`, 2200);
+}
+/* Petite bulle en bas du plein écran : dit ce qu'on peut faire, puis s'efface toute seule. */
+function tpdWelcome(){
+  const touch = window.matchMedia && matchMedia('(pointer:coarse)').matches;
+  return touch
+    ? L('<b>Dessine avec le doigt ou le stylet</b> · pince pour zoomer · deux doigts pour déplacer','<b>Draw with a finger or stylus</b> · pinch to zoom · two fingers to move')
+    : L('<b>Dessine directement sur la page</b> · molette pour zoomer · Espace + glisser pour déplacer','<b>Draw right on the page</b> · wheel to zoom · Space + drag to move');
+}
+function tpdHint(html, ms){
+  if(!tpFsEl) return;
+  let h = tpFsEl.querySelector('.tp-fs-hint');
+  if(!h){ h = document.createElement('div'); h.className = 'tp-fs-hint'; h.setAttribute('role', 'status'); tpFsEl.appendChild(h); }
+  h.innerHTML = html; h.classList.add('show');
+  clearTimeout(TPD.hintTimer); TPD.hintTimer = setTimeout(()=>{ h.classList.remove('show'); }, ms || 3000);
 }
 function tpdSetColor(c){
   if(!/^#[0-9a-f]{6}$/i.test(c||'')) return;
@@ -1085,7 +1103,7 @@ function tpdBarHtml(bar){
   const hist = `<button type="button" class="tp-tb-btn" data-tpd="undo" title="${L('Annuler le trait (Ctrl/⌘ Z)','Undo stroke (Ctrl/⌘ Z)')}"${TPD.undo.length ? '' : ' disabled'}>${tpdIco('undo')}</button><button type="button" class="tp-tb-btn" data-tpd="redo" title="${L('Refaire (Ctrl/⌘ Maj Z)','Redo (Ctrl/⌘ Shift Z)')}"${TPD.redo.length ? '' : ' disabled'}>${tpdIco('redo')}</button>`;
   const clr = `<button type="button" class="tp-tb-btn tp-d-clear ${TPD.clearArmed ? 'armed' : ''}" data-tpd="clear" title="${L('Tout effacer (s\u2019annule avec Ctrl/⌘ Z)','Clear everything (undo with Ctrl/⌘ Z)')}"${can || TPD.clearArmed ? '' : ' disabled'}>${tpdIco('trash')}${TPD.clearArmed ? `<span>${L('Confirmer ?','Confirm?')}</span>` : ''}</button>`;
   const full = fs ? '' : `<button type="button" class="tp-tb-btn" data-tpd="fs" title="${L('Dessiner en plein écran, avec zoom','Draw full screen, with zoom')}">${tpdIco('full')}</button>`;
-  return `${tools}${hand}${sep}${colorW}${strokeW}${sep}${hist}${sep}${clr}${fs ? '' : sep}${full}${zoom}${sep}<button type="button" class="tp-tb-btn txt tp-d-done" data-tpd="finish">${tpdIco('check')}<span>${L('Terminer','Done')}</span></button>`;
+  return `${tools}${hand}${sep}${colorW}${strokeW}${sep}${hist}${sep}${clr}${fs ? '' : sep}${full}${zoom}${sep}<button type="button" class="tp-tb-btn txt tp-d-done" data-tpd="finish" title="${L('Terminer et revenir à la page (Échap)','Finish and go back to the page (Esc)')}">${tpdIco('check')}<span>${L('Terminer','Done')}</span></button>`;
 }
 function tpdPlacePop(bar){
   const pop = bar.querySelector('.tp-d-pop'); if(!pop) return;
@@ -1096,14 +1114,14 @@ function tpdPlacePop(bar){
 }
 function tpdRenderBars(){
   const main = document.getElementById('tpToolbar');
-  if(main && S.tpDrawMode){
+  if(main && S.tpDrawMode && !tpFsEl){
     main.innerHTML = tpdBarHtml('main');
     const pills = document.getElementById('tpPills'); if(pills) pills.innerHTML = '';
     tpdPlacePop(main);
   }
   const fb = document.getElementById('tpFsToolbar');
   if(fb){ fb.innerHTML = tpdBarHtml('fs'); tpdPlacePop(fb); }
-  if(tpFsEl) tpFsEl.classList.toggle('tp-fs-pan', !!(TPD.hand || TPD.space));
+  if(tpFsEl){ tpFsEl.classList.toggle('tp-fs-pan', !!(TPD.hand || TPD.space)); tpFsEl.classList.toggle('tp-fs-drawing', !!(S.tpDrawMode && TPD.autoFs)); }
   tpdPreviewDot(); tpdSyncBars();
   if(typeof tpFsApply === 'function' && tpFsEl) tpFsApply(true);
 }
@@ -1131,15 +1149,16 @@ function tpDrawControlsHtml(){
   const d = ensureTPDesign(S.project), can = tpdHas(d);
   const clr = `<button type="button" class="btn btn-sm ${TPD.clearArmed ? 'btn-danger' : 'btn-ghost'}" data-tpd="clear"${can || TPD.clearArmed ? '' : ' disabled'}>${TPD.clearArmed ? L('Confirmer : tout effacer ?','Confirm: clear everything?') : L('Tout effacer','Clear everything')}</button>`;
   if(S.tpDrawMode){
-    return `<p class="tp-tip" style="padding:9px 12px; font-size:12.5px; line-height:1.55;">${L('Les outils sont dans la barre du haut : stylo, feutre, crayon, pinceau, surligneur, gomme, toutes les couleurs, taille et opacité.','The tools are in the top bar: pen, marker, pencil, brush, highlighter, eraser, every color, size and opacity.')}<br><b>Ctrl/⌘ Z</b> ${L('annule le dernier trait','undoes the last stroke')} · <b>Ctrl/⌘ Maj Z</b> ${L('le refait','redoes it')}.</p>
+    return `<p class="tp-tip" style="padding:9px 12px; font-size:12.5px; line-height:1.55;">${L('Tu dessines en plein écran. Les outils sont dans la barre en haut de la page.','You are drawing in full screen. The tools are in the bar at the top of the page.')}<br><b>Ctrl/⌘ Z</b> ${L('annule le dernier trait','undoes the last stroke')} · <b>Ctrl/⌘ Maj Z</b> ${L('le refait','redoes it')}.</p>
     <div class="tp-draw-toolbar">
       <button type="button" class="btn btn-sm" data-tpd="fs">${tpdIco('full', 14)} ${L('Dessiner en plein écran','Draw full screen')}</button>
       ${clr}
     </div>
     <div class="tp-draw-toolbar"><button type="button" class="btn btn-sm btn-primary" data-tpd="finish">${L('Terminer le dessin','Finish drawing')}</button></div>`;
   }
-  return `<div class="tp-draw-toolbar">
-    <button type="button" class="btn btn-sm" data-tpd="draw">${icon('pen')} ${L('Dessiner sur la page','Draw on the page')}</button>
+  return `<p class="tp-tip" style="padding:9px 12px; font-size:12.5px; line-height:1.55;">${L('Dessine directement sur la page de titre : logo, croquis, signature… Elle s\u2019ouvre en plein écran avec tous les outils, la palette et le zoom.','Draw directly on the title page: logo, sketch, signature… It opens full screen with every tool, the palette and zoom.')}</p>
+  <div class="tp-draw-toolbar">
+    <button type="button" class="btn btn-sm btn-primary" data-tpd="draw">${icon('pen')} ${L('Dessiner sur la page','Draw on the page')}</button>
     ${can ? clr.replace(L('Tout effacer','Clear everything'), L('Effacer le dessin','Clear the drawing')) : ''}
   </div>`;
 }
@@ -1150,15 +1169,17 @@ function tpToggleDraw(){
   tpCloseMenus(); tpdD();
   S.tpDrawMode = true; TPD.pop = null;
   tpdSavePrefs();
-  refreshTPPreview(); tpRenderToolbar(); tpdRefreshPanel();
-  if(tpFsEl) tpFsRebuildPage();
-  tpdRenderBars();
+  if(tpFsEl){ TPD.autoFs = false; tpFsRebuildPage(); }   // déjà en plein écran (aperçu seul) : on y reste
+  else{ TPD.autoFs = true; tpFullscreen(); }              // sinon « Dessiner » ouvre directement le plein écran
+  tpRenderToolbar(); tpdRefreshPanel(); tpdRenderBars();
+  tpdHint(tpdWelcome(), 6500);
 }
 function tpFinishDraw(){
   if(!S.tpDrawMode) return;
   tpdCancelStroke(); tpdFlush(); tpdDetach();
   S.tpDrawMode = false; TPD.pop = null; TPD.hand = false; TPD.clearArmed = false;
   scheduleAutosave();
+  if(tpFsEl && TPD.autoFs){ TPD.autoFs = false; tpFullscreenExit(); tpRebuildControls(); return; }   // « Terminer » ramène à la page, le dessin est déjà dans l'aperçu
   if(tpFsEl) tpFsRebuildPage();
   refreshTPPreview(); tpRebuildControls(); tpRenderToolbar(); tpdRenderBars();
 }
