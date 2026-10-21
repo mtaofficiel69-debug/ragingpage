@@ -729,7 +729,7 @@
     -webkit-print-color-adjust:exact; print-color-adjust:exact; color-adjust:exact;
   }
   .titlepage .tp-bg-image{position:absolute; inset:0; width:100%; height:100%; object-fit:cover; opacity:var(--tp-img-opacity,1); z-index:0;}
-  .titlepage .tp-drawing-layer{position:absolute; inset:0; width:100%; height:100%; z-index:1; pointer-events:none;}
+  .titlepage .tp-drawing-layer{position:absolute; inset:0; width:100%; height:100%; z-index:3; pointer-events:none;}
   /* Image libre de la page de titre : posée où l'on veut, à la taille voulue (valeurs en % de la page). */
   .titlepage .tp-title.tp-title-off{visibility:hidden;}
   .titlepage .tp-free-img{position:absolute; z-index:2; margin:0; padding:0; line-height:0; box-sizing:border-box;}
@@ -1955,3 +1955,45 @@
     .tp-controls-col > .tp-panes{flex:1 1 0; min-height:0; display:flex; flex-direction:column;}
     .tp-controls-col .tp-panes > .tp-panel{flex:1 1 0; min-height:0; overflow-y:auto;}
   }
+
+  /* v90 : dessin sur la page de titre — barre d'outils (stylo, feutre, crayon, pinceau, surligneur, gomme, couleurs, taille, annuler / refaire),
+     plein écran avec zoom. Même D.A. que la barre de texte : surfaces, filets et bleu de l'application. */
+  #tpDrawCanvas{cursor:none; touch-action:none;}
+  #tpDrawLive{position:absolute; inset:0; width:100%; height:100%; z-index:3; pointer-events:none;}
+  .tp-d-ring{position:absolute; z-index:4; display:none; pointer-events:none; box-sizing:border-box; border:1.5px solid #fff; border-radius:50%; transform:translate(-50%,-50%); box-shadow:0 0 0 1px #000000aa, inset 0 0 0 1px #000000aa;}
+  .tp-d-tool.on{box-shadow:inset 0 0 0 1.5px #3699D466;}
+  .tp-d-dotbox{width:24px; height:24px; display:inline-flex; align-items:center; justify-content:center; flex:none;}
+  .tp-d-dot{display:block; border-radius:50%; flex:none; background:var(--ink);}
+  .tp-d-go, .tp-d-done{padding:0 12px; font-weight:600;}
+  .tp-d-done{background:var(--accent); color:#fff;}
+  .tp-d-done:hover{background:var(--accent-2);}
+  .tp-d-go{background:#3699D41a; color:var(--accent-2);}
+  .tp-d-clear.armed{background:#D6454522; color:var(--danger); font-weight:600; font-size:12.5px;}
+  .tp-d-zoom{display:inline-flex; align-items:center;}
+  .tp-d-zv{min-width:54px; font-size:13px; font-variant-numeric:tabular-nums;}
+  .tp-d-pop{text-align:left; font-family:var(--sans);}
+  .tp-d-pop-color{width:334px; max-width:calc(100vw - 20px);}
+  .tp-d-pop-stroke{width:252px;}
+  .tp-d-lbl{font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:var(--ink-soft); margin:0 0 7px;}
+  .tp-d-sw{display:grid; grid-template-columns:repeat(12,1fr); gap:6px; justify-items:center;}
+  .tp-d-sw .tp-swatch{width:22px; height:22px;}
+  .tp-d-sw-r{grid-template-columns:repeat(10,1fr); margin-bottom:12px;}
+  .tp-d-pop-color .tp-d-lbl + .tp-d-sw{margin-bottom:0;}
+  .tp-d-pop-color .tp-d-sw-r + .tp-d-lbl, .tp-d-pop-color .tp-d-lbl:not(:first-child){margin-top:2px;}
+  .tp-d-cust{display:inline-flex; align-items:center; gap:6px;}
+  .tp-d-hex{width:76px; height:28px; box-sizing:border-box; border:1px solid var(--hair); border-radius:6px; background:var(--surface-soft); color:var(--ink); font-family:var(--sans); font-size:12.5px; padding:0 7px; outline:none;}
+  .tp-d-hex:focus{border-color:var(--accent);}
+  .tp-d-prev{height:52px; border:1px solid var(--hair); border-radius:8px; background:var(--surface-soft); display:flex; align-items:center; justify-content:center; margin-bottom:14px;}
+  .tp-d-row{display:flex; align-items:center; gap:10px; font-size:13px; color:var(--ink-soft);}
+  .tp-d-row + .tp-d-row{margin-top:11px;}
+  .tp-d-row label{width:54px; flex:none;}
+  .tp-d-row input[type=range]{flex:1; min-width:0; accent-color:var(--accent);}
+  .tp-d-sizev, .tp-d-alphav{width:38px; text-align:right; flex:none; font-variant-numeric:tabular-nums; color:var(--ink);}
+  .tp-d-keys{margin-top:12px; padding-top:10px; border-top:1px solid var(--hair); font-size:11.5px; color:var(--ink-soft);}
+  /* plein écran : la page se déplace et se zoome librement (la barre d'outils flotte au-dessus) */
+  .tp-fs{display:block; overflow:hidden; touch-action:none; -webkit-user-select:none; user-select:none;}
+  .tp-fs-page{position:absolute; left:0; top:0;}
+  .tp-fs-tb{position:fixed; top:14px; left:50%; transform:translateX(-50%); z-index:3; max-width:calc(100vw - 250px); flex-wrap:wrap; justify-content:center;}
+  .tp-fs.tp-fs-pan, .tp-fs.tp-fs-pan #tpDrawCanvas{cursor:grab;}
+  .tp-fs.tp-fs-panning, .tp-fs.tp-fs-panning *{cursor:grabbing !important;}
+  @media (max-width:900px){ .tp-fs-tb{top:60px; max-width:calc(100vw - 20px);} }
