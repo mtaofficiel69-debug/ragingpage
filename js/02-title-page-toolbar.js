@@ -320,6 +320,7 @@ function tpToolbarHtml(){
 }
 function tpRenderToolbar(){
   const t = document.getElementById('tpToolbar'); if(!t) return;
+  if(S.tpDrawMode){ tpdRenderBars(); return; }   // v90 : en mode dessin, la barre porte les outils de dessin
   // Le menu de polices garde sa recherche, son défilement et sa sélection clavier d'un rendu à l'autre : il reste ouvert quand on choisit une police.
   const old = t.querySelector('.tp-fm-pop'); let keep = null;
   if(old){
@@ -445,6 +446,7 @@ function tpFitPreview(){
   const ctl = document.getElementById('tpControlsCol');
   if(ctl) ctl.style.height = (wide && mat) ? mat.offsetHeight+'px' : '';
   tpUpdateMoveHandle();
+  if(typeof tpdMaybeResize === 'function') tpdMaybeResize();   // v90 : le dessin garde la bonne résolution
 }
 function tpTbColor(id){
   if(tpSel==='none') return;
@@ -652,34 +654,149 @@ document.addEventListener('click', e=>{
   tpSelect('none');
 });
 let tpFsEl = null;
-function tpFsFit(){
+/* v90 : plein écran avec zoom et déplacement (molette / pincement / boutons + −, Espace + glisser), et dessin possible dessus.
+   z = zoom relatif à « page entière visible » (100 % = ajustée à l'écran) ; L et T = position de la page à l'écran. */
+const TPFS = { z:1, L:0, T:0, fit:1, pw:0, ph:0, ptrs:new Map(), pan:null, pinch:null, moved:false };
+function tpFsPageEl(){ return tpFsEl ? tpFsEl.querySelector('.titlepage') : null; }
+function tpFsTopY(){ const b = tpFsEl && tpFsEl.querySelector('.tp-fs-tb'); return b ? Math.round(b.getBoundingClientRect().bottom) + 12 : 16; }
+function tpFsApply(){
   if(!tpFsEl) return;
-  const tp = tpFsEl.querySelector('.titlepage'), box = tpFsEl.querySelector('.tp-fs-page'); if(!tp || !box) return;
-  const pw = tp.offsetWidth, ph = tp.offsetHeight; if(!pw || !ph) return;
-  const s = Math.min((window.innerWidth - 56)/pw, (window.innerHeight - 56)/ph, 2);
-  box.style.width = Math.round(pw*s)+'px'; box.style.height = Math.round(ph*s)+'px';
-  tp.style.transform = 'scale('+s.toFixed(4)+')';
+  const tp = tpFsPageEl(), box = tpFsEl.querySelector('.tp-fs-page'); if(!tp || !box || !TPFS.pw) return;
+  const s = TPFS.fit * TPFS.z, w = Math.round(TPFS.pw * s), h = Math.round(TPFS.ph * s);
+  const vw = tpFsEl.clientWidth, vh = tpFsEl.clientHeight, top = tpFsTopY();
+  TPFS.L = Math.max(60 - w, Math.min(vw - 60, TPFS.L));        // la page ne sort jamais complètement de l'écran
+  TPFS.T = Math.max(top + 40 - h, Math.min(vh - 60, TPFS.T));
+  box.style.width = w + 'px'; box.style.height = h + 'px';
+  box.style.left = Math.round(TPFS.L) + 'px'; box.style.top = Math.round(TPFS.T) + 'px';
+  tp.style.transform = 'scale(' + s.toFixed(5) + ')';
+  tp.style.setProperty('--tp-hs', (1 / s).toFixed(4));
+  tpFsEl.querySelectorAll('.tp-d-zv').forEach(n=>{ n.textContent = Math.round(TPFS.z * 100) + '%'; });
+  if(typeof tpdMaybeResize === 'function') tpdMaybeResize();
+}
+function tpFsFitReset(){
+  if(!tpFsEl) return;
+  const tp = tpFsPageEl(); if(!tp) return;
+  TPFS.pw = tp.offsetWidth; TPFS.ph = tp.offsetHeight; if(!TPFS.pw || !TPFS.ph) return;
+  const vw = tpFsEl.clientWidth, vh = tpFsEl.clientHeight, top = tpFsTopY();
+  TPFS.fit = Math.max(.1, Math.min((vw - 40) / TPFS.pw, (vh - top - 20) / TPFS.ph, 2.5));
+  TPFS.z = 1;
+  TPFS.L = (vw - TPFS.pw * TPFS.fit) / 2;
+  TPFS.T = top + (vh - top - 20 - TPFS.ph * TPFS.fit) / 2;
+  tpFsApply();
+}
+function tpFsZoom(f, cx, cy){
+  if(!tpFsEl) return;
+  if(cx == null){ cx = tpFsEl.clientWidth / 2; cy = (tpFsTopY() + tpFsEl.clientHeight) / 2; }
+  const z1 = Math.max(.5, Math.min(8, TPFS.z * f)), k = z1 / TPFS.z; if(k === 1) return;
+  TPFS.L = cx - (cx - TPFS.L) * k; TPFS.T = cy - (cy - TPFS.T) * k; TPFS.z = z1;
+  tpFsApply();
+}
+function tpFsBuildPageEl(){
+  const tp = buildTitlePageEl(S.project, {live:S.tpDrawMode});
+  tp.style.margin = '0'; tp.style.boxShadow = 'none'; tp.style.transformOrigin = 'top left';
+  return tp;
+}
+/* Reconstruit la page du plein écran (entrée / sortie du mode dessin) en gardant le zoom et la position. */
+function tpFsRebuildPage(){
+  if(!tpFsEl) return;
+  const box = tpFsEl.querySelector('.tp-fs-page'); if(!box) return;
+  if(typeof tpdDetach === 'function') tpdDetach();
+  box.innerHTML = '';
+  const tp = tpFsBuildPageEl(); box.appendChild(tp);
+  tpFsApply();
+  if(S.tpDrawMode) tpdAttach(tp);
+}
+function tpFsWheel(e){
+  if(!tpFsEl) return;
+  if(e.target.closest && e.target.closest('.tp-fs-tb, .tp-tb-pop')) return;
+  e.preventDefault();
+  const mouse = e.deltaMode === 1 || (e.deltaX === 0 && Number.isInteger(e.deltaY) && Math.abs(e.deltaY) >= 50);
+  if(e.ctrlKey || e.metaKey || mouse){
+    tpFsZoom(Math.exp(-e.deltaY * (e.ctrlKey ? .01 : e.deltaMode === 1 ? .05 : .0016)), e.clientX, e.clientY);   // molette ou pincement du pavé tactile
+  }else{ TPFS.L -= e.deltaX; TPFS.T -= e.deltaY; tpFsApply(); }                                                     // deux doigts sur le pavé tactile : déplacer
+}
+function tpFsDown(e){
+  if(!tpFsEl) return;
+  if(e.target.closest && e.target.closest('.tp-fs-tb, .tp-fs-exit, .tp-tb-pop')) return;
+  TPFS.ptrs.set(e.pointerId, {x:e.clientX, y:e.clientY});
+  if(TPFS.ptrs.size >= 2){        // deux doigts : pincer pour zoomer, glisser pour déplacer (le trait en cours est annulé)
+    if(typeof tpdCancelStroke === 'function') tpdCancelStroke();
+    TPFS.pan = null;
+    const p = [...TPFS.ptrs.values()];
+    TPFS.pinch = {d:Math.hypot(p[0].x - p[1].x, p[0].y - p[1].y) || 1, cx:(p[0].x + p[1].x) / 2, cy:(p[0].y + p[1].y) / 2};
+    e.preventDefault(); e.stopPropagation(); return;
+  }
+  const onCanvas = e.target && e.target.id === 'tpDrawCanvas';
+  const pan = e.button === 1 || !(S.tpDrawMode && onCanvas) || TPD.hand || TPD.space || (e.pointerType === 'touch' && TPD.seenPen);
+  if(!pan) return;
+  TPFS.pan = {id:e.pointerId, x:e.clientX, y:e.clientY, L:TPFS.L, T:TPFS.T}; TPFS.moved = false;
+  e.preventDefault(); e.stopPropagation();
+  try{ tpFsEl.setPointerCapture(e.pointerId); }catch(err){}
+  tpFsEl.classList.add('tp-fs-panning');
+}
+function tpFsMove(e){
+  const q = TPFS.ptrs.get(e.pointerId); if(q){ q.x = e.clientX; q.y = e.clientY; }
+  if(TPFS.pinch && TPFS.ptrs.size >= 2){
+    const p = [...TPFS.ptrs.values()], d = Math.hypot(p[0].x - p[1].x, p[0].y - p[1].y) || 1, cx = (p[0].x + p[1].x) / 2, cy = (p[0].y + p[1].y) / 2;
+    TPFS.L += cx - TPFS.pinch.cx; TPFS.T += cy - TPFS.pinch.cy;
+    tpFsZoom(d / TPFS.pinch.d, cx, cy);
+    TPFS.pinch = {d, cx, cy}; e.preventDefault(); e.stopPropagation(); return;
+  }
+  if(TPFS.pan && e.pointerId === TPFS.pan.id){
+    const dx = e.clientX - TPFS.pan.x, dy = e.clientY - TPFS.pan.y;
+    if(Math.hypot(dx, dy) > 4) TPFS.moved = true;
+    TPFS.L = TPFS.pan.L + dx; TPFS.T = TPFS.pan.T + dy; tpFsApply();
+    e.preventDefault(); e.stopPropagation();
+  }
+}
+function tpFsUp(e){
+  TPFS.ptrs.delete(e.pointerId);
+  if(TPFS.pinch && TPFS.ptrs.size < 2) TPFS.pinch = null;
+  if(TPFS.pan && e.pointerId === TPFS.pan.id){
+    TPFS.pan = null; if(tpFsEl) tpFsEl.classList.remove('tp-fs-panning');
+    if(TPFS.moved){ TPFS.suppress = true; setTimeout(()=>{ TPFS.suppress = false; }, 60); }   // le clic qui suit un déplacement ne ferme pas le plein écran
+  }
+}
+function tpFsResize(){
+  if(!tpFsEl) return;
+  if(TPFS.z === 1) tpFsFitReset(); else tpFsApply();
 }
 function tpFullscreen(){
   if(tpFsEl) return;
-  const tp = buildTitlePageEl(S.project);
-  tp.style.margin = '0'; tp.style.boxShadow = 'none'; tp.style.transformOrigin = 'top left';
+  tpCloseMenus();
+  if(S.tpDrawMode && typeof tpdDetach === 'function'){ tpdCancelStroke(); tpdFlush(); tpdDetach(); }   // le canevas passe de l'aperçu au plein écran, sans rien perdre
   const ov = document.createElement('div'); ov.id = 'tpFs'; ov.className = 'tp-fs';
-  ov.innerHTML = `<button type="button" class="tp-fs-exit" data-act="tpFullscreenExit">✕ ${L('Quitter le plein écran','Exit full screen')}</button><div class="tp-fs-page"></div>`;
-  ov.querySelector('.tp-fs-page').appendChild(tp);
-  ov.addEventListener('click', e=>{ if(e.target===ov) tpFullscreenExit(); });
+  ov.innerHTML = `<div class="tp-tb tp-fs-tb" id="tpFsToolbar"></div><button type="button" class="tp-fs-exit" data-tpd="fsexit">✕ ${L('Quitter le plein écran','Exit full screen')}</button><div class="tp-fs-page"></div>`;
+  ov.querySelector('.tp-fs-page').appendChild(tpFsBuildPageEl());
+  ov.addEventListener('click', e=>{
+    if(e.target !== ov || S.tpDrawMode) return;
+    if(TPFS.suppress){ TPFS.suppress = false; return; }
+    tpFullscreenExit();
+  });
+  ov.addEventListener('pointerdown', tpFsDown, true);
+  ov.addEventListener('pointermove', tpFsMove, true);
+  ov.addEventListener('pointerup', tpFsUp, true);
+  ov.addEventListener('pointercancel', tpFsUp, true);
+  ov.addEventListener('wheel', tpFsWheel, {passive:false});
+  TPFS.ptrs.clear(); TPFS.pan = TPFS.pinch = null; TPFS.z = 1;
   document.body.appendChild(ov); tpFsEl = ov;
-  tpFsFit();
+  if(typeof tpdRenderBars === 'function') tpdRenderBars();
+  tpFsFitReset();
+  if(S.tpDrawMode) tpdAttach(tpFsPageEl());
   try{ if(ov.requestFullscreen){ const r = ov.requestFullscreen(); if(r && r.catch) r.catch(()=>{}); } }catch(err){}
 }
 function tpFullscreenExit(){
-  const ov = tpFsEl; tpFsEl = null;
-  if(ov && ov.parentNode) ov.parentNode.removeChild(ov);
+  const ov = tpFsEl; if(!ov) return; tpFsEl = null;
+  TPD.space = false; TPD.hand = false; if(TPD.pop && TPD.pop.bar === 'fs') TPD.pop = null;
+  if(typeof tpdDetach === 'function'){ tpdCancelStroke(); tpdFlush(); tpdDetach(); }
+  TPFS.ptrs.clear(); TPFS.pan = TPFS.pinch = null;
+  if(ov.parentNode) ov.parentNode.removeChild(ov);
   try{ if(document.fullscreenElement && document.exitFullscreen) document.exitFullscreen(); }catch(err){}
+  if(S && document.getElementById('tpPreviewShell')){ refreshTPPreview(); tpRenderToolbar(); if(typeof tpdRefreshPanel === 'function') tpdRefreshPanel(); }
 }
-document.addEventListener('fullscreenchange', ()=>{ if(tpFsEl && !document.fullscreenElement) tpFullscreenExit(); });
+document.addEventListener('fullscreenchange', ()=>{ if(tpFsEl && !document.fullscreenElement) tpFullscreenExit(); else if(tpFsEl) setTimeout(tpFsResize, 60); });
 document.addEventListener('keydown', e=>{ if(e.key==='Escape' && tpFsEl){ e.preventDefault(); tpFullscreenExit(); } });
-window.addEventListener('resize', tpFsFit);
+window.addEventListener('resize', tpFsResize);
 
 /* Export PDF : les polices du PDF sont les polices standard (Courier / Helvetica / Times). Une police ajoutée en v51 ou un texte
    souligné, sur la page de titre, serait donc dégradé. Pour que le PDF soit identique à l'écran, ces blocs de texte
@@ -829,13 +946,14 @@ function tpInnerHtml(p){
 /* Builds a full .titlepage element (background image layer + drawing
    layer + text content), applies the design variables, and returns it.
    Shared by the design-tab preview and the PDF export. */
-function buildTitlePageEl(p){
+function buildTitlePageEl(p, opts){
   const design = ensureTPDesign(p);
+  try{ tpdSyncRaster(design); }catch(e){}   // v90 : l'image du dessin est toujours à jour avec les traits (aperçu, impression, PDF)
   const tp = document.createElement('div'); tp.className='titlepage';
   applyTPDesignVars(tp, design);
   let html = '';
   if(design.bgImage) html += `<img class="tp-bg-image" src="${design.bgImage}">`;
-  if(design.drawing) html += `<img class="tp-drawing-layer" src="${design.drawing}">`;
+  if(design.drawing && !(opts && opts.live)) html += `<img class="tp-drawing-layer" src="${design.drawing}">`;   // v90 : en cours de dessin, c'est le canevas qui montre les traits
   html += tpInnerHtml(p);
   if(design.freeImg && design.freeImg.src){
     const f = design.freeImg;
