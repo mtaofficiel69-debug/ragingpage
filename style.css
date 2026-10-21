@@ -1997,18 +1997,6 @@
   .tp-fs.tp-fs-pan, .tp-fs.tp-fs-pan #tpDrawCanvas{cursor:grab;}
   .tp-fs.tp-fs-panning, .tp-fs.tp-fs-panning *{cursor:grabbing !important;}
   @media (max-width:900px){ .tp-fs-tb{top:60px; max-width:calc(100vw - 20px);} }
-  /* Dessin : « Dessiner » ouvre directement le plein écran. Un seul bouton de sortie (Terminer), une bulle d'aide qui s'efface. */
-  .tp-fs.tp-fs-drawing .tp-fs-exit{display:none;}
-  .tp-fs.tp-fs-drawing .tp-fs-tb{max-width:calc(100vw - 28px);}
-  .tp-fs-hint{position:fixed; left:50%; bottom:22px; transform:translate(-50%,10px); z-index:3; max-width:calc(100vw - 28px); padding:9px 16px; border-radius:999px; background:var(--surface); color:var(--ink-soft); border:1px solid var(--hair); box-shadow:0 12px 30px -12px #00000066; font-family:var(--sans); font-size:13px; line-height:1.4; text-align:center; opacity:0; pointer-events:none; transition:opacity .25s, transform .25s;}
-  .tp-fs-hint b{color:var(--ink); font-weight:600;}
-  .tp-fs-hint.show{opacity:1; transform:translate(-50%,0);}
-  .tp-hd-r .btn svg{vertical-align:-2px;}
-  @media (max-width:900px){ .tp-fs.tp-fs-drawing .tp-fs-tb{top:12px;} .tp-fs-hint{bottom:14px;} }
-  /* Dessin : « Dessiner » ouvre directement le plein écran. Un seul bouton de sortie (Terminer), une bulle d'aide qui s'efface. */
-  .tp-fs.tp-fs-drawing .tp-fs-exit{display:none;}
-  .tp-fs.tp-fs-drawing .tp-fs-tb{max-width:calc(100vw - 28px);}
-  .tp-fs-hint{position:fixed; left:50%; bottom:22px; transform:translate(-50%,10px); z-index:3; max-width:calc(100vw - 28px); padding:9px 16px; border-radius:999px; background:var(--surface); color:var(--ink-soft); border:1px solid var(--hair); box-shadow:0 12px 30px -12px #00000066; font-family:var(--sans); font-size:13px; line-height:1.4; text-align:center; opacity:0; pointer-events:none; transition:opacity .25s, transform .25s;}
-  .tp-fs-hint b{color:var(--ink); font-weight:600;}
-  .tp-fs-hint.show{opacity:1; transform:translate(-50%,0);}
-  @media (max-width:900px){ .tp-fs.tp-fs-drawing .tp-fs-tb{top:12px;} .tp-fs-hint{bottom:14px;} }
+  /* v58 : « Fond » avait un panneau plus étroit que « Contenu » et « Dessin » (la grille prenait la largeur de son contenu).
+     La grille occupe maintenant toute la largeur disponible : les trois onglets ont exactement la même taille. */
+  .tp-design-wrap{width:100%; box-sizing:border-box;}
