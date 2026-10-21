@@ -249,3 +249,33 @@ function toggleFocusMode(){
   }catch(e){}
 })();
 
+
+/* =====================================================================
+   PAGES LIBRES (hors numérotation)
+   ---------------------------------------------------------------------
+   Des pages de texte libre (dédicace, citation, synopsis, remerciements,
+   page blanche...) posées AVANT le scénario (5 au maximum, juste après la
+   page de titre) ou APRÈS lui (autant qu'on veut, dans l'ordre voulu).
+   Elles ne portent jamais de numéro et ne comptent pas dans la
+   numérotation : la première page du scénario est toujours la page 1.
+   Rangées dans le projet : p.freePages = { front:[...], back:[...] }, chaque
+   page = { id, text, align:'left'|'center' }. Un ancien scénario n'a
+   rien de tel : ensureFreePages() renvoie alors deux listes vides, sans
+   rien changer au reste. */
+const FREE_PAGES_MAX_FRONT = 5;
+function ensureFreePages(p){
+  p = p || S.project;
+  if(!p) return { front:[], back:[] };
+  if(!p.freePages || typeof p.freePages !== 'object') p.freePages = {};
+  const fp = p.freePages;
+  ['front','back'].forEach(k=>{
+    if(!Array.isArray(fp[k])) fp[k] = [];
+    fp[k] = fp[k].filter(x => x && typeof x === 'object');
+    fp[k].forEach(x=>{
+      if(!x.id) x.id = uid('fp');
+      if(typeof x.text !== 'string') x.text = '';
+      if(x.align !== 'center') x.align = 'left';
+    });
+  });
+  return fp;
+}
