@@ -787,12 +787,14 @@ function tpFullscreen(){
 }
 function tpFullscreenExit(){
   const ov = tpFsEl; if(!ov) return; tpFsEl = null;
-  TPD.space = false; TPD.hand = false; if(TPD.pop && TPD.pop.bar === 'fs') TPD.pop = null;
+  TPD.space = false; TPD.hand = false; TPD.pop = null; TPD.clearArmed = false;
   if(typeof tpdDetach === 'function'){ tpdCancelStroke(); tpdFlush(); tpdDetach(); }
+  if(S.tpDrawMode){ S.tpDrawMode = false; TPD.autoFs = false; try{ scheduleAutosave(); }catch(err){} }   // fin du dessin : les traits sont déjà dans le projet
   TPFS.ptrs.clear(); TPFS.pan = TPFS.pinch = null;
   if(ov.parentNode) ov.parentNode.removeChild(ov);
   try{ if(document.fullscreenElement && document.exitFullscreen) document.exitFullscreen(); }catch(err){}
   if(S && document.getElementById('tpPreviewShell')){ refreshTPPreview(); tpRenderToolbar(); if(typeof tpdRefreshPanel === 'function') tpdRefreshPanel(); }
+  if(S && S.tab === 'titlepage' && typeof tpRebuildControls === 'function' && document.getElementById('tpControlsCol')) tpRebuildControls();
 }
 document.addEventListener('fullscreenchange', ()=>{ if(tpFsEl && !document.fullscreenElement) tpFullscreenExit(); else if(tpFsEl) setTimeout(tpFsResize, 60); });
 document.addEventListener('keydown', e=>{ if(e.key==='Escape' && tpFsEl){ e.preventDefault(); tpFullscreenExit(); } });
