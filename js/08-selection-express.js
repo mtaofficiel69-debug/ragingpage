@@ -506,6 +506,15 @@ const ENTER_REPEAT_MS = 50;
 const ENTER_STALE_MS = 70;
 let pgLastEnterAt = 0;
 function pgThrottleEnterRepeat(e){
+  /* Retour arrière / Suppr MAINTENUS : même règle des répétitions « en retard » que pour Entrée. Sur un long
+     scénario, effacer une série de lignes vides prend plus de temps que la cadence du clavier : les répétitions
+     s'empilaient et l'effacement continuait après avoir lâché la touche. Une répétition qui a attendu plus de
+     ENTER_STALE_MS est ignorée ; quand l'éditeur suit, rien ne change (aucune cadence imposée). */
+  if((e.key === 'Backspace' || e.key === 'Delete') && e.repeat){
+    const waited = performance.now() - e.timeStamp;
+    if(waited > ENTER_STALE_MS && waited < 60000){ e.preventDefault(); e.stopImmediatePropagation(); }
+    return;
+  }
   if(e.key !== 'Enter') return;
   const now = performance.now();
   if(e.repeat){

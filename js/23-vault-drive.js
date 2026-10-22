@@ -439,6 +439,9 @@ async function gdPush(silent){
     if(!silent) toast(L('Scénario envoyé dans ton Google Drive.','Screenplay sent to your Google Drive.'));
   }catch(e){
     GD.err = 'push';
+    // Jeton refusé par Google (expiré ou révoqué avant l'heure) : on l'oublie, la pastille propose alors la
+    // reconnexion et le prochain clic la refait (voir 31a-drive-chip.js), au lieu de rester bloqué « en erreur ».
+    if(String(e && e.message) === 'upload-401'){ GD.token = null; GD.exp = 0; }
     if(!silent) toast(L('Envoi vers Google Drive impossible.','Couldn\u2019t send to Google Drive.'));
   }
   GD.busy = false;

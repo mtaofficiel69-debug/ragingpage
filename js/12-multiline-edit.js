@@ -196,6 +196,20 @@ function focusDiv(div, offset){
   updatePageIndicator();
 }
 
+/* Variante pour les touches MAINTENUES (fusion de lignes en rafale) : pose le curseur sans forcer le
+   navigateur à refaire toute la mise en page tout de suite. La pagination (schedulePaginate) passe une fois
+   par image, puis recadre la vue sur le curseur et met l'indicateur à jour, comme d'habitude. */
+function focusDivQuick(div, offset){
+  S.pagination._quickFocus = true;
+  try{ div.focus({ preventScroll:true }); } finally { S.pagination._quickFocus = false; }
+  const sel = window.getSelection(); const range = document.createRange();
+  let node = div.firstChild;
+  if(!node){ node = document.createTextNode(''); div.appendChild(node); }
+  if(node.nodeType!==3){ div.appendChild(document.createTextNode('')); node = div.lastChild; }
+  range.setStart(node, Math.min(offset, node.textContent.length)); range.collapse(true);
+  sel.removeAllRanges(); sel.addRange(range);
+}
+
 /* ---- mouse drag-to-select across lines ----
    Each script line is its own separate contentEditable element (needed so
    Enter/Backspace/type-switching can treat lines independently). Browsers

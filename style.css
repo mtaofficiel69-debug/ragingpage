@@ -2091,3 +2091,24 @@ html[data-theme="dark"] .topbar.tb-c4 .vault-chip.ok{color:#5FD39A;} html[data-t
 .topbar.tb-c7 .btn[data-act="doUndo"], .topbar.tb-c7 .btn[data-act="doRedo"], .topbar.tb-c7 .topbar-left .tb-div:nth-of-type(n+2){display:none;}
 .topbar.tb-c8 .lang-flags{display:none;}
 
+/* Colonne de gauche repliable (js/06-editor-shell.js : toggleRail). Les deux boutons se posent par-dessus :
+   colonne ouverte, rien ne bouge. */
+.rail{position:relative;}
+.rail-toggle{position:absolute; right:10px; bottom:7px; width:28px; height:28px; display:grid; place-items:center; padding:0; border:0; border-radius:8px;
+  background:transparent; color:var(--studio-text-dim); cursor:pointer; transition:background .12s, color .12s;}
+.rail-toggle:hover{background:rgba(255,255,255,.08); color:#fff;}
+.rail-toggle:focus-visible, .rail-reopen:focus-visible{outline:none; box-shadow:0 0 0 3px rgba(54,153,212,.45);}
+.rail-toggle .icon{width:16px; height:16px;}
+.rail-reopen{display:none;}
+#editorView.rail-collapsed > .rail{display:none;}
+#editorView.rail-collapsed > .rail-reopen{display:grid; place-items:center; position:fixed; left:0; top:50%; transform:translateY(-50%); z-index:45;
+  width:24px; height:56px; padding:0 2px 0 0; border:0; border-radius:0 10px 10px 0; background:var(--studio); color:var(--studio-text-dim);
+  box-shadow:0 2px 10px rgba(16,24,40,.22); cursor:pointer; transition:width .12s, color .12s, background .12s;}
+#editorView.rail-collapsed > .rail-reopen:hover{width:30px; color:#fff; background:var(--studio-2);}
+.rail-reopen .icon{width:15px; height:15px;}
+@media (max-width:880px){
+  .rail-nav{padding-bottom:46px;}
+  .rail-toggle{right:auto; left:50%; transform:translateX(-50%); bottom:10px;}
+}
+@media print{ .rail-toggle, .rail-reopen{display:none !important;} }
+

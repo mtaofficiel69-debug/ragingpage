@@ -226,6 +226,8 @@ function icon(name){
     pulse:'<path d="M1.5 8.5h3l1.8-5 3.2 9 1.8-4h3.2"/>',
     bubbles:'<path d="M2 3h7v5H5.5L3.5 10V8H2z"/><path d="M7 8.5V11h2.5l2 2v-2H14V6h-3"/>',
     more:'<circle cx="8" cy="3" r="1.4"/><circle cx="8" cy="8" r="1.4"/><circle cx="8" cy="13" r="1.4"/>',
+    railhide:'<rect x="1.8" y="2.5" width="12.4" height="11" rx="1.2"/><path d="M5.8 2.5v11M11 6.1 9.1 8l1.9 1.9"/>',
+    railshow:'<rect x="1.8" y="2.5" width="12.4" height="11" rx="1.2"/><path d="M5.8 2.5v11M9.2 6.1 11.1 8l-1.9 1.9"/>',
     nonum:'<path d="M3 1.5h6.5L13 5v9.5H3z"/><path d="M9.5 1.5V5H13M6.6 7.4l-.6 4.6M9 7.4l-.6 4.6M5.3 9h4.6M5 10.6h4.6"/><path d="M4.4 13.2l7.2-6.4"/>',
     asterisk:'<path d="M8 2.5v11M3.2 5.2l9.6 5.6M12.8 5.2l-9.6 5.6"/>',
     sidebar:'<rect x="1.8" y="2.5" width="12.4" height="11" rx="1.2"/><path d="M9.8 2.5v11M11.4 5.6h1.3M11.4 8h1.3M11.4 10.4h1.3"/>',
