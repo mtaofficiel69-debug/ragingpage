@@ -371,9 +371,10 @@
     if(!live()){ d.classList.remove('on'); return; }
     const pane = $('centerPane'); if(!pane){ d.classList.remove('on'); return; }
     const r = pane.getBoundingClientRect();
-    d.classList.add('on');
-    d.style.left = Math.round(r.left + 16) + 'px';
-    d.style.bottom = Math.round(window.innerHeight - r.bottom + 14) + 'px';
+    if(!d.classList.contains('on')) d.classList.add('on');      // réécrire la même classe relançait les observateurs du document
+    const lx = Math.round(r.left + 16) + 'px', by = Math.round(window.innerHeight - r.bottom + 14) + 'px';
+    if(d.style.left !== lx) d.style.left = lx;
+    if(d.style.bottom !== by) d.style.bottom = by;
   }
   function rtWatch(){
     if(!live()) return;
@@ -388,7 +389,7 @@
   }
   document.addEventListener('input', e => {
     if(!(e.target && e.target.closest && e.target.closest('#page'))) return;
-    const d = rtEnsure(); d.classList.add('typing');
+    const d = rtEnsure(); if(!d.classList.contains('typing')) d.classList.add('typing');
     clearTimeout(RT.typing); RT.typing = setTimeout(() => d.classList.remove('typing'), 1700);
   }, true);
 
@@ -419,14 +420,21 @@
     }
     return (id && /^[\w-]{11}$/.test(id)) ? { id, t } : null;
   }
+  /* PERFORMANCE. Tourne à chaque image où le document bouge (donc à chaque frappe) : sans musique, ou quand
+     rien n'a changé depuis la dernière passe (mêmes musiques, même éditeur, même nombre de lignes), on ne
+     relit pas tout le scénario. */
+  let MMK = '';
   function musicMarks(){
     if(!S.project) return;
     const page = $('page'), m = S.project.music || {};
-    document.querySelectorAll('#page .line[data-music]').forEach(d => { if(!m[d.dataset.id]) delete d.dataset.music; });
+    const k = page ? Object.keys(m).join(',') + '|' + pageLineCount() : '';
+    if(page && page.__mmk === k && MMK === k) return;
+    MMK = k; if(page) page.__mmk = k;
+    document.querySelectorAll('#page .line[data-music]').forEach(d => { if(!m[d.dataset.id]){ delete d.dataset.music; S.musicMarkVer = (S.musicMarkVer || 0) + 1; } });
     if(!page) return;
     Object.keys(m).forEach(id => {
       const d = page.querySelector('.line[data-id="' + id + '"]');
-      if(d && d.dataset.music !== '1') d.dataset.music = '1';
+      if(d && d.dataset.music !== '1'){ d.dataset.music = '1'; S.musicMarkVer = (S.musicMarkVer || 0) + 1; }   // relu par musicUi (32) : un repère posé ici doit recevoir son libellé
     });
   }
   function musicClose(){ const b = $('rpMusicBackdrop'); if(b) b.remove(); }

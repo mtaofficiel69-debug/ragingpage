@@ -535,17 +535,28 @@ function focusedLine(){
 }
 /* Sur quelle feuille tombe une ordonnée donnée (coordonnées écran). Renvoie
    un numéro de page 1-based, ou null s'il n'y a pas encore de feuille. */
+/* PERFORMANCE. Les feuilles sont toutes de même hauteur et régulièrement espacées : au lieu de mesurer
+   chacune d'elles (326 mesures à chaque frappe sur un long métrage), on lit la première et la dernière et
+   on calcule. Mêmes réponses qu'avant, y compris quand l'ordonnée tombe entre deux feuilles. */
+function sheetGrid(){
+  const box = document.getElementById('sheets');
+  const sheets = box ? box.getElementsByClassName('sheet') : [];
+  const n = sheets.length; if(!n) return null;
+  const r0 = sheets[0].getBoundingClientRect();
+  const step = n > 1 ? (sheets[n - 1].getBoundingClientRect().top - r0.top) / (n - 1) : 0;
+  return { n, top: r0.top, h: r0.height, step };
+}
 function pageAtViewportY(y){
-  const sheets = document.querySelectorAll('.sheet');
-  if(!sheets.length) return null;
-  let best = null, bestDist = Infinity;
-  for(let i = 0; i < sheets.length; i++){
-    const r = sheets[i].getBoundingClientRect();
-    if(y >= r.top && y <= r.bottom) return i + 1;       // dans la feuille
-    const d = y < r.top ? r.top - y : y - r.bottom;     // sinon, la plus proche
-    if(d < bestDist){ bestDist = d; best = i + 1; }
-  }
-  return best;
+  const g = sheetGrid();
+  if(!g) return null;
+  if(g.n === 1 || !(g.step > 0)) return 1;
+  const i = Math.max(0, Math.min(g.n - 1, Math.floor((y - g.top) / g.step)));
+  const t = g.top + i * g.step, b = t + g.h;
+  if(y >= t && y <= b) return i + 1;                          // dans la feuille
+  if(y < t) return i + 1;                                     // avant la première
+  if(i === g.n - 1) return g.n;                               // après la dernière
+  const dNext = (g.top + (i + 1) * g.step) - y;               // entre deux feuilles : la plus proche
+  return (y - b) <= dNext ? i + 1 : i + 2;
 }
 function pageStep(){
   const stack = document.getElementById('pageStack');
@@ -560,13 +571,20 @@ function dominantVisiblePage(){
   const pane = document.getElementById('centerPane');
   if(!pane) return 1;
   const paneRect = pane.getBoundingClientRect();
-  const sheets = document.querySelectorAll('.sheet');
-  let best = 0, bestOverlap = -1;
-  sheets.forEach((sheet, i) => {
-    const r = sheet.getBoundingClientRect();
-    const overlap = Math.max(0, Math.min(r.bottom, paneRect.bottom) - Math.max(r.top, paneRect.top));
+  const g = sheetGrid();
+  if(!g) return 1;
+  // Seules les feuilles qui croisent la zone visible peuvent l'emporter (calcul, sans mesurer les autres).
+  let lo = 0, hi = g.n - 1;
+  if(g.n > 1 && g.step > 0){
+    lo = Math.max(0, Math.floor((paneRect.top - g.top) / g.step) - 1);
+    hi = Math.min(g.n - 1, Math.floor((paneRect.bottom - g.top) / g.step) + 1);
+  }
+  let best = 0, bestOverlap = 0;
+  for(let i = lo; i <= hi; i++){
+    const t = g.top + i * g.step, b = t + g.h;
+    const overlap = Math.max(0, Math.min(b, paneRect.bottom) - Math.max(t, paneRect.top));
     if(overlap > bestOverlap){ bestOverlap = overlap; best = i; }
-  });
+  }
   return best + 1;
 }
 function updatePageIndicator(){
@@ -598,7 +616,10 @@ function updatePageIndicator(){
     }
   }
   S.pagination.current = Math.min(S.pagination.count, Math.max(1, byCaret || dominantVisiblePage()));
-  el.innerHTML = `${L('Page','Page')} <b>${esc(pageLbl(S.pagination.current))}</b> / ${S.pagination.count}`;
+  // PERFORMANCE : on ne réécrit l'indicateur que s'il change. Le réécrire à l'identique à chaque image
+  // relançait, image après image, tout ce qui surveille le document (et un rafraîchissement complet de l'écran).
+  const html = `${L('Page','Page')} <b>${esc(pageLbl(S.pagination.current))}</b> / ${S.pagination.count}`;
+  if(el.__html !== html || el.innerHTML !== html){ el.innerHTML = html; el.__html = el.innerHTML; }
 }
 async function goToPage(){
   const _v = await mmPrompt(L('Numéro de page (1 – ' + S.pagination.count + ')', 'Page number (1 – ' + S.pagination.count + ')'), S.pagination.current, {title:L('Aller à la page','Go to page'), ok:L('Aller','Go')});

@@ -145,9 +145,16 @@
   /* =====================================================================
      2. REPÈRE DE MUSIQUE : libellé et état « en lecture »
   ===================================================================== */
+  let MUK = '';
   function musicUi(){
     const pg = $('page'); if(!pg) return;
-    const mp = document.querySelector('.rp-mp'), pid = mp ? mp.dataset.id : null;
+    // Le lecteur est posé directement dans <body> : on le cherche parmi ses quelques enfants, pas dans tout le document.
+    let mp = null; for(const c of document.body.children){ if(c.classList.contains('rp-mp')){ mp = c; break; } }
+    const pid = mp ? mp.dataset.id : null;
+    // PERFORMANCE : rien à relire quand ni la musique en lecture, ni la langue, ni les lignes marquées n'ont changé.
+    const k = pid + '|' + getLang() + '|' + Object.keys((S.project && S.project.music) || {}).join(',') + '|' + pageLineCount() + '|' + (S.musicMarkVer || 0);
+    if(pg.__muk === k && MUK === k) return;
+    MUK = k; pg.__muk = k;
     pg.querySelectorAll('.line[data-music]').forEach(d => {
       const playing = d.dataset.id === pid;
       const lab = playing ? L('En lecture', 'Playing') : L('Écouter', 'Play');

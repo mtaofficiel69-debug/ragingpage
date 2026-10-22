@@ -332,22 +332,43 @@ function i18nWalk(root){
       const v = root.getAttribute && root.getAttribute(attr);
       if(v && I18N_EN.hasOwnProperty(v.trim()) && I18N_EN[v.trim()] !== v) root.setAttribute(attr, I18N_EN[v.trim()]);
     });
-    if(i18nSkip(root)) return;
+    if(root.id === 'page' || i18nSkip(root)) return;   // #page : uniquement le texte du scénario, jamais traduit
   }
   let child = root.firstChild;
   while(child){ i18nWalk(child); child = child.nextSibling; }
 }
 function applyLanguage(){ if(getLang() === 'en') i18nWalk(document.body); }
 
-let __i18nRaf = null;
+/* PERFORMANCE. Chaque modification du document (une frappe dans le scénario, une marge posée par la
+   pagination...) relançait une traduction de TOUT le document : sur un long métrage, des dizaines de
+   milliers de nœuds relus à chaque touche, plus de la moitié du temps de réaction de l'éditeur. On ne
+   relit plus que ce qui vient de changer (nœuds ajoutés, texte ou attribut modifié) ; la passe complète
+   reste faite au démarrage et au changement de langue. Le résultat affiché est le même. */
+let __i18nRaf = null, __i18nFull = false;
+const __i18nPending = new Set();
+function i18nFlush(){
+  __i18nRaf = null;
+  if(getLang() !== 'en'){ __i18nPending.clear(); __i18nFull = false; return; }
+  if(__i18nFull){ __i18nFull = false; __i18nPending.clear(); applyLanguage(); return; }
+  const nodes = Array.from(__i18nPending); __i18nPending.clear();
+  nodes.forEach(n => { if(n.isConnected) i18nWalk(n); });
+}
 function scheduleI18n(){
-  if(__i18nRaf) return;
-  __i18nRaf = requestAnimationFrame(()=>{ __i18nRaf = null; applyLanguage(); });
+  __i18nFull = true;
+  if(!__i18nRaf) __i18nRaf = requestAnimationFrame(i18nFlush);
+}
+function i18nOnMutations(records){
+  if(getLang() !== 'en') return;
+  for(const r of records){
+    if(r.type === 'childList'){ r.addedNodes.forEach(n => __i18nPending.add(n)); }
+    else __i18nPending.add(r.target);
+  }
+  if(__i18nPending.size && !__i18nRaf) __i18nRaf = requestAnimationFrame(i18nFlush);
 }
 let __i18nObserver = null;
 function startI18nObserver(){
   if(__i18nObserver) return;
-  __i18nObserver = new MutationObserver(scheduleI18n);
+  __i18nObserver = new MutationObserver(i18nOnMutations);
   __i18nObserver.observe(document.body, {
     childList:true, subtree:true, characterData:true,
     attributes:true, attributeFilter:['title','placeholder']

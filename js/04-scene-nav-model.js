@@ -141,9 +141,14 @@ function refreshNav(){
 }
 /* Déplacement du surlignage seul : appelé à chaque mouvement du curseur,
    donc volontairement sans reconstruction de la liste. */
+let __navActive = { id:null, el:null };
 function navSyncActive(){
   if(!navVisible()) return;
   const cur = currentSceneId();
+  // PERFORMANCE. Le curseur bouge à chaque frappe, mais la scène courante rarement : si la même entrée est
+  // déjà surlignée, il n'y a rien à faire (ni relire toute la liste, ni mesurer le panneau).
+  const prev = __navActive;
+  if(prev.id === cur && prev.el && prev.el.isConnected && prev.el.classList.contains('active')) return;
   let active = null;
   document.querySelectorAll('#navList .nav-item').forEach(d=>{
     const on = d.dataset.id === cur;
@@ -155,6 +160,7 @@ function navSyncActive(){
     const r = active.getBoundingClientRect(), pr = pane.getBoundingClientRect();
     if(r.top < pr.top + 4 || r.bottom > pr.bottom - 4) active.scrollIntoView({block:'nearest'});
   }
+  __navActive = { id:cur, el:active };
 }
 /* Clic sur une scène : on pose le curseur au début de son entête sans
    reconstruire l'éditeur (donc sans perdre l'historique d'annulation ni
@@ -750,6 +756,7 @@ function contdText(el, marks){
    La mention est rendue par un ::after en CSS, donc elle n'existe pas dans
    le contenu éditable : impossible de placer le curseur dedans, de
    l'effacer par mégarde, ou de la voir remonter dans el.text. */
+let __contdPrev = null;
 function refreshContdMarks(){
   const page = document.getElementById('page');
   if(!page) return;
@@ -767,6 +774,13 @@ function refreshContdMarks(){
   const activeDiv = document.activeElement && document.activeElement.closest
     ? document.activeElement.closest('.line--character') : null;
   const skipId = activeDiv ? activeDiv.dataset.id : null;
+  // PERFORMANCE. Appelée à chaque frappe : quand ni les mentions, ni la ligne active, ni les lignes
+  // Personnage n'ont changé, il n'y a rien à réécrire, inutile de relire tout le scénario.
+  const chars = page.getElementsByClassName('line--character');
+  let key = skipId + '|' + chars.length; for(const id in marks) key += '|' + id + '=' + marks[id];
+  const P = __contdPrev;
+  if(P && P.page === page && P.key === key && P.first === chars[0] && P.last === chars[chars.length - 1]) return;
+  __contdPrev = { page, key, first: chars[0], last: chars[chars.length - 1] };
   page.querySelectorAll('.line--character').forEach(div=>{
     if(div.dataset.id === skipId) return;
     const m = marks[div.dataset.id];
