@@ -374,9 +374,11 @@
       ['rect', L('Rectangle (R) \u00B7 Maj = carr\u00E9', 'Rectangle (R) \u00B7 Shift = square'), '<rect x="3" y="4" width="10" height="8" rx="1"/>'],
       ['ellipse', L('Ellipse (O) \u00B7 Maj = cercle', 'Ellipse (O) \u00B7 Shift = circle'), '<ellipse cx="8" cy="8" rx="5.5" ry="4.2"/>'],
       ['text', L('Texte (T)', 'Text (T)'), '<path d="M3.5 4.5v-1h9v1M8 3.5v9M6 12.5h4"/>'],
+      ['bucket', L('Seau de peinture (G) \u00B7 colorie la zone cliqu\u00E9e', 'Paint bucket (G) \u00B7 fills the clicked area'), '<path d="M2.9 7.6L7.4 3.1l5.3 5.3-4.5 4.5a1.6 1.6 0 0 1-2.3 0L2.9 9.9a1.6 1.6 0 0 1 0-2.3z"/><path d="M3.2 8.6h9.3M5.6 1.6l1.8 1.5"/><path d="M14.1 10.4s1.1 1.5 1.1 2.3a1.1 1.1 0 0 1-2.2 0c0-.8 1.1-2.3 1.1-2.3z" fill="currentColor"/>'],
       ['eraser', L('Gomme (E)', 'Eraser (E)'), '<path d="M3 11l5-6 5 4-3.5 4H5.5L3 11zM6.5 8.2l4 3.2"/>']
     ];
-    const KEYS = { b:'pen', l:'line', a:'arrow', r:'rect', o:'ellipse', t:'text', e:'eraser' };
+    const BUCKET_CUR = 'url("data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 16 16" fill="none" stroke-linecap="round" stroke-linejoin="round"><g stroke="#fff" stroke-width="3"><path d="M2.9 7.6L7.4 3.1l5.3 5.3-4.5 4.5a1.6 1.6 0 0 1-2.3 0L2.9 9.9a1.6 1.6 0 0 1 0-2.3z"/><path d="M14.1 10.4s1.1 1.5 1.1 2.3a1.1 1.1 0 0 1-2.2 0c0-.8 1.1-2.3 1.1-2.3z"/></g><g stroke="#1b1b1f" stroke-width="1.3"><path d="M2.9 7.6L7.4 3.1l5.3 5.3-4.5 4.5a1.6 1.6 0 0 1-2.3 0L2.9 9.9a1.6 1.6 0 0 1 0-2.3z"/><path d="M3.2 8.6h9.3"/><path d="M14.1 10.4s1.1 1.5 1.1 2.3a1.1 1.1 0 0 1-2.2 0c0-.8 1.1-2.3 1.1-2.3z" fill="#1b1b1f"/></g></svg>') + '") 21 21, crosshair';
+    const KEYS = { b:'pen', l:'line', a:'arrow', r:'rect', o:'ellipse', t:'text', g:'bucket', e:'eraser' };
     const bg = document.createElement('div'); bg.id = 'rpDrawBg'; bg.className = 'rp-draw-bg rp-ui';
     bg.innerHTML = `<div class="rp-draw" role="dialog" aria-modal="true">
       <div class="rp-draw-bar"><h3>${esc(frame ? L('Modifier le plan', 'Edit the shot') : L('Dessiner un plan', 'Draw a shot'))}</h3>
@@ -387,11 +389,19 @@
         <button type="button" data-size="14" title="${esc(L('\u00C9pais', 'Thick'))}">${svg('<path d="M3 8h10" stroke-width="4.6"/>', 14)}</button>
         <button type="button" data-size="26" title="${esc(L('Tr\u00E8s \u00E9pais', 'Extra thick'))}">${svg('<path d="M3 8h10" stroke-width="6.6"/>', 14)}</button><i></i>
         <button type="button" data-a="fill" title="${esc(L('Remplir les formes', 'Fill shapes'))}">${svg('<rect x="3.5" y="4.5" width="9" height="7" rx="1.2" fill="currentColor" fill-opacity=".35"/>', 14)}</button>
-        <button type="button" data-a="guides" title="${esc(L('Rep\u00E8res de cadrage (tiers) \u2014 non enregistr\u00E9s', 'Framing guides (thirds) \u2014 not saved'))}">${svg('<path d="M6 2.5v11M10 2.5v11M2.5 6h11M2.5 10h11"/>', 14)}</button><i></i>
+        <button type="button" data-a="guides" title="${esc(L('Rep\u00E8res de cadrage (tiers) \u2014 non enregistr\u00E9s', 'Framing guides (thirds) \u2014 not saved'))}">${svg('<path d="M6 2.5v11M10 2.5v11M2.5 6h11M2.5 10h11"/>', 14)}</button>
+        <button type="button" data-a="crop" title="${esc(L('Cadrer (C) \u00B7 d\u00E9placer et zoomer l\u2019image dans le cadre', 'Frame (C) \u00B7 move and zoom the picture in the frame'))}">${svg('<path d="M4.5 1.5v10h10M1.5 4.5h10v10"/>', 14)}</button><i></i>
         <button type="button" data-a="undo" title="${esc(L('Annuler le dernier trait (Ctrl+Z)', 'Undo last stroke (Ctrl+Z)'))}">${svg('<path d="M4 7h6a3 3 0 0 1 0 6H6M4 7l2.5-2.5M4 7l2.5 2.5"/>', 14)}</button>
         <button type="button" data-a="redo" title="${esc(L('R\u00E9tablir (Ctrl+Y)', 'Redo (Ctrl+Y)'))}">${svg('<path d="M12 7H6a3 3 0 0 0 0 6h4M12 7l-2.5-2.5M12 7l-2.5 2.5"/>', 14)}</button>
         <button type="button" data-a="clear" title="${esc(L('Tout effacer', 'Clear all'))}">${svg('<path d="M3.5 4.5h9M6.5 4.5V3h3v1.5M5 4.5l.5 8h5l.5-8"/>', 14)}</button></div>
-      <div class="rp-draw-cv"><canvas width="960" height="540"></canvas><div class="rp-draw-guides"></div></div>
+      <div class="rp-draw-cv"><canvas width="960" height="540"></canvas><div class="rp-draw-guides"></div>
+        <div class="rp-crop-bar" hidden><span class="h">${esc(L('Glisse l\u2019image pour la placer \u00B7 molette pour zoomer', 'Drag the picture to place it \u00B7 scroll to zoom'))}</span>
+          <button type="button" data-crop="cover" title="${esc(L('L\u2019image remplit tout le cadre', 'The picture fills the whole frame'))}">${esc(L('Remplir', 'Fill'))}</button>
+          <button type="button" data-crop="contain" title="${esc(L('Toute l\u2019image est visible', 'The whole picture is visible'))}">${esc(L('Image enti\u00E8re', 'Whole picture'))}</button>
+          <button type="button" data-crop="out" title="${esc(L('D\u00E9zoomer', 'Zoom out'))}">${svg('<path d="M3.5 8h9"/>', 13)}</button>
+          <input type="range" min="0" max="1000" value="500" aria-label="${esc(L('Zoom', 'Zoom'))}">
+          <button type="button" data-crop="in" title="${esc(L('Zoomer', 'Zoom in'))}">${svg('<path d="M3.5 8h9M8 3.5v9"/>', 13)}</button>
+          <button type="button" class="ok" data-crop="ok" title="${esc(L('Valider le cadrage (Entr\u00E9e)', 'Apply the framing (Enter)'))}">${esc(L('OK', 'OK'))}</button></div></div>
       <div class="rp-draw-act"><button type="button" class="btn btn-ghost" data-a="cancel">${esc(L('Annuler', 'Cancel'))}</button>
         <button type="button" class="btn btn-primary" data-a="save">${esc(L('Enregistrer le plan', 'Save the shot'))}</button></div></div>`;
     document.body.appendChild(bg);
@@ -399,18 +409,18 @@
     cx.fillStyle = '#fff'; cx.fillRect(0, 0, 960, 540);
     if(frame){
       const im = new Image();
-      im.onload = () => { const k = Math.min(960 / im.naturalWidth, 540 / im.naturalHeight), w = im.naturalWidth * k, h = im.naturalHeight * k; cx.drawImage(im, (960 - w) / 2, (540 - h) / 2, w, h); };
+      im.onload = () => { const k = Math.min(960 / im.naturalWidth, 540 / im.naturalHeight), w = im.naturalWidth * k, h = im.naturalHeight * k; cx.drawImage(im, (960 - w) / 2, (540 - h) / 2, w, h); origIm = im; };
       im.src = frame.src;
     }
-    let color = COLORS[0], size = 3, tool = 'pen', fill = false, hist = [], fwd = [], last = null, prevMid = null, down = false, moved = false, start = null, base = null, txt = null;
+    let color = COLORS[0], size = 3, tool = 'pen', fill = false, hist = [], fwd = [], last = null, prevMid = null, down = false, moved = false, start = null, base = null, txt = null, origIm = null, crop = null, lastCrop = null;
     const snap = () => { hist.push(cx.getImageData(0, 0, 960, 540)); if(hist.length > 30) hist.shift(); fwd.length = 0; };
     const pt = e => { const r = cv.getBoundingClientRect(); return { x:(e.clientX - r.left) * 960 / r.width, y:(e.clientY - r.top) * 540 / r.height, p:(e.pointerType === 'pen' && e.pressure) ? e.pressure : 0.5 }; };
     const style = p => { cx.lineCap = 'round'; cx.lineJoin = 'round'; cx.strokeStyle = tool === 'eraser' ? '#fff' : color; cx.fillStyle = cx.strokeStyle; cx.lineWidth = (tool === 'eraser' ? size * 3 : size) * (p === 0.5 ? 1 : (0.5 + p)); };
     const isShape = () => tool === 'line' || tool === 'arrow' || tool === 'rect' || tool === 'ellipse';
     function setTool(t){
-      commitText(); tool = t;
+      commitText(); cropEnd(true); tool = t;
       bg.querySelectorAll('[data-tool]').forEach(x => x.classList.toggle('sel', x.dataset.tool === t));
-      cv.style.cursor = t === 'text' ? 'text' : 'crosshair';
+      cv.style.cursor = t === 'text' ? 'text' : t === 'bucket' ? BUCKET_CUR : 'crosshair';
     }
     function drawShape(a, b, shift){
       style(0.5); cx.beginPath();
@@ -432,6 +442,103 @@
         cx.ellipse((a.x + x2) / 2, (a.y + y2) / 2, Math.max(0.5, Math.abs(x2 - a.x) / 2), Math.max(0.5, Math.abs(y2 - a.y) / 2), 0, 0, Math.PI * 2); if(fill) cx.fill(); cx.stroke();
       }
     }
+    /* seau de peinture : colorie la zone de couleur proche autour du point cliqué (un trait fermé = une zone ;
+       cliquer sur le fond colorie tout le fond). La zone déborde d'un pixel sous les bords adoucis des traits,
+       pour ne pas laisser de liseré blanc. */
+    function bucketAt(p){
+      const W = 960, H = 540, x0 = Math.max(0, Math.min(W - 1, Math.floor(p.x))), y0 = Math.max(0, Math.min(H - 1, Math.floor(p.y)));
+      const img = cx.getImageData(0, 0, W, H), d = img.data, px = new Uint32Array(d.buffer);
+      const probe = document.createElement('canvas').getContext('2d'); probe.fillStyle = color; probe.fillRect(0, 0, 1, 1);
+      const c = probe.getImageData(0, 0, 1, 1).data;                          // couleur choisie → RGB (tout format CSS)
+      const i0 = (y0 * W + x0) * 4, sr = d[i0], sg = d[i0 + 1], sb = d[i0 + 2];
+      if(Math.abs(sr - c[0]) < 3 && Math.abs(sg - c[1]) < 3 && Math.abs(sb - c[2]) < 3) return;   // déjà de cette couleur
+      const TOL = 48, near = i => Math.abs(d[i] - sr) <= TOL && Math.abs(d[i + 1] - sg) <= TOL && Math.abs(d[i + 2] - sb) <= TOL;
+      const mask = new Uint8Array(W * H), stack = [x0, y0];
+      while(stack.length){
+        const y = stack.pop(); let x = stack.pop();
+        while(x >= 0 && !mask[y * W + x] && near((y * W + x) * 4)) x--;
+        x++;
+        let up = false, dn = false;
+        while(x < W && !mask[y * W + x] && near((y * W + x) * 4)){
+          mask[y * W + x] = 1;
+          if(y > 0){ const a = !mask[(y - 1) * W + x] && near(((y - 1) * W + x) * 4); if(a && !up){ stack.push(x, y - 1); up = true; } else if(!a) up = false; }
+          if(y < H - 1){ const b = !mask[(y + 1) * W + x] && near(((y + 1) * W + x) * 4); if(b && !dn){ stack.push(x, y + 1); dn = true; } else if(!b) dn = false; }
+          x++;
+        }
+      }
+      snap();
+      const val = new Uint32Array(new Uint8ClampedArray([c[0], c[1], c[2], 255]).buffer)[0];
+      for(let y = 0; y < H; y++) for(let x = 0; x < W; x++){
+        const k = y * W + x;
+        if(mask[k] || (x > 0 && mask[k - 1] === 1) || (x < W - 1 && mask[k + 1] === 1) || (y > 0 && mask[k - W] === 1) || (y < H - 1 && mask[k + W] === 1)) px[k] = val;
+      }
+      cx.putImageData(img, 0, 0);
+    }
+    /* cadrer : l'image (celle d'origine si rien n'a encore été dessiné, sinon le dessin actuel) se déplace
+       et se zoome dans le cadre 16:9 ; ce qu'on voit est exactement ce qui sera enregistré et exporté. */
+    const cropBar = bg.querySelector('.rp-crop-bar'), cropRange = cropBar.querySelector('input');
+    function cropStart(){
+      if(crop) return;
+      commitText();
+      let src = null, sw = 960, sh = 540, s = 1, ox = 0, oy = 0;
+      if(origIm && (!hist.length || (lastCrop && lastCrop.h === hist.length))){     // rien dessiné depuis : on repart de l'image d'origine, nette
+        src = origIm; sw = origIm.naturalWidth; sh = origIm.naturalHeight;
+        if(hist.length){ s = lastCrop.s; ox = lastCrop.ox; oy = lastCrop.oy; }
+        else { s = Math.min(960 / sw, 540 / sh); ox = (960 - sw * s) / 2; oy = (540 - sh * s) / 2; }
+      } else { src = document.createElement('canvas'); src.width = 960; src.height = 540; src.getContext('2d').drawImage(cv, 0, 0); }
+      snap();
+      const guides = bg.querySelector('.rp-draw-guides');
+      crop = { src, sw, sh, s, ox, oy, min:Math.min(960 / sw, 540 / sh) * 0.5, max:Math.max(960 / sw, 540 / sh) * 4, drag:null, guides:guides.classList.contains('on') };
+      guides.classList.add('on');
+      cropBar.hidden = false; cv.style.cursor = 'grab';
+      bg.querySelector('[data-a="crop"]').classList.add('sel');
+      cropDraw();
+    }
+    function cropDraw(){
+      const c = crop; cx.fillStyle = '#fff'; cx.fillRect(0, 0, 960, 540);
+      cx.imageSmoothingQuality = 'high'; cx.drawImage(c.src, c.ox, c.oy, c.sw * c.s, c.sh * c.s);
+      cropRange.value = Math.round(Math.log(c.s / c.min) / Math.log(c.max / c.min) * 1000);
+    }
+    function cropZoom(ns, fx, fy){
+      const c = crop; ns = Math.max(c.min, Math.min(c.max, ns));
+      if(fx == null){ fx = 480; fy = 270; }
+      c.ox = fx - (fx - c.ox) * ns / c.s; c.oy = fy - (fy - c.oy) * ns / c.s; c.s = ns;
+      cropDraw();
+    }
+    function cropFit(mode){
+      const c = crop, s = mode === 'cover' ? Math.max(960 / c.sw, 540 / c.sh) : Math.min(960 / c.sw, 540 / c.sh);
+      c.s = s; c.ox = (960 - c.sw * s) / 2; c.oy = (540 - c.sh * s) / 2; cropDraw();
+    }
+    /* aimant doux : les bords et le centre de l'image s'alignent sur ceux du cadre quand on en approche */
+    function cropSnap(v, size, full){
+      const T = 10, cand = [0, full - size, (full - size) / 2];
+      for(const t of cand) if(Math.abs(v - t) < T) return t;
+      return v;
+    }
+    function cropEnd(keep){
+      if(!crop) return;
+      const c = crop; crop = null;
+      if(!keep){ const h = hist.pop(); if(h) cx.putImageData(h, 0, 0); }
+      else if(c.src === origIm) lastCrop = { s:c.s, ox:c.ox, oy:c.oy, h:hist.length };
+      cropBar.hidden = true;
+      if(!c.guides) bg.querySelector('.rp-draw-guides').classList.remove('on');
+      bg.querySelector('[data-a="crop"]').classList.remove('sel');
+      cv.style.cursor = tool === 'text' ? 'text' : tool === 'bucket' ? BUCKET_CUR : 'crosshair';
+    }
+    cv.addEventListener('wheel', e => {
+      if(!crop) return; e.preventDefault();
+      const r = cv.getBoundingClientRect(), fx = (e.clientX - r.left) * 960 / r.width, fy = (e.clientY - r.top) * 540 / r.height;
+      cropZoom(crop.s * Math.exp(-e.deltaY * 0.0015), fx, fy);
+    }, { passive:false });
+    cropRange.addEventListener('input', () => { if(crop) cropZoom(crop.min * Math.pow(crop.max / crop.min, cropRange.value / 1000)); });
+    cropBar.addEventListener('mousedown', e => { if(e.target.closest('button')) e.preventDefault(); });   // Entrée reste « valider » après un clic
+    cropBar.addEventListener('click', e => {
+      const b = e.target.closest('[data-crop]'); if(!b || !crop) return;
+      const k = b.dataset.crop;
+      if(k === 'ok') cropEnd(true);
+      else if(k === 'cover' || k === 'contain') cropFit(k);
+      else cropZoom(crop.s * (k === 'in' ? 1.2 : 1 / 1.2));
+    });
     /* texte : un champ posé sur le dessin, validé par Entrée ou en cliquant ailleurs */
     function textAt(p){
       const fpx = Math.round(size * 2.2 + 14), r = cv.getBoundingClientRect(), k = r.width / 960;
@@ -453,11 +560,17 @@
     cv.addEventListener('pointerdown', e => {
       e.preventDefault(); commitText(); try{ cv.setPointerCapture(e.pointerId); }catch(err){}
       const p = pt(e);
+      if(crop){ crop.drag = { x:p.x, y:p.y, ox:crop.ox, oy:crop.oy }; cv.style.cursor = 'grabbing'; return; }
       if(tool === 'text'){ textAt(p); return; }
+      if(tool === 'bucket'){ bucketAt(p); return; }
       snap(); down = true; moved = false; last = p; prevMid = p;
       if(isShape()){ start = p; base = hist[hist.length - 1]; } else { start = null; style(p.p); }
     });
     cv.addEventListener('pointermove', e => {
+      if(crop && crop.drag){
+        e.preventDefault(); const p = pt(e), c = crop, w = c.sw * c.s, h = c.sh * c.s;
+        c.ox = cropSnap(c.drag.ox + p.x - c.drag.x, w, 960); c.oy = cropSnap(c.drag.oy + p.y - c.drag.y, h, 540); cropDraw(); return;
+      }
       if(!down) return; e.preventDefault(); moved = true;
       const p = pt(e);
       if(start){ cx.putImageData(base, 0, 0); drawShape(start, p, e.shiftKey); last = p; return; }
@@ -466,6 +579,7 @@
       prevMid = mid; last = p;
     });
     const end = () => {
+      if(crop && crop.drag){ crop.drag = null; cv.style.cursor = 'grab'; return; }
       if(!down) return; down = false;
       if(start){ if(!moved) hist.pop(); start = null; base = null; return; }     // forme : déjà tracée pendant le glissement
       if(!moved){ cx.beginPath(); cx.arc(last.x, last.y, cx.lineWidth / 2, 0, Math.PI * 2); cx.fill(); }
@@ -481,8 +595,11 @@
         else if(e.key === 'Escape'){ e.preventDefault(); const t = txt; txt = null; t.el.remove(); }
         e.stopPropagation(); return;
       }
+      if(crop && (e.key === 'Escape' || e.key === 'Enter') && !(e.target && e.target.tagName === 'BUTTON' && e.key === 'Enter')){ e.preventDefault(); e.stopPropagation(); cropEnd(e.key === 'Enter'); return; }
       if(e.key === 'Escape'){ e.preventDefault(); e.stopPropagation(); close(); return; }
       const mod = e.ctrlKey || e.metaKey, k = (e.key || '').toLowerCase();
+      if(crop && mod && k === 'z'){ e.preventDefault(); e.stopPropagation(); cropEnd(false); return; }
+      if(!mod && !e.altKey && k === 'c' && !(e.target && e.target.type === 'color')){ e.preventDefault(); e.stopPropagation(); if(crop) cropEnd(true); else cropStart(); return; }
       if(mod && !e.shiftKey && k === 'z'){ e.preventDefault(); e.stopPropagation(); commitText(); undo(); return; }
       if(mod && (k === 'y' || (k === 'z' && e.shiftKey))){ e.preventDefault(); e.stopPropagation(); redo(); return; }
       if(!mod && !e.altKey && KEYS[k] && !(e.target && e.target.type === 'color')){ e.preventDefault(); setTool(KEYS[k]); }
@@ -502,13 +619,14 @@
       else if(b.dataset.size){ size = +b.dataset.size; bg.querySelectorAll('[data-size]').forEach(x => x.classList.toggle('sel', x === b)); }
       else if(b.dataset.tool) setTool(b.dataset.tool);
       else if(b.dataset.a === 'fill'){ fill = !fill; b.classList.toggle('sel', fill); }
-      else if(b.dataset.a === 'guides'){ const g = bg.querySelector('.rp-draw-guides'); g.classList.toggle('on'); b.classList.toggle('sel', g.classList.contains('on')); }
-      else if(b.dataset.a === 'undo'){ commitText(); undo(); }
-      else if(b.dataset.a === 'redo') redo();
-      else if(b.dataset.a === 'clear'){ commitText(); snap(); cx.fillStyle = '#fff'; cx.fillRect(0, 0, 960, 540); }
+      else if(b.dataset.a === 'crop'){ if(crop) cropEnd(true); else cropStart(); }
+      else if(b.dataset.a === 'guides'){ const g = bg.querySelector('.rp-draw-guides'); g.classList.toggle('on'); b.classList.toggle('sel', g.classList.contains('on')); if(crop) crop.guides = g.classList.contains('on'); }
+      else if(b.dataset.a === 'undo'){ commitText(); if(crop) cropEnd(false); else undo(); }
+      else if(b.dataset.a === 'redo'){ cropEnd(true); redo(); }
+      else if(b.dataset.a === 'clear'){ commitText(); cropEnd(true); snap(); cx.fillStyle = '#fff'; cx.fillRect(0, 0, 960, 540); }
       else if(b.dataset.a === 'cancel') close();
       else if(b.dataset.a === 'save'){
-        commitText();
+        commitText(); cropEnd(true);
         const kind = frame ? frame.k : 'draw';
         const src = kind === 'img' ? cv.toDataURL('image/jpeg', 0.85) : cv.toDataURL('image/png');
         if(frame){ frame.src = src; } else store().frames.push(Object.assign({ id:uid(), pg:page, k:'draw', src, cap:'' }, sc ? { sc:sc } : {}));
@@ -714,6 +832,23 @@
   .rp-draw-txt{position:absolute; z-index:2; box-sizing:border-box; padding:0 2px; margin:0; border:1px dashed var(--accent); border-radius:3px; background:rgba(255,255,255,.6); outline:none;}
   `;
   document.head.appendChild(stV90);
+  /* v91 : seau de peinture et cadrage de l'image dans l'éditeur de dessin */
+  const stV91 = document.createElement('style'); stV91.id = 'rpV91Style';
+  stV91.textContent = `
+  .rp-crop-bar{position:absolute; left:50%; bottom:12px; transform:translateX(-50%); z-index:3; display:flex; align-items:center; gap:6px; max-width:calc(100% - 24px); padding:6px 6px 6px 14px;
+    border-radius:999px; background:var(--surface); color:var(--ink); border:1px solid var(--hair); box-shadow:var(--shadow-md); font-size:12.5px; white-space:nowrap; animation:rpCropIn .14s ease;}
+  @keyframes rpCropIn{from{opacity:0;} to{opacity:1;}}
+  .rp-crop-bar[hidden]{display:none;}
+  .rp-crop-bar .h{color:var(--ink-soft); margin-right:4px; overflow:hidden; text-overflow:ellipsis; min-width:0;}
+  .rp-crop-bar button{flex:none; height:28px; min-width:28px; display:inline-grid; place-items:center; padding:0 10px; border:1px solid var(--hair); border-radius:999px; background:var(--surface); color:var(--ink); font:inherit; font-size:12.5px; font-weight:600; cursor:pointer;}
+  .rp-crop-bar button[data-crop="in"], .rp-crop-bar button[data-crop="out"]{padding:0; width:28px;}
+  .rp-crop-bar button:hover{border-color:var(--accent); color:var(--accent);}
+  .rp-crop-bar button.ok{background:var(--accent); border-color:var(--accent); color:#fff; padding:0 14px;}
+  .rp-crop-bar button.ok:hover{color:#fff; filter:brightness(1.06);}
+  .rp-crop-bar input[type=range]{flex:none; width:110px; accent-color:var(--accent); margin:0 2px;}
+  @media (max-width:760px){ .rp-crop-bar .h{display:none;} .rp-crop-bar input[type=range]{width:70px;} }
+  `;
+  document.head.appendChild(stV91);
 
   const plansTxt = n => n + ' ' + (n > 1 ? L('plans', 'shots') : L('plan', 'shot'));
   const pad2 = n => (n < 10 ? '0' : '') + n;
