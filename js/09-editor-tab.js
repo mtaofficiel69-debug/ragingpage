@@ -214,6 +214,15 @@ function pageLineDivs(){
   const page = document.getElementById('page');
   return page ? Array.from(page.querySelectorAll('.line[data-id]')) : [];
 }
+/* Même décompte que pageLineDivs().length, sans relire tout le scénario : les collections vivantes du
+   navigateur gardent leur longueur en mémoire tant que la structure ne change pas (une frappe ne la change
+   pas). Les lignes réelles = toutes les .line, moins les conteneurs de dialogue simultané. */
+function pageLineCount(){
+  const page = document.getElementById('page');
+  if(!page) return 0;
+  if(page.__lc !== page){ page.__lcAll = page.getElementsByClassName('line'); page.__lcDual = page.getElementsByClassName('dual-wrap'); page.__lc = page; }
+  return page.__lcAll.length - page.__lcDual.length;
+}
 function neighborLineDiv(el, dir){
   const i = findIdx(el.id);
   const n = i < 0 ? null : S.project.elements[i + dir];
@@ -258,6 +267,7 @@ function refreshLineDiv(div, el){
   // Le type vient de changer : la chaîne des reprises de parole n'est plus
   // la même, on la recalcule sur tout le script plutôt que sur cette ligne.
   delete div.dataset.contd;
+  __contdPrev = null;                 // la mention de cette ligne vient d'être retirée : la prochaine passe doit tout revoir
   setTimeout(refreshContdMarks, 0);
   // Changer de type change les marges et l'indentation, donc la hauteur :
   // la pagination doit être rejouée.
@@ -277,14 +287,14 @@ function onLineInput(e){
   const div = e.target.closest('.line');
   // Saisie qui n'atterrit pas dans une ligne, ou structure qui ne
   // correspond plus au modèle : on réaligne avant toute chose.
-  if(!div || (page && pageLineDivs().length !== S.project.elements.length)){
+  if(!div || (page && pageLineCount() !== S.project.elements.length)){
     syncFromDOM(); repaginateNow(); scheduleAutosave(); return;
   }
   const el = findEl(div.dataset.id);
   if(!el){ syncFromDOM(); repaginateNow(); return; }
   let text = lineText(div);
   el.text = (el.type === 'card') ? text.replace(/\n$/, '') : text;
-  div.dataset.empty = text ? '' : '1';
+  const emp = text ? '' : '1'; if(div.dataset.empty !== emp) div.dataset.empty = emp;   // inchangé : on n'y touche pas (sinon tous les styles [data-empty] sont réévalués)
   autoDetect(el, div);
   refreshContdMarks();
   updateExtMenu(div, el);

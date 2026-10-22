@@ -248,6 +248,9 @@ function computePagination(container, format, apply, proj, inc){
   if(!lines.length) return { pageCount:1, pages:[[]], pageOf:{}, spill:{}, geo:pageGeometry(container, format) };
 
   const geo = pageGeometry(container, format);
+  // Signature de la géométrie relue ICI, pendant que la mise en page est encore à jour : la relire après
+  // l'écriture des marges forçait le navigateur à refaire toute la mise en page une fois de plus.
+  const sig = apply ? pgSignature(container) : '';
   const contentH = geo.contentH;
   // Carton « page entière » : sa boîte fait exactement la hauteur utile d'une feuille.
   win.forEach(d => { if(d.classList.contains('line--card')) d.style.minHeight = (d.dataset.full === '1') ? Math.floor(contentH - 2) + 'px' : ''; });
@@ -296,7 +299,7 @@ function computePagination(container, format, apply, proj, inc){
   const startPg = inc ? inc.startPage : 0;
   const pages = [], pgIdx = [], filled = [];
   pages[startPg] = []; pgIdx[startPg] = []; filled[startPg] = false;
-  const pageOf = {}, spill = {}, splits = [], breaks = [];
+  const pageOf = {}, spill = {}, splits = [], breaks = [], splitWrites = [];
   const topOf = [], domBottom = [], firstOfPage = [];
   let pageIdx = startPg, y = startPg * step;
   const pageTop = () => pageIdx * step;
@@ -352,9 +355,10 @@ function computePagination(container, format, apply, proj, inc){
     splits.push({ kind:'inside', div:m[i].d, k, top, pT:mt.pT, lh:mt.lh1, spH, newTop:newTop0, startPage:pageIdx,
                   more: isDlg && marksOn, cue:cueText, left, extra:0, cutIdx:null, moreY: top + mt.pT + k * mt.lh1 });
     if(apply){
-      m[i].d.classList.add('is-split');
-      m[i].d.style.setProperty('--sp-top', (k * mt.lh1 + 0.5) + 'px');
-      m[i].d.style.setProperty('--sp-h', (spH - 0.5) + 'px');
+      // Écriture différée jusqu'après la boucle : écrite ici, elle obligeait le navigateur à refaire toute la
+      // mise en page à la lecture suivante (offsetLeft, style calculé). Le calcul n'en dépend pas (hOv).
+      const d = m[i].d, a = (k * mt.lh1 + 0.5) + 'px', b = (spH - 0.5) + 'px';
+      splitWrites.push(() => { d.classList.add('is-split'); d.style.setProperty('--sp-top', a); d.style.setProperty('--sp-h', b); });
     }
     hOv[i] = m[i].h - mt.pT - k * mt.lh1;           // hauteur du reste, sur la page suivante
   };
@@ -479,6 +483,7 @@ function computePagination(container, format, apply, proj, inc){
 
   // Marges : seule la 1re ligne de chaque feuille est repoussée (les autres gardent leur marge naturelle).
   if(apply){
+    splitWrites.forEach(f => f());
     const restoreNode = d => {
       CLEAR(d);
       const st = savedState && savedState.get(d);
@@ -576,7 +581,7 @@ function computePagination(container, format, apply, proj, inc){
     const at = pb.indexOf(A);
     if(at >= 0) pb.splice(at, 1, ...(sp.cue ? [mk(sp.cue), B] : [B]));
   });
-  return { pageCount: PG.length, pages: PG, pageOf: pageOut, spill: outSpill, geo, splits: outSplits, breaks: outBreaks, topOf, domBottom, firstOfPage, lines,
+  return { pageCount: PG.length, pages: PG, pageOf: pageOut, spill: outSpill, geo, sig, splits: outSplits, breaks: outBreaks, topOf, domBottom, firstOfPage, lines,
            clean: outClean, incRange: inc ? [startPg, convK >= 0 ? convK + 1 : PG.length] : null,
            debug:{ contentH, step, oneLine, linesPerPage: Math.floor((contentH + PAGE_EPS) / oneLine), blocks: m.length } };
 }
@@ -750,7 +755,7 @@ function pgComputeEditor(page){
   /* La géométrie (largeur, police, interligne, réglages) n'est relue qu'APRÈS le calcul : la lire avant aurait
      forcé le navigateur à refaire toute la mise en page une fois de plus. Si elle a changé depuis la
      dernière pagination (fenêtre redimensionnée, police arrivée…), le tronçon calculé ne vaut rien : calcul complet. */
-  const sigNow = pgSignature(page);
+  const sigNow = (res && res.sig) || pgSignature(page);
   if(plan && res && P._sig !== sigNow) res = null;
   if(!res) res = computePagination(page, fmt, true);
   P.res = res; P._resPage = page; P._sig = sigNow; P._forceFull = false;

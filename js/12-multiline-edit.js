@@ -28,7 +28,7 @@ function selectionSpan(){
   // Cas du « tout sélectionner » : la sélection porte sur #page lui-même,
   // ses extrémités ne sont donc dans aucune ligne. On les ramène sur la
   // première et la dernière ligne concernées.
-  const kids = pageLineDivs();
+  const kids = (!a || !b) ? pageLineDivs() : [];      // seulement pour « tout sélectionner » : inutile de relire toutes les lignes à chaque frappe
   if(!a && r.startContainer === page && kids.length){
     a = stBoundaryLine(page, r.startOffset, false) || kids[Math.min(r.startOffset, kids.length - 1)]; aOff = 0;
   }
