@@ -28,6 +28,7 @@
     const p = S.project;
     if(!p.storyboard || typeof p.storyboard !== 'object') p.storyboard = { frames:[] };
     if(!Array.isArray(p.storyboard.frames)) p.storyboard.frames = [];
+    if(!Array.isArray(p.storyboard.seqs)) p.storyboard.seqs = [];   // v93 : séquences libres
     return p.storyboard;
   }
   const save = () => { try{ scheduleAutosave(); }catch(e){} };
@@ -320,26 +321,26 @@
       im.src = url;
     });
   }
-  async function addFiles(files, page, sc){
+  async function addFiles(files, page, sc, sq){
     const list = Array.from(files || []).filter(f => /^image\//.test(f.type));
     if(!list.length){ toast(L('Dépose une image (JPG, PNG, WebP…).', 'Drop an image (JPG, PNG, WebP…).')); return; }
     for(const f of list){
-      try{ store().frames.push(Object.assign({ id:uid(), pg:page, k:'img', src:await compress(f), cap:'' }, sc ? { sc:sc } : {})); }
+      try{ store().frames.push(Object.assign({ id:uid(), pg:page, k:'img', src:await compress(f), cap:'' }, sc ? { sc:sc } : {}, sq ? { sq:sq } : {})); }
       catch(e){ toast(L('Image illisible : ', 'Unreadable image: ') + f.name); }
     }
     save(); sbChanged();
   }
-  function pickFile(page, sc){
+  function pickFile(page, sc, sq){
     const inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'image/*'; inp.multiple = true; inp.style.display = 'none';
-    inp.addEventListener('change', () => { addFiles(inp.files, page, sc); inp.remove(); });
+    inp.addEventListener('change', () => { addFiles(inp.files, page, sc, sq); inp.remove(); });
     document.body.appendChild(inp); inp.click();
   }
-  async function pasteImage(page, sc){
+  async function pasteImage(page, sc, sq){
     try{
       const items = await navigator.clipboard.read();
       for(const it of items){
         const t = it.types.find(x => /^image\//.test(x));
-        if(t){ const b = await it.getType(t); await addFiles([new File([b], 'collage', { type:t })], page, sc); return; }
+        if(t){ const b = await it.getType(t); await addFiles([new File([b], 'collage', { type:t })], page, sc, sq); return; }
       }
       toast(L('Aucune image dans le presse-papiers.', 'No image in the clipboard.'));
     }catch(e){ toast(L('Colle avec Ctrl/Cmd+V en survolant la page voulue.', 'Paste with Ctrl/Cmd+V while hovering the page you want.')); }
@@ -367,7 +368,7 @@
   }
 
   /* ---- éditeur de dessin (v90 : formes, flèche, texte, remplissage, rétablir, repères de cadrage) ---- */
-  function drawOpen(page, frame, sc){
+  function drawOpen(page, frame, sc, sq){
     const old = $('rpDrawBg'); if(old) old.remove();
     /* v92 : outils rangés par groupe dans une colonne, chacun avec son nom et sa touche ; au-dessus du dessin,
        seulement les réglages utiles à l'outil choisi (couleur, épaisseur, opacité, trait, remplissage). */
@@ -729,7 +730,7 @@
         commitText(); cropEnd(true);
         const kind = frame ? frame.k : 'draw';
         const src = kind === 'img' ? cv.toDataURL('image/jpeg', 0.85) : cv.toDataURL('image/png');
-        if(frame){ frame.src = src; } else store().frames.push(Object.assign({ id:uid(), pg:page, k:'draw', src, cap:'' }, sc ? { sc:sc } : {}));
+        if(frame){ frame.src = src; } else store().frames.push(Object.assign({ id:uid(), pg:page, k:'draw', src, cap:'' }, sc ? { sc:sc } : {}, sq ? { sq:sq } : {}));
         close(); save(); sbChanged();
       }
     });
@@ -1039,9 +1040,55 @@
   }
 
   /* ---------- plans dans l'ordre d'affichage, scènes et pages ---------- */
-  function sbOrdered(){
+  /* ancien rangement (par page puis par scène) : ne sert plus qu'à convertir un storyboard existant */
+  function sbOrderedByPage(){
     const n = nPages(), scs = sbScenes(), by = framesByPage(n, scs), out = []; let k = 0;
     for(let p = 1; p <= n; p++){ const ps = scs.filter(s => s.from <= p && p <= s.to); by[p].forEach(f => out.push({ f:f, num:++k, pg:p, sc:sceneIdOf(f, ps) })); }
+    return out;
+  }
+  /* v93 — SÉQUENCES LIBRES
+     Le storyboard n'est plus rangé de force sous les scènes : il suit l'ordre du film, découpé en séquences
+     que l'on crée, nomme et range soi-même (générique, ouverture, montage, scène 12, fin…). Une séquence peut
+     être reliée à une scène du scénario (son titre suit alors l'entête) ou rester libre.
+     store().seqs = [{ id, title, sc }] dans l'ordre ; chaque plan porte f.sq ; l'ordre des plans d'une
+     séquence est celui du tableau store().frames. Un storyboard d'avant est converti une fois, à l'identique :
+     une séquence reliée par scène qui avait des plans, dans le même ordre. */
+  function sbMigrate(){
+    const st = store(); if(st.v === 2) return;
+    const hasScenes = (() => { try{ return getSceneBlocks().some(b => b.sceneId); }catch(e){ return false; } })();
+    if(st.frames.length && hasScenes && !Object.keys((S.pagination && S.pagination.pageOf) || {}).length) return;   // pagination pas encore prête
+    const old = sbOrderedByPage(), seqs = [], byKey = {};
+    old.forEach(x => {
+      const k = x.sc || ('p' + x.pg); let q = byKey[k];
+      if(!q){ q = { id:uid(), title:x.sc ? '' : L('Page ', 'Page ') + x.pg, sc:x.sc || '' }; byKey[k] = q; seqs.push(q); }
+      x.f.sq = q.id;
+    });
+    const seen = new Set(old.map(x => x.f));
+    st.frames = old.map(x => x.f).concat(st.frames.filter(f => !seen.has(f)));
+    st.seqs = seqs.concat(st.seqs || []); st.v = 2;
+    if(old.length) save();
+  }
+  function seqLabel(q, scById){
+    if(q.title && q.title.trim()) return q.title.trim();
+    const sc = q.sc && scById[q.sc];
+    if(sc) return sc.title;
+    return L('Séquence sans titre', 'Untitled sequence');
+  }
+  function sbOrdered(){
+    sbMigrate();
+    const st = store(), ids = new Set(st.seqs.map(q => q.id));
+    const lost = st.frames.filter(f => !ids.has(f.sq));
+    if(lost.length){                                   // plan sans séquence (ajouté ailleurs) : va dans la dernière
+      if(!st.seqs.length) st.seqs.push({ id:uid(), title:'', sc:'' });
+      const last = st.seqs[st.seqs.length - 1]; lost.forEach(f => { f.sq = last.id; }); save();
+    }
+    const scById = {}; sbScenes().forEach(x => { scById[x.id] = x; });
+    const by = {}; st.frames.forEach(f => { (by[f.sq] = by[f.sq] || []).push(f); });
+    const out = []; let k = 0;
+    st.seqs.forEach(q => {
+      const sc = q.sc && scById[q.sc], label = seqLabel(q, scById);
+      (by[q.id] || []).forEach(f => out.push({ f:f, num:++k, pg:sc ? sc.from : (parseInt(f.pg, 10) || 1), sc:sc ? sc.id : '', sq:q.id, seq:q, label:label }));
+    });
     return out;
   }
   /* pages couvertes par chaque scène : de la page de son entête à la page de son dernier bloc
@@ -1065,6 +1112,7 @@
     if(scope === 'one') return all.filter(x => x.f.id === one);
     if(scope === 'sel') return all.filter(x => SELS.has(x.f.id));
     if(scope === 'scene') return all.filter(x => x.sc === val);
+    if(scope === 'seq') return all.filter(x => x.sq === val);
     if(scope === 'page') return all.filter(x => x.pg === (parseInt(val, 10) || 1));
     return all;
   }
@@ -1125,7 +1173,7 @@
       const px = Math.round(W * .03);
       cx.textBaseline = 'top';
       cx.font = '700 ' + fs + 'px ' + ff; cx.fillStyle = '#1F6FA0';
-      cx.fillText(L('PLAN', 'SHOT') + ' ' + x.num + '  \u00B7  ' + L('PAGE', 'PAGE') + ' ' + x.pg, px, H + tp);
+      cx.fillText(L('PLAN', 'SHOT') + ' ' + x.num + (x.label ? '  \u00B7  ' + clip(x.label, 60).toUpperCase() : ''), px, H + tp);
       cx.font = fs + 'px ' + ff; cx.fillStyle = '#1b1b1f';
       lines.forEach((t, i) => cx.fillText(t, px, H + tp + lh * (i + 1)));
     }
@@ -1165,7 +1213,7 @@
       doc.setFont('helvetica', 'bold'); doc.setFontSize(9); doc.setTextColor(31, 111, 160);
       doc.text(safe(L('PLAN', 'SHOT') + ' ' + it.num), x0, y0 + ih + 14);
       doc.setFont('helvetica', 'normal'); doc.setTextColor(110, 115, 125);
-      doc.text('Page ' + it.pg, x0 + iw, y0 + ih + 14, { align:'right' });
+      doc.text(safe(clip(it.label || '', per === 6 ? 26 : 50)), x0 + iw, y0 + ih + 14, { align:'right' });
       const cap = safe(it.f.cap || '').trim();
       if(cap){
         const fs = per === 6 ? 9 : 10.5, lh = fs * 1.3, maxL = Math.max(1, Math.floor((capH - 22) / lh));
@@ -1190,7 +1238,7 @@
           downloadBlob(base + ' - ' + L('plan', 'shot') + ' ' + pad2(files[0].x.num) + '.png', files[0].blob, 'image/png');
         } else {
           const zf = [];
-          for(const f of files) zf.push({ name:L('plan', 'shot') + ' ' + pad2(f.x.num) + ' - page ' + f.x.pg + '.png', data:new Uint8Array(await f.blob.arrayBuffer()) });
+          for(const f of files) zf.push({ name:L('plan', 'shot') + ' ' + pad2(f.x.num) + (f.x.label ? ' - ' + sanitize(clip(f.x.label, 40)) : '') + '.png', data:new Uint8Array(await f.blob.arrayBuffer()) });
           downloadBlob(base + ' - ' + o.file + '.zip', zipStore(zf), 'application/zip');
         }
       } else {
@@ -1208,21 +1256,18 @@
     const old = $('rpDlBg'); if(old) old.remove();
     const all = sbOrdered();
     if(!all.length){ toast(L('Aucun plan à télécharger.', 'No shots to download.')); return; }
-    const scenes = sbScenes().map(s => Object.assign({}, s, { n:all.filter(x => x.sc === s.id).length })).filter(s => s.n);
-    const pages = []; for(let p = 1; p <= nPages(); p++){ const n = all.filter(x => x.pg === p).length; if(n) pages.push({ p:p, n:n }); }
+    const seqL = []; store().seqs.forEach(q => { const its = all.filter(x => x.sq === q.id); if(its.length) seqL.push({ id:q.id, label:its[0].label, n:its.length }); });
     const selN = all.filter(x => SELS.has(x.f.id)).length, oneIt = one ? all.filter(x => x.f.id === one)[0] : null;
     let scope = oneIt ? 'one' : (selN ? 'sel' : 'all'), fmt = 'png';
     const opt = (val, title, sub, extra, off) => `<label class="rp-dl-opt${off ? ' off' : ''}" data-scope="${val}"><input type="radio" name="rpDlScope" value="${val}"${off ? ' disabled' : ''}><span class="t">${title}${sub ? `<small>${sub}</small>` : ''}</span>${extra || ''}</label>`;
-    const sceneSel = scenes.length ? `<select data-sel="scene" aria-label="${esc(L('Scène', 'Scene'))}">${scenes.map(s => `<option value="${esc(s.id)}">${esc((s.num ? s.num + '. ' : '') + clip(s.title, 30) + ' \u00B7 ' + s.n)}</option>`).join('')}</select>` : '';
-    const pageSel = `<select data-sel="page" aria-label="Page">${pages.map(x => `<option value="${x.p}">Page ${x.p} \u00B7 ${x.n}</option>`).join('')}</select>`;
+    const seqSel = seqL.length ? `<select data-sel="seq" aria-label="${esc(L('Séquence', 'Sequence'))}">${seqL.map(q => `<option value="${esc(q.id)}">${esc(clip(q.label, 34) + ' \u00B7 ' + q.n)}</option>`).join('')}</select>` : '';
     const bg = document.createElement('div'); bg.id = 'rpDlBg'; bg.className = 'modal-backdrop rp-ui'; bg.style.zIndex = '300';
     bg.innerHTML = `<div class="modal rp-dl" role="dialog" aria-modal="true" style="max-width:440px;">
       <h2>${esc(L('Télécharger le storyboard', 'Download the storyboard'))}</h2>
       <div class="rp-dl-sec">${esc(L('Quoi télécharger', 'What to download'))}</div>
-      ${oneIt ? opt('one', esc(L('Ce plan', 'This shot')), esc(L('Plan', 'Shot') + ' ' + oneIt.num + ' \u00B7 page ' + oneIt.pg)) : ''}
+      ${oneIt ? opt('one', esc(L('Ce plan', 'This shot')), esc(L('Plan', 'Shot') + ' ' + oneIt.num + ' \u00B7 ' + clip(oneIt.label, 40))) : ''}
       ${opt('sel', esc(L('Les plans cochés', 'Selected shots')), esc(selN ? plansTxt(selN) : L('Coche des plans avec le rond en bas à gauche de chaque image', 'Tick shots with the circle at the bottom left of each image')), '', !selN)}
-      ${opt('scene', esc(L('Une scène', 'A scene')), esc(scenes.length ? L('Tous les plans rangés sous cette scène', 'Every shot filed under this scene') : L('Aucune scène n\u2019a de plan', 'No scene has a shot')), sceneSel, !scenes.length)}
-      ${opt('page', esc(L('Une page', 'A page')), '', pageSel)}
+      ${opt('seq', esc(L('Une séquence', 'A sequence')), esc(L('Tous les plans de cette séquence', 'Every shot of this sequence')), seqSel, !seqL.length)}
       ${opt('all', esc(L('Tout le storyboard', 'The whole storyboard')), esc(plansTxt(all.length)))}
       <div class="rp-dl-sec">Format</div>
       <div class="rp-dl-seg"><button type="button" data-fmt="png">PNG</button><button type="button" data-fmt="pdf">PDF</button></div>
@@ -1233,16 +1278,11 @@
         <button type="button" class="btn btn-primary" data-r="go">${esc(L('Télécharger', 'Download'))}</button></div></div>`;
     document.body.appendChild(bg);
     const q = s => bg.querySelector(s);
-    const items = () => { const sc = q('select[data-sel="scene"]'), pg = q('select[data-sel="page"]'); return sbPick(scope, scope === 'scene' ? (sc && sc.value) : (pg && pg.value), one); };
+    const items = () => { const sq = q('select[data-sel="seq"]'); return sbPick(scope, sq && sq.value, one); };
     function names(){
       if(scope === 'one') return { file:L('plan', 'shot') + ' ' + pad2(oneIt.num), label:L('Plan', 'Shot') + ' ' + oneIt.num };
       if(scope === 'sel') return { file:L('plans choisis', 'selected shots'), label:L('Plans choisis', 'Selected shots') };
-      if(scope === 'scene'){
-        const sc = scenes.filter(s => s.id === q('select[data-sel="scene"]').value)[0] || {};
-        const n = sc.num || (scenes.indexOf(sc) + 1);
-        return { file:L('scène', 'scene') + ' ' + sanitize(String(n)), label:L('Scène', 'Scene') + ' ' + n + (sc.title ? ' \u2014 ' + sc.title : '') };
-      }
-      if(scope === 'page'){ const n = q('select[data-sel="page"]').value; return { file:'page ' + n, label:'Page ' + n }; }
+      if(scope === 'seq'){ const it = seqL.filter(x => x.id === q('select[data-sel="seq"]').value)[0] || { label:'' }; return { file:sanitize(clip(it.label, 40)) || L('séquence', 'sequence'), label:it.label }; }
       return { file:'storyboard', label:L('Tout le storyboard', 'Whole storyboard') };
     }
     function upd(){
@@ -1389,7 +1429,7 @@
   if(ACTIONS.openShortcuts) ACTIONS.openShortcuts = openShortcuts;
 
   /* v92 : fonctions partagées avec l'onglet Storyboard (js/36-storyboard-tab.js) */
-  window.RPSB = { store, save, drawOpen, pickFile, pasteImage, addFiles, dlOpen, delFrame, sbScenes, sbOrdered, sceneIdOf, snack, SELS, svg, ICON_FRAME, changed:sbChanged };
+  window.RPSB = { store, save, drawOpen, pickFile, pasteImage, addFiles, dlOpen, delFrame, sbScenes, sbOrdered, sbMigrate, seqLabel, sceneIdOf, snack, SELS, svg, ICON_FRAME, uid, changed:sbChanged };
 
   /* ---------- boucle de mise à jour ---------- */
   let raf = 0;
