@@ -916,80 +916,98 @@ function sampleSetLang(id){
   document.querySelectorAll('#sampleLangChoice .fmt-opt').forEach(el=> el.classList.toggle('active', el.dataset.id === id));
 }
 /* Onglet « Aide à l'écriture » de l'éditeur : cartes par thème (v69). */
+/* v95 : l'aide à l'écriture montre au lieu d'expliquer — une page de scénario annotée dans la marge, une frise
+   des trois actes calée sur la longueur réelle du scénario, une relecture à cocher (gardée avec le scénario)
+   et des raccourcis vers les onglets qui servent à construire l'histoire. */
 function renderWritingHelp(){
-  const rows = [
-    [L('Ligne de scène','Scene heading'), L('Où et quand : INT./EXT., lieu, moment. Une par changement de lieu ou de moment.','Where and when: INT./EXT., location, time. One per change of place or time.'), L('INT. CUISINE - NUIT','INT. KITCHEN - NIGHT'), 'Ctrl+1'],
-    [L('Action','Action'), L('Ce qu\u2019on voit et entend, au présent, en phrases courtes.','What we see and hear, in present tense, in short sentences.'), L('Léa pose sa valise.','Léa sets down her suitcase.'), 'Ctrl+2'],
-    [L('Personnage','Character'), L('Le nom de celui qui parle, en majuscules, juste avant sa réplique.','The speaker\u2019s name, in capitals, right before the line.'), 'LÉA', 'Ctrl+3'],
-    [L('Parenthèse','Parenthetical'), L('Comment la réplique est dite. Rare : seulement si le ton n\u2019est pas évident.','How the line is delivered. Rare: only if the tone isn\u2019t obvious.'), L('(un temps)','(a beat)'), 'Ctrl+4'],
-    [L('Dialogue','Dialogue'), L('Ce que dit le personnage. Court, naturel, avec du non-dit.','What the character says. Short, natural, with things left unsaid.'), L('Je suis venue pour signer.','I came to sign.'), 'Ctrl+5'],
-    [L('Transition','Transition'), L('Raccord entre deux scènes. À utiliser très peu.','The link between two scenes. Use very sparingly.'), L('FONDU AU NOIR.','FADE OUT.'), 'Ctrl+6'],
-    [L('Plan','Shot'), L('Ce que la caméra montre, seulement quand c\u2019est l\u2019information. Une ou deux fois par scénario.','What the camera shows, only when it IS the information. Once or twice per script.'), L('GROS PLAN - LA LETTRE','CLOSE ON - THE LETTER'), 'Ctrl+7'],
-    [L('Note','Note'), L('Un mot pour toi, invisible à l\u2019export.','A word to yourself, invisible in exports.'), L('À creuser : le père','To dig into: the father'), 'Ctrl+9'],
+  const en = getLang() === 'en';
+  /* la page annotée : [classe de la ligne, texte, nom, raccourci, rôle en quelques mots] */
+  const lines = [
+    ['scene', L('INT. LIBRAIRIE MARCHAND - JOUR','INT. MARCHAND BOOKS - DAY'), L('Ligne de scène','Scene heading'), 'Ctrl+1', L('Où et quand. Une par lieu ou moment.','Where and when. One per place or time.')],
+    ['action', L('Léa pose sa valise. Le carillon tinte encore au-dessus de la porte.','Léa sets down her suitcase. The bell above the door is still ringing.'), L('Action','Action'), 'Ctrl+2', L('Ce qu’on voit et entend, au présent.','What we see and hear, in present tense.')],
+    ['character', L('LÉA','LÉA'), L('Personnage','Character'), 'Ctrl+3', L('Qui parle, en majuscules.','Who speaks, in capitals.')],
+    ['paren', L('(sans se retourner)','(without turning around)'), L('Parenthèse','Parenthetical'), 'Ctrl+4', L('Le ton, seulement s’il n’est pas évident.','The tone, only when it isn’t obvious.')],
+    ['dialogue', L('Je suis venue pour signer. Rien d’autre.','I came to sign. Nothing else.'), L('Dialogue','Dialogue'), 'Ctrl+5', L('Court, naturel, avec du non-dit.','Short, natural, with things left unsaid.')],
+    ['shot', L('GROS PLAN - LA LETTRE','CLOSE ON - THE LETTER'), L('Plan','Shot'), 'Ctrl+7', L('Seulement si le cadre est l’information.','Only when the framing is the point.')],
+    ['transition', L('FONDU AU NOIR.','FADE OUT.'), L('Transition','Transition'), 'Ctrl+6', L('Rare : seulement si le raccord compte.','Rare: only when the cut matters.')],
+    ['note', L('À creuser : ce que le père n’a jamais dit.','To dig into: what the father never said.'), L('Note','Note'), 'Ctrl+9', L('Pour toi seul, jamais imprimée.','Just for you, never printed.')],
   ];
-  const elsHtml = rows.map(r=>`<div class="wh-el"><div class="wh-el-h"><span class="wh-el-t">${r[0]}</span><span class="kbd">${r[3]}</span></div><div class="wh-el-d">${r[1]}</div><span class="wh-el-e">${esc(r[2])}</span></div>`).join('');
+  const page = lines.map((r, i) => `<div class="wf-l wf-${r[0]}" data-r="${i}" style="grid-row:${i + 1}">${r[0] === 'scene' ? '<span class="wf-n">1</span>' : ''}${esc(r[1])}</div>
+    <div class="wf-a" data-r="${i}" style="grid-row:${i + 1}"><span class="wf-at"><b>${r[2]}</b><span class="kbd">${r[3]}</span></span><span class="wf-ad">${r[4]}</span></div>`).join('');
+  /* la frise : moments clés, en part du scénario, calés sur son nombre de pages */
+  const total = Math.max(1, (S.pagination && S.pagination.count) || 1);
+  const pg = f => Math.max(1, Math.round(total * f));
+  const beats = [
+    [.12, L('Déclencheur','Inciting incident'), 'up'],
+    [.25, L('Choix : fin de l’acte 1','Choice: end of act 1'), 'down'],
+    [.50, L('Point médian','Midpoint'), 'up'],
+    [.75, L('Tout est perdu','All is lost'), 'down'],
+    [.90, L('Climax','Climax'), 'up'],
+  ];
+  const marks = beats.map(b => `<span class="ws-m ws-${b[2]}" style="left:${b[0] * 100}%"><i></i><span class="ws-ml"><b>${b[1]}</b><em>${L('p. ','p. ')}${pg(b[0])}</em></span></span>`).join('');
   const acts = [
-    [L('Acte 1 \u00b7 la mise en place','Act 1 \u00b7 the setup'), L('environ le premier quart','about the first quarter'), L('On découvre le personnage, son monde et son but. Un déclencheur bouscule tout, puis il fait un choix actif qui le lance dans l\u2019histoire.','We meet the character, her world and her goal. An inciting incident shakes everything up, then she makes an active choice that launches her into the story.')],
-    [L('Acte 2 \u00b7 la confrontation','Act 2 \u00b7 the confrontation'), L('environ la moitié du scénario','about half the script'), L('Le personnage poursuit son but et rencontre des obstacles de plus en plus durs. Au milieu, un point médian retourne la situation, puis tout semble perdu.','The character pursues her goal and meets harder and harder obstacles. In the middle, a midpoint turns the situation around, then all seems lost.')],
-    [L('Acte 3 \u00b7 la résolution','Act 3 \u00b7 the resolution'), L('environ le dernier quart','about the last quarter'), L('Après le point le plus bas, le personnage trouve la solution et affronte le climax. La dernière image montre ce qui a changé.','After the lowest point, the character finds the solution and faces the climax. The final image shows what has changed.')],
+    [L('Acte 1','Act 1'), L('La mise en place','The setup'), L('Le personnage, son monde, son but. Un événement bouscule tout ; il fait un choix.','The character, their world, their goal. Something upsets it all; they make a choice.')],
+    [L('Acte 2','Act 2'), L('La confrontation','The confrontation'), L('Des obstacles de plus en plus durs. Au milieu, tout bascule ; puis tout semble perdu.','Ever harder obstacles. In the middle, everything turns; then all seems lost.')],
+    [L('Acte 3','Act 3'), L('La résolution','The resolution'), L('Il trouve la solution et affronte le climax. La dernière image montre le changement.','They find the answer and face the climax. The last image shows the change.')],
   ];
-  const actsHtml = acts.map((a,i)=>`<li class="wh-act"><span class="help-step-num">${i+1}</span><div class="wh-act-b"><div class="wh-act-h"><b>${a[0]}</b><span class="wh-act-k">${a[1]}</span></div><p class="wh-act-d">${a[2]}</p></div></li>`).join('');
+  /* relecture du premier jet : cochée au fil des relectures, gardée avec le scénario */
   const checks = [
-    L('Mon personnage principal veut quelque chose de précis, et je le montre dès les premières pages.','My main character wants something specific, and I show it in the first pages.'),
-    L('Un événement bouscule son quotidien assez tôt (dans le premier quart).','An event upsets her routine early enough (in the first quarter).'),
-    L('À la fin de l\u2019acte 1, il fait un choix : il n\u2019est pas simplement poussé par les événements.','At the end of act 1, she makes a choice: she isn\u2019t merely pushed along by events.'),
-    L('Chaque scène change quelque chose : sinon, je la coupe ou je la fusionne.','Every scene changes something: if not, I cut it or merge it.'),
-    L('Mes actions décrivent seulement ce qu\u2019on peut voir ou entendre, pas ce que pense le personnage.','My action lines describe only what can be seen or heard, never what the character thinks.'),
-    L('Mes personnages ne disent pas tout : ils laissent du non-dit.','My characters don\u2019t say everything: they leave things unsaid.'),
-    L('La dernière image répond à la première et montre le changement.','The final image answers the first and shows the change.'),
+    L('Mon personnage veut quelque chose de précis, dès les premières pages.','My character wants something specific, from the first pages.'),
+    L('Un événement bouscule son quotidien dans le premier quart.','An event upsets their routine within the first quarter.'),
+    L('À la fin de l’acte 1, il choisit : il n’est pas seulement poussé.','At the end of act 1, they choose: they aren’t just pushed along.'),
+    L('Chaque scène change quelque chose — sinon je la coupe ou la fusionne.','Every scene changes something — otherwise I cut or merge it.'),
+    L('Mes actions décrivent ce qu’on voit ou entend, pas ce qu’on pense.','My action lines describe what we see or hear, not what anyone thinks.'),
+    L('Mes personnages ne disent pas tout.','My characters don’t say everything.'),
+    L('La dernière image répond à la première.','The last image answers the first.'),
   ];
-  const where = [
-    [L('Cartes','Cards'), L('Chaque scène sur une fiche, à déplacer comme au tableau de liège.','Each scene on a card, to move around like on a corkboard.')],
-    [L('Structure','Structure'), L('Les grandes étapes de l\u2019histoire ; des gabarits (Save the Cat\u2026) pré-remplissent des cartes.','The story\u2019s big stages; templates (Save the Cat\u2026) pre-fill cards.')],
-    [L('Outline','Outline'), L('Un résumé d\u2019une phrase par scène : la colonne vertébrale de ton scénario.','A one-sentence summary per scene: the backbone of your screenplay.')],
-    [L('Personnages','Characters'), L('Qui parle, combien, dans quelles scènes.','Who speaks, how much, in which scenes.')],
+  const done = (S.project && Array.isArray(S.project.whChecks)) ? S.project.whChecks : [];
+  const nDone = checks.filter((c, i) => done[i]).length;
+  const tiles = [
+    ['cards', 'grid', L('Cartes','Cards'), L('Les scènes en fiches, à réordonner.','Scenes as cards, to reorder.')],
+    ['structure', 'layers', L('Structure','Structure'), L('Les grandes étapes, avec des gabarits.','The big stages, with templates.')],
+    ['outline', 'list', L('Outline','Outline'), L('Une phrase par scène.','One sentence per scene.')],
+    ['characters', 'users', L('Personnages','Characters'), L('Qui parle, combien, où.','Who speaks, how much, where.')],
   ];
-  const strip = (S.project && S.project.isSample) ? `<div class="sset-status wh-strip"><span class="sset-dot"></span><span class="wh-strip-t">${L('Ce scénario est une copie de l\u2019exemple.','This screenplay is a copy of the example.')}</span><button class="btn btn-sm" data-act="stripSampleNotes">${L('Supprimer les notes bleues de cet exemple','Remove the blue notes from this example')}</button></div>` : '';
-  return `<div class="cards-toolbar"><div class="pane-title" style="margin:0;">${L('Aide à l\u2019écriture','Writing help')}</div></div>
-  <div class="wh-wrap">
-    <p class="wh-lead">${L('Un exemple annoté, les éléments d\u2019un scénario, les trois actes et une checklist pour bien démarrer. Ce sont des repères éprouvés, pas des règles : garde ce qui t’aide.','An annotated example, the elements of a screenplay, the three acts and a checklist to get you started. These are tried-and-tested guides, not rules: keep what helps you.')}</p>
-    <div class="wh-card wh-sample">
-      <div class="wh-card-t">${icon('book')}<span>${L('Scénario d\u2019exemple : « Dernier Rayon »','Example screenplay: \u201CLast Aisle\u201D')}</span></div>
-      <p class="wh-card-s">${L('Un court métrage de 17 pages à lire pour apprendre, avec chaque étape expliquée là où elle arrive.','A 17-page short film to learn from, with each step explained right where it happens.')}</p>
-      <ul class="help-points">
-        <li>${L('Annoté de bout en bout : but du personnage, déclencheur, point médian, climax','Annotated throughout: the character\u2019s goal, inciting incident, midpoint, climax')}</li>
-        <li>${L('Tu reçois ta propre copie, à modifier librement','You get your own copy, free to edit')}</li>
-        <li>${L('Les notes bleues n\u2019apparaissent jamais à l\u2019impression ni à l\u2019export','The blue notes never appear in print or in exports')}</li>
-      </ul>
-      <div class="sset-actions">
-        <button class="btn btn-primary" data-act="createSample" data-id="fr">${L('Ouvrir en français','Open in French')}</button>
-        <button class="btn btn-primary" data-act="createSample" data-id="en">${L('Ouvrir en anglais','Open in English')}</button>
-      </div>${strip}
-    </div>
-    <div class="wh-card">
-      <div class="wh-card-t"><span>${L('Les éléments d\u2019un scénario','The elements of a screenplay')}</span></div>
-      <p class="wh-card-s">${L('Écris une ligne, puis choisis son type avec le raccourci, ou laisse Raging Page le deviner. Entrée passe à l\u2019élément suivant.','Write a line, then pick its type with the shortcut, or let Raging Page guess it. Enter moves to the next element.')}</p>
-      <div class="wh-els">${elsHtml}</div>
-      <div class="help-callout">${L('<b>Des standards, pas une prison :</b> ces conventions sont celles de l’industrie depuis des décennies et elles ont fait leurs preuves, notamment parce qu’elles rendent ton scénario facile à lire. Apprends-les d’abord ; ensuite, rien ne t’oblige à les suivre à la lettre si ton histoire demande autre chose.','<b>Standards, not a cage:</b> these are industry conventions that have stood the test of time, not least because they make your script easy to read. Learn them first; after that, nothing forces you to follow them to the letter if your story needs something else.')}</div>
-    </div>
-    <div class="wh-card">
-      <div class="wh-card-t"><span>${L('Les trois actes','The three acts')}</span></div>
-      <p class="wh-card-s">${L('Une histoire se découpe en trois temps. Voici où chacun se place et ce qui s\u2019y passe. C’est un schéma qui a fait ses preuves, pas un moule : beaucoup de bons scénarios le déplacent ou le brisent.','A story breaks into three parts. Here is where each one sits and what happens in it. It’s a pattern that has proven itself, not a mould: plenty of good scripts shift it or break it.')}</p>
-      <ol class="wh-acts">${actsHtml}</ol>
-      <div class="help-callout">${L('<b>Repère de longueur :</b> 1 page ≈ 1 minute de film. Sur 17 pages, le déclencheur tombe vers la page 4, le point médian vers la page 9, « tout est perdu » vers la page 13 et le climax vers la page 15.','<b>Length guide:</b> 1 page \u2248 1 minute of film. In 17 pages, the inciting incident lands around page 4, the midpoint around page 9, \u201Call is lost\u201D around page 13 and the climax around page 15.')}</div>
-    </div>
-    <div class="wh-card">
-      <div class="wh-card-t"><span>${L('Ta checklist de débutant','Your beginner\u2019s checklist')}</span></div>
-      <p class="wh-card-s">${L('Sept questions à te poser quand ton premier jet est fini. Ce sont des questions, pas des obligations : si tu réponds « non » quelque part, que ce soit un choix.','Seven questions to ask yourself once your first draft is done. These are questions, not obligations: if you answer “no” somewhere, make it a choice.')}</p>
-      <ul class="help-points">${checks.map(c=>`<li>${c}</li>`).join('')}</ul>
-    </div>
-    <div class="wh-card">
-      <div class="wh-card-t"><span>${L('Où trouver quoi dans Raging Page','Where to find what in Raging Page')}</span></div>
-      <p class="wh-card-s">${L('Les onglets qui t\u2019aident à construire l\u2019histoire, à côté de l\u2019éditeur.','The tabs that help you build the story, next to the editor.')}</p>
-      <div class="wh-where">${where.map(w=>`<div class="wh-tile"><div class="wh-tile-t">${w[0]}</div><p class="wh-tile-d">${w[1]}</p></div>`).join('')}</div>
-    </div>
+  const strip = (S.project && S.project.isSample) ? `<div class="sset-status wh-strip"><span class="sset-dot"></span><span class="wh-strip-t">${L('Ce scénario est une copie de l’exemple.','This screenplay is a copy of the example.')}</span><button class="btn btn-sm" data-act="stripSampleNotes">${L('Supprimer les notes bleues de cet exemple','Remove the blue notes from this example')}</button></div>` : '';
+  return `<div class="cards-toolbar"><div class="pane-title" style="margin:0;">${L('Aide à l’écriture','Writing help')}</div></div>
+  <div class="wh-wrap ws">
+    <p class="wh-lead">${L('Le format et la structure d’un scénario, à garder sous la main.','The format and structure of a screenplay, to keep at hand.')}</p>
+    <div class="ws-sample">
+      <div class="ws-mini" aria-hidden="true"><i class="s"></i><i></i><i class="n"></i><i class="c"></i><i class="d"></i><i class="d2"></i><i></i></div>
+      <div class="ws-sm-b"><b>${L('Scénario d’exemple : « Dernier Rayon »','Example screenplay: “Last Aisle”')}</b>
+        <span>${L('Un court métrage de 17 pages, commenté pas à pas dans des notes bleues qui ne s’impriment jamais.','A 17-page short film, commented step by step in blue notes that never print.')}</span></div>
+      <div class="ws-sm-a"><button class="btn ${en ? '' : 'btn-primary'}" data-act="createSample" data-id="fr">${L('Ouvrir en français','Open in French')}</button>
+        <button class="btn ${en ? 'btn-primary' : ''}" data-act="createSample" data-id="en">${L('Ouvrir en anglais','Open in English')}</button></div>
+    </div>${strip}
+    <section class="ws-sec">
+      <div class="ws-h"><h3>${L('Le format','The format')}</h3><span>${L('Tape une ligne, choisis son type au raccourci — ou laisse Raging Page le deviner. Entrée passe à la suivante.','Type a line, pick its type with the shortcut — or let Raging Page guess. Enter moves to the next one.')}</span></div>
+      <div class="wf">${page}</div>
+    </section>
+    <section class="ws-sec">
+      <div class="ws-h"><h3>${L('La structure','The structure')}</h3><span>${L('Repères pour ton scénario de ','Landmarks for your screenplay of ')}<b>${total} ${total > 1 ? L('pages','pages') : L('page','page')}</b>${L(' (1 page ≈ 1 minute).',' (1 page ≈ 1 minute).')}</span></div>
+      <div class="ws-tl"><div class="ws-bar"><span class="a1">${L('Acte 1','Act 1')}</span><span class="a2">${L('Acte 2','Act 2')}</span><span class="a3">${L('Acte 3','Act 3')}</span>${marks}</div></div>
+      <div class="ws-acts">${acts.map(a => `<div class="ws-act"><b>${a[0]} · ${a[1]}</b><p>${a[2]}</p></div>`).join('')}</div>
+    </section>
+    <section class="ws-sec">
+      <div class="ws-h"><h3>${L('Relecture du premier jet','First-draft read-through')}</h3><span class="ws-prog"><b class="ws-n">${nDone} / ${checks.length}</b><i><i style="width:${Math.round(nDone / checks.length * 100)}%"></i></i></span></div>
+      <div class="ws-chk">${checks.map((c, i) => `<label class="ws-ci${done[i] ? ' on' : ''}"><input type="checkbox" data-wsc="${i}"${done[i] ? ' checked' : ''}><span>${c}</span></label>`).join('')}</div>
+    </section>
+    <section class="ws-sec">
+      <div class="ws-h"><h3>${L('Pour construire l’histoire','To build the story')}</h3></div>
+      <div class="ws-tiles">${tiles.map(t => `<button type="button" class="ws-tile" data-act="switchTab" data-id="${t[0]}">${icon(t[1])}<span><b>${t[2]}</b><em>${t[3]}</em></span></button>`).join('')}</div>
+    </section>
   </div>`;
 }
+/* relecture : chaque case cochée est gardée avec le scénario (sans redessiner l'onglet) */
+document.addEventListener('change', e => {
+  const t = e.target; if(!t || !t.dataset || t.dataset.wsc == null || !S.project) return;
+  const a = Array.isArray(S.project.whChecks) ? S.project.whChecks : (S.project.whChecks = []);
+  a[+t.dataset.wsc] = t.checked; scheduleAutosave();
+  t.closest('.ws-ci').classList.toggle('on', t.checked);
+  const box = t.closest('.ws-sec'), all = box.querySelectorAll('[data-wsc]'), n = [...all].filter(x => x.checked).length;
+  box.querySelector('.ws-n').textContent = n + ' / ' + all.length;
+  box.querySelector('.ws-prog i i').style.width = Math.round(n / all.length * 100) + '%';
+});
 
 const ACTIONS = {
   openCreateModal, closeModal, closeModalBg: (id,e)=>{ if(e.target.id==='createBackdrop') closeModal(); },

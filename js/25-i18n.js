@@ -304,7 +304,7 @@ const I18N_EXCLUDE_SEL = [
   '.line', '[contenteditable]', 'textarea', 'input', 'script', 'style',
   '.card-heading', '.card-syn', '.flat-row-title', '.char-name', '.char-stats',
   '.tag-chip', '.chip-toggle', '.proj-name', '.rail-project', '#charDetail',
-  '.titlepage', '#reportResults', '.comment-body', '.diff-text', '.diff-type', '.cp-lab'
+  '.titlepage', '#reportResults', '.comment-body', '.diff-text', '.diff-type', '.cp-lab', '.wd-slug'
 ].join(',');
 
 function i18nSkip(el){ return !!(el && el.closest && el.closest(I18N_EXCLUDE_SEL)); }

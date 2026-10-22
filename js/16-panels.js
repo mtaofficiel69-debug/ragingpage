@@ -89,11 +89,7 @@ function renderNotes(){
     <p class="wh-lead">${L('Un bloc-notes à part, pour tout ce qui n\u2019a pas sa place dans le scénario.','A separate notepad, for everything that doesn\u2019t belong in the screenplay.')}</p>
     <div class="wh-card">
       <div class="wh-card-t"><span>${L('Ton bloc-notes','Your notepad')}</span></div>
-      <p class="wh-card-s">${L('Séparé du scénario, jamais exporté.','Kept separate from the screenplay, never exported.')}</p>
-      <ul class="help-points">
-        <li>${L('Les notes insérées directement dans le texte (Ctrl+9) restent visibles dans l\u2019éditeur','Notes inserted directly in the text (Ctrl+9) stay visible in the editor')}</li>
-        <li>${L('Elles sont, elles aussi, exclues des exports','They are also excluded from exports')}</li>
-      </ul>
+      <p class="wh-card-s">${L('Séparé du scénario et jamais exporté, comme les notes glissées dans le texte (Ctrl+9).','Kept apart from the screenplay and never exported, like the notes slipped into the text (Ctrl+9).')}</p>
       <textarea class="notes-area" id="personalNotes" placeholder="${L('Idées, recherches, choses à ne pas oublier…','Ideas, research, things not to forget…')}">${esc(S.project.personalNotes)}</textarea>
     </div>
   </div>`;
