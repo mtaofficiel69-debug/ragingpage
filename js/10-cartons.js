@@ -421,7 +421,7 @@ function showContextPanel(el){
     side.classList.remove('hidden');
     side.innerHTML = (el.fpg ? fpPanelHtml(el) : '') + cardPanelHtml(el);
     bindCardPanel(el);
-  } else if(el.fpg){
+  } else if(el.fpg && !fpPanelOff){
     side.dataset.mode = 'freepage';
     side.classList.remove('hidden');
     side.innerHTML = fpPanelHtml(el);
