@@ -122,7 +122,7 @@ function cpActions(){
     { id:'toggleNav', ic:'sidebar', t:['Liste des scènes (panneau de droite)', 'Scene list (right panel)'], k:'scenes navigateur panneau droite navigator', w:CP_W.mV, st:() => !!S.navOpen, ed:true, run:() => toggleNav() },
     { id:'toggleFocusMode', ic:'focus', t:['Mode Focus', 'Focus mode'], k:'focus concentration estomper distraction', w:CP_W.mV, keys:[M, Sh, 'F'], st:() => !!S.focusMode, ed:true, line:true, run:() => toggleFocusMode() },
     { id:'toggleTypewriterMode', ic:'typeT', t:['Mode machine à écrire', 'Typewriter mode'], k:'machine a ecrire centre curseur typewriter', w:CP_W.mV, st:() => !!S.typewriterMode, ed:true, line:true, run:() => toggleTypewriterMode() },
-    { id:'rpSbToggle', ic:'image', t:['Storyboard en temps réel', 'Live storyboard'], k:'storyboard images plans dessin', w:CP_W.mV, keys:[M, Al, 'B'], st:() => { try{ return localStorage.getItem('scriptmm_storyboard') === '1'; }catch(e){ return false; } }, ed:true, run:() => A.rpSbToggle && A.rpSbToggle() },
+    { id:'sbPlay', ic:'frames', t:['Storyboard : lecture auto des plans', 'Storyboard: auto play the shots'], k:'storyboard lecture lire diaporama animatique plans defiler play slideshow', w:CP_W.rail, run:() => { switchTab('storyboard'); setTimeout(() => { const b = document.querySelector('[data-sb="play"]'); if(b && !b.disabled) b.click(); }, 120); } },
     // Voix
     { id:'speakScene', ic:'speaker', t:['Lire la scène à voix haute', 'Read the scene aloud'], k:'lire voix haute lecture read aloud speak table read', w:CP_W.mVo, keys:[M, Sh, 'L'], ed:true, line:true, run:() => speakScene() },
     { id:'toggleDictation', ic:'mic', t:['Dicter dans la ligne', 'Dictate into the line'], k:'dicter dictee micro voix dictate microphone', w:CP_W.mVo, keys:[M, Sh, 'V'], ed:true, line:true, run:() => toggleDictation() },
@@ -150,6 +150,7 @@ function cpActions(){
     tab('cards', 'grid', 'Cartes', 'Cards', 'cartes fiches cards'),
     tab('structure', 'layers', 'Structure', 'Structure', 'structure actes beats'),
     tab('outline', 'list', 'Outline', 'Outline', 'outline sequencier plan resume'),
+    Object.assign(tab('storyboard', 'frames', 'Storyboard', 'Storyboard', 'storyboard plans dessins images vignettes shots drawings'), { keys:[M, Al, 'B'] }),
     tab('guide', 'book', 'Aide à l’écriture', 'Writing help', 'aide ecriture conseils guide writing help'),
     tab('characters', 'users', 'Personnages', 'Characters', 'personnages roles characters'),
     tab('tags', 'tag', 'Tags', 'Tags', 'tags etiquettes'),

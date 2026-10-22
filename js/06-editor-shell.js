@@ -7,6 +7,7 @@ function railItems(){
     ['cards','grid',L('Cartes','Cards')],
     ['structure','layers',L('Structure','Structure')],
     ['outline','list',L('Outline','Outline')],
+    ['storyboard','frames',L('Storyboard','Storyboard')],
     ['guide','book',L('Aide à l\u2019écriture','Writing help')],
     ['characters','users',L('Personnages','Characters')],
     ['tags','tag',L('Tags','Tags')],
@@ -22,7 +23,7 @@ function railItems(){
 function renderEditorShell(){
   const p = S.project;
   const railGroups = [
-    [L('Écrire','Write'), ['editor','cards','structure','outline','guide']],
+    [L('Écrire','Write'), ['editor','cards','structure','outline','storyboard','guide']],
     [L('Univers','Story world'), ['characters','tags','notes']],
     [L('Projet','Project'), ['titlepage','reports','stats','history','graveyard','settings']],
   ];
@@ -149,6 +150,7 @@ function renderTabBody(){
   else if(S.tab==='cards') c.innerHTML = renderCards();
   else if(S.tab==='structure') c.innerHTML = renderStructure();
   else if(S.tab==='outline') c.innerHTML = renderOutline();
+  else if(S.tab==='storyboard') c.innerHTML = renderStoryboard();
   else if(S.tab==='guide') c.innerHTML = renderWritingHelp();
   else if(S.tab==='titlepage'){ c.innerHTML = renderTitlePageDesign(); }
   else if(S.tab==='characters') c.innerHTML = renderCharacters();

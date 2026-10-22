@@ -178,6 +178,7 @@ function icon(name){
     export:'<path d="M8 10V2M4 6l4-4 4 4"/><path d="M2 13h12"/>',
     search:'<circle cx="6.5" cy="6.5" r="4.5"/><path d="M13 13l-3.2-3.2"/>',
     doc:'<path d="M3 1h7l3 3v11H3z"/><path d="M9 1v4h4"/>',
+    frames:'<rect x="1.5" y="1.8" width="13" height="8" rx="1.4"/><path d="M1.9 8.4l3.4-3 2.6 2.2 2-1.6 4.3 3.4"/><path d="M1.5 13.2h3.4M6.3 13.2h3.4M11.1 13.2h3.4"/>',
     grid:'<rect x="2" y="2" width="5" height="5"/><rect x="9" y="2" width="5" height="5"/><rect x="2" y="9" width="5" height="5"/><rect x="9" y="9" width="5" height="5"/>',
     layers:'<path d="M8 1.5l6.2 3.3L8 8.1 1.8 4.8z"/><path d="M1.8 8.2 8 11.5l6.2-3.3"/><path d="M1.8 11.5 8 14.8l6.2-3.3"/>',
     list:'<path d="M4 4h9M4 8h9M4 12h9"/><circle cx="1.3" cy="4" r=".9"/><circle cx="1.3" cy="8" r=".9"/><circle cx="1.3" cy="12" r=".9"/>',
