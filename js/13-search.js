@@ -287,8 +287,51 @@ let _matchTimer = 0;
 /* v88 : le contour bleu était retiré sur l'élément gardé en mémoire ; si la ligne était entre-temps
    redessinée (pagination, rafraîchissement), c'est sa copie qui gardait le contour pour toujours.
    On retire maintenant le contour de TOUTES les lignes présentes à l'écran, au moment voulu. */
+/* Durée du surlignement jaune (recherche) : le compte à rebours ne part qu'une fois la page ARRIVÉE
+   sur le résultat (sur un long scénario, le défilement prenait à lui seul presque tout le temps).
+   Puis il reste bien visible, s'efface en douceur, et disparaît tout de suite si on clique ou tape dans le texte. */
+const HL_HOLD = 2500, HL_FADE = 700, HL_MAX_SCROLL = 4000, HL_STEPS = 6;
+let _hlSeq = 0, _hlRaf = 0, _hlOn = false, _hlStep = 0, _hlLines = [];
+/* Fondu : des teintes de plus en plus claires sont déclarées une seule fois (rp-search-1 … rp-search-6) ;
+   on fait seulement passer le surlignement de l'une à l'autre, ce qui ne redessine que les mots surlignés. */
+function searchHlStep(i){
+  if(i === _hlStep) return;
+  if(window.CSS && CSS.highlights){
+    const from = _hlStep ? 'rp-search-' + _hlStep : 'rp-search', h = CSS.highlights.get(from);
+    if(h){ CSS.highlights.delete(from); CSS.highlights.set(i ? 'rp-search-' + i : 'rp-search', h); }
+  }
+  _hlLines.forEach(d => { if(d.isConnected && d.classList.contains('hl')) d.style.background = 'rgba(255,193,7,' + (.28 * (1 - i / (HL_STEPS + 1))).toFixed(3) + ')'; });
+  _hlStep = i;
+}
+/* attend que la ligne trouvée ne bouge plus (fin du défilement), puis laisse le surlignement HL_HOLD ms avant de l'estomper */
+function searchHlArm(div){
+  const seq = ++_hlSeq, t0 = performance.now();
+  let last = null, still = 0;
+  const step = () => {
+    if(seq !== _hlSeq) return;
+    const top = div.isConnected ? div.getBoundingClientRect().top : null;
+    if(top !== null && last !== null && Math.abs(top - last) < 0.5) still++; else still = 0;
+    last = top;
+    if(top === null || still >= 6 || performance.now() - t0 > HL_MAX_SCROLL){ _matchTimer = setTimeout(() => searchHlFade(seq), HL_HOLD); return; }
+    _hlRaf = requestAnimationFrame(step);
+  };
+  _hlRaf = requestAnimationFrame(step);
+}
+function searchHlFade(seq){
+  const t0 = performance.now();
+  const step = () => {
+    if(seq !== _hlSeq) return;
+    const k = (performance.now() - t0) / HL_FADE;
+    if(k >= 1){ clearMatchMarks(); return; }
+    searchHlStep(Math.min(HL_STEPS, Math.floor(k * (HL_STEPS + 1))));
+    _hlRaf = requestAnimationFrame(step);
+  };
+  _hlRaf = requestAnimationFrame(step);
+}
 function clearMatchMarks(){
-  if(window.CSS && CSS.highlights) CSS.highlights.delete('rp-search');
+  _hlSeq++; cancelAnimationFrame(_hlRaf); _hlOn = false; _hlLines = [];
+  if(window.CSS && CSS.highlights){ CSS.highlights.delete('rp-search'); if(_hlStep) CSS.highlights.delete('rp-search-' + _hlStep); }
+  _hlStep = 0;
   document.querySelectorAll('#page .line').forEach(d=>{
     if(d.classList.contains('hl') || (d.style.outline && d.style.outline.indexOf('31, 111, 160') >= 0) || (d.style.outline && d.style.outline.toLowerCase().indexOf('1f6fa0') >= 0)){
       d.classList.remove('hl'); d.style.outline = ''; d.style.background = '';
@@ -296,6 +339,8 @@ function clearMatchMarks(){
   });
 }
 document.addEventListener('mousedown', e=>{ if(e.target && e.target.closest && e.target.closest('#page')){ clearTimeout(_matchTimer); clearMatchMarks(); } }, true);
+/* taper dans le scénario efface aussi le surlignement jaune (seulement s'il y en a un : rien à faire sinon) */
+document.addEventListener('keydown', e=>{ if(_hlOn && !/^(Shift|Control|Alt|Meta|CapsLock)$/.test(e.key) && e.target && e.target.closest && e.target.closest('#page')){ clearTimeout(_matchTimer); clearMatchMarks(); } }, true);
 /* Surlignage façon WriterDuet : on surligne le TEXTE trouvé (fond ambré, sans cadre ni contour), pas la ligne.
    Rien n'est ajouté dans le DOM (API CSS Custom Highlight) : aucun risque de collision avec l'écriture du
    scénario, et le contenu éditable reste strictement intact. Si le navigateur ne sait pas le faire, on teinte
@@ -304,7 +349,8 @@ document.addEventListener('mousedown', e=>{ if(e.target && e.target.closest && e
   if(typeof document === 'undefined' || document.getElementById('rpSearchHlCss')) return;
   const st = document.createElement('style');
   st.id = 'rpSearchHlCss';
-  st.textContent = '::highlight(rp-search){background-color:rgba(255,193,7,.55);}';
+  st.textContent = '::highlight(rp-search){background-color:rgba(255,193,7,.55);}'
+    + [1, 2, 3, 4, 5, 6].map(i => '::highlight(rp-search-' + i + '){background-color:rgba(255,193,7,' + (.55 * (1 - i / 7)).toFixed(3) + ');}').join('');
   (document.head || document.documentElement).appendChild(st);
 })();
 /* même normalisation que searchNorm(), mais en gardant, pour chaque caractère normalisé, sa position d'origine */
@@ -372,7 +418,7 @@ function scrollToMatch(){
   /* un seul surlignage à la fois : chaque saut efface le précédent avant d'en poser un nouveau. */
   clearTimeout(_matchTimer);
   clearMatchMarks();
-  if(div){ div.scrollIntoView({block:'center', behavior:'smooth'}); _matchTimer = setTimeout(clearMatchMarks,1200); }
+  if(div){ div.scrollIntoView({block:'center', behavior:'smooth'}); _hlOn = true; searchHlArm(div); }
   let ranges = null;
   if(window.CSS && CSS.highlights && typeof Highlight !== 'undefined'){
     try{ ranges = searchMatchRanges(id); }catch(err){ ranges = null; }
@@ -381,6 +427,6 @@ function scrollToMatch(){
   /* repli : teinte légère sur la ou les lignes concernées (pas de contour) */
   ((S.search.spans||{})[id]||[id]).forEach(x=>{
     const d2 = document.querySelector('#page [data-id="'+x+'"]');
-    if(d2){ d2.classList.add('hl'); d2.style.background = 'rgba(255,193,7,.28)'; }
+    if(d2){ d2.classList.add('hl'); d2.style.background = 'rgba(255,193,7,.28)'; _hlLines.push(d2); }
   });
 }
