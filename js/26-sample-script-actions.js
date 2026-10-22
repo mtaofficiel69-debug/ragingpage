@@ -1042,6 +1042,7 @@ function moreMenuHtml(){
   const T = t => `<div class="tb-more-title">${t}</div>`;
   return `${T(L('Écriture','Writing'))}
     ${dualBtnHtml('')}
+    <button class="btn" data-act="openFreePageMenu" title="${L('Dédicace, citation, synopsis, intercalaire, page blanche... : autant que tu veux, où tu veux, sans toucher à la numérotation','Dedication, quote, synopsis, divider, blank page...: as many as you like, wherever you like, without touching the numbering')}">${icon('emptypage')} ${L('Page sans numéro…','Unnumbered page…')}</button>
     <button class="btn" data-act="openReplace">${icon('findrep')} Rechercher / remplacer</button>
     <button class="btn" data-act="openSynonyms">${icon('bubbles')} Synonymes</button>
     <button class="btn" data-act="wdOpenRename">${icon('cursor')} ${L('Renommer partout…','Rename everywhere…')}</button>

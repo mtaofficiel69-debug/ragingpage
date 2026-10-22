@@ -35,6 +35,7 @@ function applyLayoutStyle(div, el){
 }
 function applyCardStyle(div, el){
   applyLayoutStyle(div, el);
+  if(el && el.fpg) div.dataset.fpg = el.fpg; else delete div.dataset.fpg;   // page sans numéro (voir js/33-free-pages.js)
   if(!el || el.type !== 'card'){
     CARD_VARS.forEach(n => div.style.removeProperty(n));
     div.style.minHeight = '';
@@ -418,8 +419,12 @@ function showContextPanel(el){
   if(el.type==='card'){
     side.dataset.mode = 'card';
     side.classList.remove('hidden');
-    side.innerHTML = cardPanelHtml(el);
+    side.innerHTML = (el.fpg ? fpPanelHtml(el) : '') + cardPanelHtml(el);
     bindCardPanel(el);
+  } else if(el.fpg){
+    side.dataset.mode = 'freepage';
+    side.classList.remove('hidden');
+    side.innerHTML = fpPanelHtml(el);
   } else if(S.navOpen){
     // On sort d'une note : le navigateur reprend sa place. S'il est déjà
     // affiché, on se contente de déplacer le surlignage (reconstruire la

@@ -181,6 +181,7 @@ function appendFlow(container, els, make){
       const wrap = document.createElement('div');
       wrap.className = 'line line--dual dual-wrap';
       wrap.dataset.type = 'dual';
+      if(u.left[0] && u.left[0].fpg) wrap.dataset.fpg = u.left[0].fpg;
       const L = document.createElement('div'); L.className = 'dual-col dual-col-l';
       const R = document.createElement('div'); R.className = 'dual-col dual-col-r';
       u.left.forEach(el=> L.appendChild(make(el)));

@@ -279,3 +279,20 @@ function ensureFreePages(p){
   });
   return fp;
 }
+/* Les pages libres ci-dessus ne vivaient que dans les Paramètres et n'apparaissaient qu'à l'export. Elles
+   sont maintenant de vraies pages sans numéro, posées dans le scénario lui-même (voir js/33-free-pages.js) :
+   à l'ouverture, chacune devient un carton sur sa propre page sans numéro — même texte, même alignement —
+   au début (pages « avant ») ou à la fin (pages « après ») du scénario. Rien n'est perdu, rien n'est numéroté. */
+function fpMigrateLegacy(p){
+  if(!p || !p.freePages || typeof p.freePages !== 'object' || !Array.isArray(p.elements)) return;
+  const fp = ensureFreePages(p);
+  const conv = it => {
+    const el = { id: uid('el'), type:'card', text: String(it.text || '').replace(/\r\n?/g, '\n').replace(/\s+$/, ''), fpg: uid('fpg') };
+    el.card = { size:12, align: it.align === 'center' ? 'center' : 'left', width:100, bold:false, italic:false, caps:false, font:'mono', frame:'none', space:0, full:false };
+    return el;
+  };
+  const front = fp.front.map(conv), back = fp.back.map(conv);
+  if(front.length) p.elements.unshift(...front);
+  if(back.length) p.elements.push(...back);
+  delete p.freePages;
+}

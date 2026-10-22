@@ -18,6 +18,7 @@ Screenwriting software is expensive and most of it wants a monthly subscription.
 - Colour revisions and version comparison
 - Character reports and actor sides
 - Title page (you can even draw on it)
+- Unnumbered pages anywhere in the script (dedication, quote, act break, blank page…), without breaking the page numbering
 - Find & replace, synonyms, voice dictation
 - Focus mode, typewriter mode, dark theme
 - Import: text, Fountain, Final Draft (.fdx), PDF

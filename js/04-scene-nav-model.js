@@ -453,6 +453,7 @@ function ensureSettings(p){
               numbersLocked:false, lineSpacing:'standard',
               autoContd:true, contdMark:'auto', watermarkText:'', scriptFont:'courier-prime' };
   if(!p.settings) p.settings = {};
+  fpMigrateLegacy(p);
   // Projets antérieurs au réglage : les pages verrouillées gardent l'ancien interligne (rien ne bouge sans demande).
   const hadLock = !!(p.pageLock && Array.isArray(p.pageLock.pages) && p.pageLock.pages.length);
   const wasComfort = p.settings.lineSpacing === 'comfort' || (p.settings.lineSpacing === undefined && hadLock);

@@ -76,6 +76,7 @@ function applyRangeEdit(span, insertText){
   for(let i = 1; i < parts.length; i++){
     const txt = parts[i] + (i === parts.length - 1 ? tail : '');
     const el = newElement(aEl.type === 'scene' ? 'action' : aEl.type, txt);
+    if(aEl.fpg) el.fpg = aEl.fpg;
     S.project.elements.splice(findIdx(lastDiv.dataset.id) + 1, 0, el);
     const div = buildLineDiv(el, sceneNumbers());
     lastDiv.after(div);
@@ -161,6 +162,7 @@ function syncFromDOM(){
     if(el){ el.text = node.textContent; el.type = node.dataset.type || el.type; kept.push(el); }
     else{
       const n = newElement(node.dataset.type || 'action', node.textContent || '');
+      if(node.dataset.fpg) n.fpg = node.dataset.fpg;
       node.dataset.id = n.id; kept.push(n);
     }
   });
