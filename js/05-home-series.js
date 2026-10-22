@@ -163,7 +163,7 @@ function renderHome(){
       </aside>
       <main class="wd-main">
         <div class="wd-main-h"><h1>${L('Mes scénarios','My screenplays')}</h1>${nb ? `<span class="wd-count">${nb}</span>` : ''}</div>
-        <div class="wd-table">${list}</div>
+        <div class="wd-table">${list}<div class="wd-slug" aria-hidden="true"><span class="wd-slug-n">1</span><span class="wd-slug-t"></span><span class="wd-slug-c"></span><span class="wd-slug-n wd-slug-r">1</span></div></div>
       </main>
     </div>
   </div>`;
@@ -241,9 +241,40 @@ function icon(name){
   return `<svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">${p}</svg>`;
 }
 
+/* v95 : petit bandeau décoratif en bas de « Mes scénarios » — une entête de scène s'y tape à la machine,
+   s'efface, puis la suivante (numéro de scène des deux côtés, comme sur un scénario de tournage).
+   Aucune place en plus : il occupe le bas de la carte. Fixe si le système demande moins d'animations. */
+let __reelT = 0;
+function homeReel(){
+  clearTimeout(__reelT);
+  const box = document.querySelector('#homeView .wd-slug'); if(!box) return;
+  const lines = getLang() === 'en'
+    ? ['EXT. TRAIN PLATFORM - DAWN', 'INT. ALL-NIGHT DINER - NIGHT', 'EXT. ROOFTOP - DUSK', 'INT. EDITING ROOM - LATER', 'EXT. COUNTRY ROAD - DAY', 'INT. NEIGHBORHOOD CINEMA - NIGHT', 'EXT. EMPTY BEACH - DAWN', 'INT. YOUR NEXT FILM - CONTINUOUS']
+    : ['EXT. QUAI DE GARE - AUBE', 'INT. CAFÉ DES ARTISTES - NUIT', 'EXT. TOIT D\u2019IMMEUBLE - CRÉPUSCULE', 'INT. SALLE DE MONTAGE - PLUS TARD', 'EXT. ROUTE DE CAMPAGNE - JOUR', 'INT. CINÉMA DE QUARTIER - NUIT', 'EXT. PLAGE DÉSERTE - AUBE', 'INT. TON PROCHAIN FILM - CONTINU'];
+  const t = box.querySelector('.wd-slug-t'), ns = box.querySelectorAll('.wd-slug-n');
+  let k = 0, i = 0, del = false;
+  const setN = () => ns.forEach(n => { n.textContent = String(k + 1); });
+  if(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches){ t.textContent = lines[0]; setN(); return; }
+  const step = () => {
+    if(!box.isConnected) return;
+    if(document.hidden){ __reelT = setTimeout(step, 800); return; }
+    const L0 = lines[k];
+    if(!del){
+      i++; t.textContent = L0.slice(0, i);
+      if(i >= L0.length){ del = true; __reelT = setTimeout(step, 2600); return; }
+      __reelT = setTimeout(step, 55 + Math.random() * 70);
+    } else {
+      i--; t.textContent = L0.slice(0, i);
+      if(i <= 0){ del = false; k = (k + 1) % lines.length; setN(); __reelT = setTimeout(step, 500); return; }
+      __reelT = setTimeout(step, 22);
+    }
+  };
+  setN(); __reelT = setTimeout(step, 700);
+}
 function attachHomeEvents(){
   const f = document.getElementById('importFile');
   if(f) f.addEventListener('change', onImportFile);
+  homeReel();
 }
 
 /* create modal */
@@ -448,11 +479,13 @@ function helpTabContent(tab){
       `<div class="help-callout">${L('À faire de temps en temps si tu n\u2019as relié ni Google Drive ni le Coffre-fort : comme tout vit dans ce navigateur, vider ses données ou changer d\u2019ordinateur fait tout disparaître. Le réglage « Sauvegarde » de Paramètres peut aussi télécharger ce fichier pour toi.','Worth doing now and then if you haven\u2019t linked Google Drive or the Vault: since everything lives in this browser, clearing its data or switching computers makes everything disappear. The \u201cBackup\u201d setting in Settings can also download this file for you.')}</div>`)}`;
   if(tab==='editor') return `
     ${C(L('Les raccourcis essentiels','Essential shortcuts'),
-      `<ul class="help-list">
-        <li><span class="help-kbd-row"><span class="kbd">Tab</span></span> ${L('pour passer en ligne Personnage,','to switch to a Character line,')} <span class="help-kbd-row"><span class="kbd">${L('Maj','Shift')}</span><span class="kbd">Tab</span></span> ${L('pour revenir en Action.','to go back to Action.')}</li>
-        <li><span class="help-kbd-row"><span class="kbd">Ctrl/Cmd</span><span class="kbd">K</span></span> ${L('pour sauter à une scène.','to jump to a scene.')}</li>
-        <li><span class="help-kbd-row"><span class="kbd">Ctrl/Cmd</span><span class="kbd">Z</span></span> ${L('pour annuler. L\u2019historique couvre aussi le rechercher/remplacer.','to undo. The history also covers find/replace.')}</li>
-      </ul>`)}
+      `<div class="help-keys">${[
+        [['Tab'], L('Passer en ligne Personnage','Switch to a Character line')],
+        [[L('Maj','Shift'), 'Tab'], L('Revenir en Action','Back to Action')],
+        [[L('Entrée','Enter')], L('Passer à l\u2019élément suivant (scène → action, personnage → dialogue…)','Move to the next element (scene → action, character → dialogue…)')],
+        [['Ctrl/Cmd', 'K'], L('Tout trouver : scènes, personnages, actions, réglages','Find anything: scenes, characters, actions, settings')],
+        [['Ctrl/Cmd', 'Z'], L('Annuler — couvre aussi le rechercher / remplacer','Undo — also covers find / replace')]
+      ].map(r => `<div class="help-key"><span class="help-key-k">${r[0].map(k => `<span class="kbd">${k}</span>`).join('<span class="sc-plus">+</span>')}</span><span class="help-key-d">${r[1]}</span></div>`).join('')}</div>`)}
     ${C(L('Tout voir','See everything'),
       T('Raccourcis clavier et mise en forme du texte : bouton « Raccourcis », en haut de l\u2019éditeur (ou dans le menu ⋯ sur petit écran).','Keyboard shortcuts and text formatting: \u201cShortcuts\u201d button, at the top of the editor (or in the \u22ef menu on small screens).') +
       T('La liste complète (navigation, recherche, mode focus, lecture à voix haute, annotations…) est dans « Raccourcis ».','The full list (navigation, search, focus mode, read-aloud, annotations…) is in \u201cShortcuts\u201d.'))}`;
