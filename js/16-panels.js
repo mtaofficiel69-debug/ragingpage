@@ -1,7 +1,10 @@
 /* =====================================================================
    CHARACTERS
 ===================================================================== */
-function whEmpty(t){ return `<div class="sset-status"><span class="sset-dot"></span><span>${t}</span></div>`; }
+/* v94 : état vide commun à tous les onglets (pictogramme dans une pastille + phrase), au lieu d'une ligne grise à puce */
+function whEmpty(t, ic){ return `<div class="wh-empty"><span class="wh-empty-ic">${icon(ic || 'note')}</span><span class="wh-empty-t">${t}</span></div>`; }
+/* v94 : nombre affiché à côté du titre d'un onglet, comme « Mes scénarios » sur l'accueil */
+function paneCount(n){ return n ? ` <span class="pane-count">${n}</span>` : ''; }
 function renderCharacters(){
   const stats = characterStats();
   const rows = stats.map(s=>`
@@ -9,13 +12,13 @@ function renderCharacters(){
       <div class="char-name">${esc(s.name)}</div>
       <div class="char-stats">${s.scenes.size} ${L(s.scenes.size===1?'scène':'scènes', s.scenes.size===1?'scene':'scenes')} · ${s.dialogueLines} ${L('répliques','lines')} · ${s.words} ${L('mots','words')}</div>
     </div>`).join('');
-  return `<div class="cards-toolbar"><div class="pane-title" style="margin:0;">${L('Personnages','Characters')} (${stats.length})</div></div>
+  return `<div class="cards-toolbar"><div class="pane-title" style="margin:0;">${L('Personnages','Characters')}${paneCount(stats.length)}</div></div>
     <div class="wh-wrap">
       <p class="wh-lead">${L('Qui parle dans ton scénario, et combien. Clique sur un personnage pour relire ses répliques.','Who speaks in your screenplay, and how much. Click a character to reread their lines.')}</p>
       <div class="wh-card">
         <div class="wh-card-t"><span>${L('Les personnages','The characters')}</span></div>
         <p class="wh-card-s">${L('Classés par nombre de mots dits.','Ranked by number of words spoken.')}</p>
-        ${rows ? `<div class="wh-chars">${rows}</div>` : whEmpty(L('Aucun personnage détecté. Ajoute une ligne de type Personnage.','No character detected. Add a Character-type line.'))}
+        ${rows ? `<div class="wh-chars">${rows}</div>` : whEmpty(L('Aucun personnage détecté. Ajoute une ligne de type Personnage.','No character detected. Add a Character-type line.'), 'users')}
       </div>
       <div id="charDetail"></div>
     </div>`;
@@ -36,7 +39,7 @@ function showCharDetail(name){
     <div class="wh-lines">${lines.map(l=>`<div class="flat-row">
       <div style="font-size:12.5px;color:var(--ink-soft);margin-bottom:4px;">${L('Scène','Scene')} ${numbers[l.sceneId]||'?'}</div>
       <div style="font-family:var(--mono);font-size:13px;">${esc(l.text)}</div>
-    </div>`).join('')}</div>${lines.length ? '' : whEmpty(L('Aucune réplique.','No line.'))}
+    </div>`).join('')}</div>${lines.length ? '' : whEmpty(L('Aucune réplique.','No line.'), 'bubbles')}
   </div>`;
   document.getElementById('charDetail').innerHTML = html;
 }
@@ -61,15 +64,15 @@ function renderTags(){
     <div class="flat-row-title">${numbers[b.sceneId]}. ${esc(b.elements[0].text||'')}</div>
     <button class="btn btn-sm btn-ghost" data-act="focusSceneFromCard" data-id="${b.sceneId}">${L('Ouvrir','Open')}</button></div>
     <div class="row-tags-edit">${sceneMeta(b.sceneId).tags.map(t=>`<span class="tag-chip">#${esc(t)}</span>`).join('')}</div></div>`).join('');
-  return `<div class="cards-toolbar"><div class="pane-title" style="margin:0;">Tags</div></div>
+  return `<div class="cards-toolbar"><div class="pane-title" style="margin:0;">Tags${paneCount(tags.length)}</div></div>
     <div class="wh-wrap">
       <p class="wh-lead">${L('Des étiquettes pour retrouver les scènes d\u2019un même thème ou d\u2019un même fil.','Labels to find the scenes of a same theme or thread.')}</p>
       <div class="wh-card">
         <div class="wh-card-t"><span>${L('Filtrer par tag','Filter by tag')}</span></div>
         <p class="wh-card-s">${L('Clique sur un ou plusieurs tags pour ne garder que les scènes qui les portent toutes.','Click one or more tags to keep only the scenes that carry all of them.')}</p>
-        ${chips ? `<div class="wh-chips">${chips}</div>` : whEmpty(L('Aucun tag pour l\u2019instant, ajoute-en depuis une scène.','No tag yet, add one from a scene.'))}
+        ${chips ? `<div class="wh-chips">${chips}</div>` : whEmpty(L('Aucun tag pour l\u2019instant, ajoute-en depuis une scène.','No tag yet, add one from a scene.'), 'tag')}
       </div>
-      <div class="flat-list">${rows}</div>
+      ${rows ? `<div class="wh-card wh-list"><div class="wh-card-t"><span>${S.filterTags.size ? L('Scènes filtrées','Filtered scenes') : L('Toutes les scènes','All scenes')}</span><span class="wh-card-n">${blocks.length}</span></div><div class="flat-list">${rows}</div></div>` : whEmpty(S.filterTags.size ? L('Aucune scène ne porte tous ces tags.','No scene carries all these tags.') : L('Aucune scène.','No scene.'), 'tag')}
     </div>`;
 }
 function toggleTagFilter(tag){
@@ -202,10 +205,10 @@ function renderGraveyard(){
       </div></div>
       <div style="font-size:12.5px;color:var(--ink-soft);">${L('Supprimée','Deleted')} ${timeAgo(item.deletedAt)}</div>
     </div>`).join('');
-  return `<div class="cards-toolbar"><div class="pane-title" style="margin:0;">${L('Corbeille','Graveyard')}</div></div>
+  return `<div class="cards-toolbar"><div class="pane-title" style="margin:0;">${L('Corbeille','Graveyard')}${paneCount(g.length)}</div></div>
     <div class="wh-wrap">
       <p class="wh-lead">${L('Les scènes supprimées restent ici : tu peux les restaurer, ou les supprimer pour de bon.','Deleted scenes stay here: you can restore them, or delete them for good.')}</p>
-      ${rows ? `<div class="flat-list">${rows}</div>` : whEmpty(L('La corbeille est vide.','The graveyard is empty.'))}
+      ${rows ? `<div class="flat-list">${rows}</div>` : whEmpty(L('La corbeille est vide.','The graveyard is empty.'), 'trash')}
     </div>`;
 }
 function restoreScene(id){
@@ -244,11 +247,11 @@ function renderHistory(){
         <button class="btn btn-sm" data-act="wdRestoreScenes" data-id="${ver.id}">${L('Récupérer une scène…','Recover a scene…')}</button>
       </div>
     </div><div style="font-size:12.5px;color:var(--ink-soft);">${new Date(ver.timestamp).toLocaleString(getLang()==='en'?'en-US':'fr-FR')}</div></div>`).join('');
-  return `<div class="cards-toolbar"><div class="pane-title" style="margin:0;">${L('Historique','History')}</div>
+  return `<div class="cards-toolbar"><div class="pane-title" style="margin:0;">${L('Historique','History')}${paneCount(v.length)}</div>
       <button class="btn btn-sm btn-primary" data-act="createVersion">${L('Enregistrer une version','Save a version')}</button></div>
     <div class="wh-wrap">
       <p class="wh-lead">${L('Chaque version est un instantané de ton scénario, à comparer avec l’état actuel ou à restaurer.','Each version is a snapshot of your screenplay, to compare with its current state or to restore.')}</p>
-      ${rows ? `<div class="flat-list">${rows}</div>` : whEmpty(L('Aucune version enregistrée. Le bouton ci-dessus fige un instantané que tu pourras comparer ou restaurer plus tard.','No version saved yet. The button above freezes a snapshot you can compare or restore later.'))}
+      ${rows ? `<div class="flat-list">${rows}</div>` : whEmpty(L('Aucune version enregistrée. Le bouton ci-dessus fige un instantané que tu pourras comparer ou restaurer plus tard.','No version saved yet. The button above freezes a snapshot you can compare or restore later.'), 'clock')}
       ${S.diffVerId ? diffPanelHtml() : ''}
     </div>`;
 }
