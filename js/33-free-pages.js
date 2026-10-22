@@ -93,42 +93,71 @@ function fpSelectedRange(){
     return (a < 0 || b < 0) ? null : { a: Math.min(a, b), b: Math.max(a, b) };
   }catch(e){ return null; }
 }
+const FP_MODELS = [
+  ['text',   'emptypage', ['Page de texte','Text page'], ['Synopsis, note d’intention, remerciements... Laissée vide, elle sort blanche.','Synopsis, statement, acknowledgments... Left empty, it prints blank.']],
+  ['center', 'align',     ['Texte centré sur la page','Text centered on the page'], ['Dédicace, citation, épigraphe.','Dedication, quote, epigraph.']],
+  ['title',  'card',      ['Grand titre sur la page','Big title on the page'], ['ACTE I, intercalaire, titre d’épisode.','ACT I, divider, episode title.']]
+];
+let fpModel = 'text';
 function openFreePageMenu(anchorId){
   if(!S.project) return;
   closeFreePageMenu();
   fpMenuAnchor = (typeof anchorId === 'string' && anchorId) ? anchorId : fpCurrentLineId();
   if(fpMenuAnchor && !findEl(fpMenuAnchor)) fpMenuAnchor = null;
+  const cur = fpMenuAnchor ? findEl(fpMenuAnchor) : null;
+  // Panneau masqué et curseur déjà sur une page sans numéro : le menu le fait réapparaître.
+  if(cur && cur.fpg && fpPanelOff){ fpPanelOff = false; fpSavePanelOff(); showContextPanel(cur); }
   fpSel = fpSelectedRange();
   fpWhere = fpMenuAnchor ? 'here' : 'end';
-  const cur = fpMenuAnchor ? findEl(fpMenuAnchor) : null;
-  const btn = (kind, ic, title, sub) =>
-    `<button class="btn" style="width:100%;margin-bottom:8px;justify-content:flex-start;text-align:left;height:auto;padding:9px 12px;" data-act="fpInsert" data-id="${kind}">${icon(ic)} <span><b>${title}</b><br><small style="font-weight:400;color:var(--ink-soft);">${sub}</small></span></button>`;
-  const html = `<div class="modal-backdrop" id="fpBackdrop" data-act="closeFreePageMenuBg">
-    <div class="modal" style="max-width:460px;">
-      <h2>${L('Insérer une page sans numéro','Insert an unnumbered page')}</h2>
-      <p style="font-size:13px;color:var(--ink-soft);line-height:1.5;margin:-6px 0 14px;">${L('Elle ne porte aucun numéro et ne compte pas : les pages du scénario gardent leur numérotation. Mets-en autant que tu veux, où tu veux, et personnalise-les comme n’importe quelle page.','It carries no number and is not counted: the script pages keep their numbering. Add as many as you like, wherever you like, and style them like any other page.')}</p>
-      <div class="cp-lbl" style="font-size:12px;font-weight:600;margin-bottom:6px;">${L('Où ?','Where?')}</div>
-      <div class="cp-seg" id="fpWhereSeg" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px;">
-        ${cur ? `<button class="btn btn-sm" data-act="fpSetWhere" data-id="here">${L('Ici, après la ligne en cours','Here, after the current line')}</button>` : ''}
-        <button class="btn btn-sm" data-act="fpSetWhere" data-id="start">${L('Au début du scénario','At the start of the script')}</button>
-        <button class="btn btn-sm" data-act="fpSetWhere" data-id="end">${L('À la fin','At the end')}</button>
+  fpModel = 'text';
+  const where = (w, t, d) => `<div class="fmt-opt" data-act="fpSetWhere" data-id="${w}"><div class="t">${t}</div><div class="d">${d}</div></div>`;
+  const html = `<div class="modal-backdrop" id="fpBackdrop" data-act="closeFreePageMenuBg"><div class="modal fp-modal" data-stop="1" role="dialog" aria-modal="true">
+      <button type="button" class="fp-x" data-act="closeFreePageMenu" title="${L('Fermer (Échap)','Close (Esc)')}" aria-label="${L('Fermer','Close')}">${icon('close')}</button>
+      <div class="fp-head">
+        <span class="fp-ico">${icon('emptypage')}</span>
+        <div><h2>${L('Page sans numéro','Unnumbered page')}</h2>
+          <p class="fp-sub">${L('Elle ne compte pas : <b>les pages du scénario gardent leur numéro</b>. Autant que tu veux, où tu veux.','It isn’t counted: <b>the script pages keep their numbers</b>. As many as you like, wherever you like.')}</p></div>
       </div>
-      <div class="cp-lbl" style="font-size:12px;font-weight:600;margin-bottom:6px;">${L('Page','Page')}</div>
-      ${btn('text', 'emptypage', L('Page de texte','Text page'), L('Vierge : synopsis, note d’intention, remerciements... Laissée vide, elle sort blanche.','Blank: synopsis, statement, acknowledgments... Left empty, it prints blank.'))}
-      ${btn('center', 'align', L('Texte centré au milieu de la page','Text centered on the page'), L('Dédicace, citation, épigraphe.','Dedication, quote, epigraph.'))}
-      ${btn('title', 'card', L('Grand titre au milieu de la page','Big title on the page'), L('ACTE I, intercalaire, titre d’épisode.','ACT I, divider, episode title.'))}
-      ${cur && !cur.fpg ? `<div style="border-top:1px solid var(--hair);margin:8px 0 12px;"></div>
-      <button class="btn btn-sm" style="width:100%;justify-content:flex-start;" data-act="fpConvertSelection">${L('Mettre la ligne en cours (ou les lignes sélectionnées) sur une page sans numéro','Put the current line (or the selected lines) on an unnumbered page')}</button>` : ''}
-      <div class="modal-actions"><button class="btn btn-ghost" data-act="closeFreePageMenu">${L('Annuler','Cancel')}</button></div>
+      <div class="fp-lbl">${L('Emplacement','Position')}</div>
+      <div class="fmt-choice fp-where" id="fpWhereSeg">
+        ${cur ? where('here', L('Ici','Here'), L('Après la ligne en cours','After the current line')) : ''}
+        ${where('start', L('Au début','At the start'), L('Avant la 1re page','Before page 1'))}
+        ${where('end', L('À la fin','At the end'), L('Après la dernière page','After the last page'))}
+      </div>
+      <div class="fp-lbl">${L('Modèle','Template')}</div>
+      <div class="fp-models" id="fpModels">
+        ${FP_MODELS.map(m => `<div class="fp-model" data-act="fpSetModel" data-id="${m[0]}">${icon(m[1])}<span><b>${L(m[2][0], m[2][1])}</b><small>${L(m[3][0], m[3][1])}</small></span></div>`).join('')}
+      </div>
+      <p class="fp-hint">${L('Tout reste modifiable ensuite, comme sur n’importe quelle page (type de ligne, Aligner, Carton).','Everything stays editable afterwards, like on any page (line type, Align, Card).')}</p>
+      <div class="modal-actions">
+        ${cur && !cur.fpg ? `<button class="btn btn-ghost fp-conv" data-act="fpConvertSelection" title="${L('Les lignes sélectionnées (ou la ligne en cours) passent sur une page sans numéro.','The selected lines (or the current line) move onto an unnumbered page.')}">${L('Utiliser la sélection','Use the selection')}</button>` : ''}
+        <button class="btn btn-ghost" data-act="closeFreePageMenu">${L('Annuler','Cancel')}</button>
+        <button class="btn btn-primary" data-act="fpInsertChosen">${icon('plus')} ${L('Insérer la page','Insert the page')}</button>
+      </div>
     </div></div>`;
   document.body.insertAdjacentHTML('beforeend', html);
-  fpSetWhere(fpWhere);
+  document.addEventListener('keydown', fpMenuKeydown, true);
+  fpSetWhere(fpWhere); fpSetModel(fpModel);
+  const ok = document.querySelector('#fpBackdrop [data-act="fpInsertChosen"]'); if(ok) ok.focus();
 }
-function closeFreePageMenu(){ const b = document.getElementById('fpBackdrop'); if(b) b.remove(); }
+function fpMenuKeydown(e){
+  if(!document.getElementById('fpBackdrop')){ document.removeEventListener('keydown', fpMenuKeydown, true); return; }
+  if(e.key === 'Escape'){ e.preventDefault(); e.stopPropagation(); closeFreePageMenu(); }
+  else if(e.key === 'Enter' && !(e.target && e.target.closest && e.target.closest('button'))){ e.preventDefault(); e.stopPropagation(); fpInsert(fpModel); }
+}
+function closeFreePageMenu(){
+  const b = document.getElementById('fpBackdrop'); if(b) b.remove();
+  document.removeEventListener('keydown', fpMenuKeydown, true);
+}
 function fpSetWhere(w){
   if(w !== 'here' && w !== 'start' && w !== 'end') return;
   fpWhere = w;
-  document.querySelectorAll('#fpWhereSeg [data-act="fpSetWhere"]').forEach(b => b.classList.toggle('btn-primary', b.dataset.id === w));
+  document.querySelectorAll('#fpWhereSeg [data-act="fpSetWhere"]').forEach(b => b.classList.toggle('active', b.dataset.id === w));
+}
+function fpSetModel(m){
+  if(!FP_MODELS.some(x => x[0] === m)) return;
+  fpModel = m;
+  document.querySelectorAll('#fpModels [data-act="fpSetModel"]').forEach(b => b.classList.toggle('active', b.dataset.id === m));
 }
 function fpInsert(kind){
   if(!S.project) return;
@@ -158,20 +187,37 @@ function fpConvertSelection(){
   fpRefresh(els[a].id);
 }
 
-/* ---- Panneau de droite, quand le curseur est sur une page sans numéro ---- */
+/* ---- Panneau de droite, quand le curseur est sur une page sans numéro ----
+   Il se ferme (croix) et reste fermé ; le menu ⋮ › « Page sans numéro… » le rouvre. */
+let fpPanelOff = false;
+try{ fpPanelOff = localStorage.getItem('scriptmm_fpPanelOff') === '1'; }catch(e){}
+function fpSavePanelOff(){ try{ localStorage.setItem('scriptmm_fpPanelOff', fpPanelOff ? '1' : '0'); }catch(e){} }
 function fpPanelHtml(el){
+  if(fpPanelOff) return '';
   const id = el.id;
-  return `<div class="pane-title">${L('Page sans numéro','Unnumbered page')}</div>
-  <div class="panel-block card-panel" data-fp-id="${id}">
-    <p style="font-size:12px;color:var(--ink-soft);line-height:1.5;margin:0 0 10px;">${L('Cette page ne porte pas de numéro et ne compte pas : la page suivante du scénario garde le numéro qu’elle aurait eu sans elle. Elle est imprimée et exportée ici, à sa place.','This page carries no number and is not counted: the next script page keeps the number it would have had without it. It is printed and exported right here, in place.')}</p>
-    <p style="font-size:12px;color:var(--ink-soft);line-height:1.5;margin:0 0 12px;">${L('Personnalise-la comme n’importe quelle page : Tab pour changer le type de ligne, « Aligner » pour placer le texte, « Carton » pour la taille, la police, le cadre ou le centrage sur la page entière. Entrée ajoute une ligne sur cette même page.','Style it like any other page: Tab to change the line type, “Align” to place the text, “Card” for size, font, frame or centering on the whole page. Enter adds a line on this same page.')}</p>
-    <div class="cp-row"><div class="cp-seg" style="display:flex;flex-direction:column;align-items:stretch;gap:6px;">
-      <button class="btn btn-sm" data-act="fpExit" data-id="${id}">${L('Continuer le scénario après cette page','Continue the script after this page')}</button>
-      <button class="btn btn-sm" data-act="fpAddAfter" data-id="${id}">+ ${L('Autre page sans numéro après celle-ci','Another unnumbered page after this one')}</button>
-      <button class="btn btn-sm" data-act="fpUnset" data-id="${id}">${L('Remettre dans la numérotation','Put back into the numbering')}</button>
-      <button class="btn btn-sm btn-danger" data-act="fpDelete" data-id="${id}">${L('Supprimer cette page et son contenu','Delete this page and its content')}</button>
-    </div></div>
+  const row = (act, ic, label, cls) => `<button type="button" class="fp-act${cls ? ' ' + cls : ''}" data-act="${act}" data-id="${id}">${icon(ic)}<span>${label}</span></button>`;
+  return `<div class="fp-panel">
+    <div class="pane-title fp-pane-title"><span>${L('Page sans numéro','Unnumbered page')}</span>
+      <button type="button" class="fp-x" data-act="fpPanelClose" title="${L('Fermer le panneau','Close the panel')}" aria-label="${L('Fermer','Close')}">${icon('close')}</button></div>
+    <p class="fp-note">${L('Pas de numéro, ne compte pas : la page suivante garde son numéro. Entrée ajoute une ligne sur cette page.','No number, not counted: the next page keeps its number. Enter adds a line on this page.')}</p>
+    <div class="fp-acts">
+      ${row('fpExit', 'plus', L('Continuer le scénario après','Continue the script after'))}
+      ${row('fpAddAfter', 'emptypage', L('Ajouter une autre page sans numéro','Add another unnumbered page'))}
+      ${row('fpUnset', 'undo', L('Remettre dans la numérotation','Put back into the numbering'))}
+      ${row('fpDelete', 'trash', L('Supprimer cette page','Delete this page'), 'is-danger')}
+    </div>
   </div>`;
+}
+function fpPanelClose(id){
+  fpPanelOff = true; fpSavePanelOff();
+  const el = id ? findEl(id) : null;
+  if(el && el.type === 'card') showContextPanel(el);                 // le panneau du carton reste
+  else {
+    const side = document.getElementById('sidePane');
+    if(side){ side.dataset.mode = ''; side.classList.add('hidden'); side.innerHTML = ''; }
+    if(S.navOpen) renderNavPane();
+  }
+  toast(L('Panneau fermé. Pour le rouvrir : ⋮ › Page sans numéro…','Panel closed. To reopen it: ⋮ › Unnumbered page…'));
 }
 function fpExit(id){
   const els = S.project.elements, idx = findIdx(id), g = fpGroupRange(els, idx); if(!g) return;
@@ -204,5 +250,5 @@ async function fpDelete(id){
 Object.assign(ACTIONS, {
   openFreePageMenu: () => openFreePageMenu(), closeFreePageMenu,
   closeFreePageMenuBg: (id, e) => { if(e.target.id === 'fpBackdrop') closeFreePageMenu(); },
-  fpSetWhere, fpInsert, fpConvertSelection, fpExit, fpAddAfter, fpUnset, fpDelete
+  fpSetWhere, fpSetModel, fpInsert, fpInsertChosen: () => fpInsert(fpModel), fpConvertSelection, fpExit, fpAddAfter, fpUnset, fpDelete, fpPanelClose
 });

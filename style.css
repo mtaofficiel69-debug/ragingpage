@@ -490,12 +490,11 @@
   }
   .sheet-cont.is-bottom{bottom:calc(var(--pm-bottom,2.5cm) * .35); right:var(--pm-right,2.5cm);}
   .sheet-cont.is-top{top:calc(var(--pn-top,1.2cm) + 1.1em); left:var(--pm-left,3cm);}
-  /* Page sans numéro (js/33-free-pages.js) : repère discret à la place du numéro, jamais imprimé. */
-  .sheet.is-free{box-shadow:0 0 0 1px #3699D440, 0 1px 3px #0002, 0 18px 40px -18px #0004;}
+  /* Page sans numéro (js/33-free-pages.js) : même repère discret que « fin de page », jamais imprimé. */
   .sheet-free-tag{
     position:absolute; top:var(--pn-top,1.2cm); right:var(--pm-right,2.5cm);
     font-family:var(--sans); font-size:9.5px; font-weight:700; letter-spacing:.09em; text-transform:uppercase;
-    color:var(--accent-2,#3699D4); opacity:.7; -webkit-user-select:none; user-select:none;
+    color:var(--ink-soft); opacity:.55; -webkit-user-select:none; user-select:none;
   }
   .sheet-tab{
     position:absolute; left:0; right:0; text-align:center; font-family:var(--sans); font-size:9.5px;
@@ -2014,3 +2013,57 @@
   .tp-fs-hint b{color:var(--ink); font-weight:600;}
   .tp-fs-hint.show{opacity:1; transform:translate(-50%,0);}
   @media (max-width:900px){ .tp-fs.tp-fs-drawing .tp-fs-tb{top:12px;} .tp-fs-hint{bottom:14px;} }
+
+/* ===== Pages sans numéro (js/33-free-pages.js) : fenêtre d'insertion et panneau, dans le style de la modale « Scénario d'exemple » ===== */
+#fpBackdrop .fp-modal{position:relative; max-width:500px; padding:24px 26px 22px;}
+.fp-x{position:absolute; top:14px; right:14px; width:30px; height:30px; display:inline-flex; align-items:center; justify-content:center;
+  border:0; border-radius:8px; background:transparent; color:var(--ink-soft); cursor:pointer; transition:background .12s, color .12s;}
+.fp-x:hover{background:var(--overlay-hover); color:var(--ink);}
+.fp-x:focus-visible{outline:none; box-shadow:var(--focus-ring);}
+.fp-x .icon{width:15px; height:15px;}
+#fpBackdrop .fp-head{display:flex; align-items:center; gap:14px; margin:0 34px 18px 0;}
+#fpBackdrop .fp-ico{flex:none; width:46px; height:46px; border-radius:12px; display:flex; align-items:center; justify-content:center;
+  color:var(--accent); background:color-mix(in srgb, var(--accent) 13%, var(--surface)); box-shadow:inset 0 0 0 1px color-mix(in srgb, var(--accent) 30%, var(--surface));}
+#fpBackdrop .fp-ico .icon{width:22px; height:22px;}
+#fpBackdrop .fp-head h2{margin:0; font-size:19.76px; line-height:1.2;}
+#fpBackdrop .fp-sub{margin:4px 0 0; font-size:13.5px; line-height:1.4; color:var(--ink-soft);}
+#fpBackdrop .fp-sub b{color:var(--ink); font-weight:600;}
+#fpBackdrop .fp-lbl{font-size:11.5px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-soft); margin:0 0 8px;}
+#fpBackdrop .fp-where{gap:10px; margin-bottom:18px;}
+#fpBackdrop .fp-where .fmt-opt{position:relative; padding:10px 10px 10px 34px; background:var(--surface); transition:border-color .12s, background .12s, box-shadow .12s;}
+#fpBackdrop .fp-where .fmt-opt:hover{border-color:var(--accent); background:var(--overlay-hover);}
+#fpBackdrop .fp-where .fmt-opt::before{content:''; position:absolute; left:12px; top:13px; width:14px; height:14px; border-radius:50%; box-sizing:border-box;
+  border:1.5px solid color-mix(in srgb, var(--ink) 35%, var(--surface)); background:var(--surface); transition:border-color .12s, box-shadow .12s;}
+#fpBackdrop .fp-where .fmt-opt.active{background:color-mix(in srgb, var(--accent) 10%, var(--surface)); box-shadow:var(--focus-ring);}
+#fpBackdrop .fp-where .fmt-opt.active::before{border-color:var(--accent); box-shadow:inset 0 0 0 3px var(--surface); background:var(--accent);}
+#fpBackdrop .fp-where .fmt-opt .t{font-size:14px;}
+#fpBackdrop .fp-where .fmt-opt .d{font-size:12px; line-height:1.35;}
+#fpBackdrop .fp-models{border:1px solid var(--hair); border-radius:10px; background:var(--surface-soft); overflow:hidden;}
+#fpBackdrop .fp-model{display:flex; gap:12px; align-items:flex-start; padding:11px 14px; cursor:pointer; transition:background .12s;}
+#fpBackdrop .fp-model + .fp-model{border-top:1px solid var(--hair);}
+#fpBackdrop .fp-model:hover{background:var(--overlay-hover);}
+#fpBackdrop .fp-model .icon{flex:none; width:16px; height:16px; margin-top:2px; color:var(--ink-soft);}
+#fpBackdrop .fp-model b{display:block; font-size:14px; font-weight:600; line-height:1.35; color:var(--ink);}
+#fpBackdrop .fp-model small{display:block; font-size:12.75px; line-height:1.45; color:var(--ink-soft); margin-top:2px;}
+#fpBackdrop .fp-model.active{background:color-mix(in srgb, var(--accent) 10%, var(--surface)); box-shadow:inset 3px 0 0 var(--accent);}
+#fpBackdrop .fp-model.active .icon{color:var(--accent);}
+#fpBackdrop .fp-hint{font-size:12.5px; line-height:1.45; color:var(--ink-soft); margin:10px 0 0;}
+#fpBackdrop .modal-actions{margin-top:20px; align-items:center;}
+#fpBackdrop .fp-conv{margin-right:auto; padding-left:0; color:var(--accent-2);}
+#fpBackdrop .fp-conv:hover{text-decoration:underline;}
+@media (max-width:520px){ #fpBackdrop .fp-where{flex-direction:column;} #fpBackdrop .modal-actions{flex-wrap:wrap;} }
+.fp-panel{margin-bottom:22px;}
+.fp-pane-title{display:flex; align-items:center; justify-content:space-between; gap:8px;}
+.fp-pane-title .fp-x{position:static; margin:-4px -6px -4px 0;}
+.fp-note{font-size:12.5px; line-height:1.5; color:var(--ink-soft); margin:0 0 12px;}
+.fp-acts{border:1px solid var(--hair); border-radius:10px; background:var(--surface); overflow:hidden;}
+.fp-act{display:flex; align-items:center; gap:10px; width:100%; padding:10px 12px; border:0; background:transparent; color:var(--ink);
+  font:inherit; font-size:13px; font-weight:600; text-align:left; cursor:pointer; transition:background .12s, color .12s;}
+.fp-act + .fp-act{border-top:1px solid var(--hair);}
+.fp-act .icon{flex:none; width:15px; height:15px; color:var(--ink-soft);}
+.fp-act:hover{background:var(--overlay-hover);}
+.fp-act:hover .icon{color:var(--accent);}
+.fp-act.is-danger{color:var(--danger);}
+.fp-act.is-danger .icon{color:var(--danger);}
+.fp-act.is-danger:hover{background:color-mix(in srgb, var(--danger) 8%, var(--surface));}
+
