@@ -118,13 +118,17 @@
      1. RECONNEXION GOOGLE DRIVE
   ===================================================================== */
   let gdAsking = false, gdRefused = false;
+  const GD_ASK_KEY = 'scriptmm_gdrive_ask_at';   // la question n'est posée qu'une fois par 24 h, quelle que soit la réponse
   async function gdAskReconnect(){
     if(gdAsking || gdRefused) return;
     try{
       if(localStorage.getItem(GD_ON_KEY) !== '1' || !gdClientId()) return;
+      if(gdConnected()) return;
+      if(Date.now() - (+localStorage.getItem(GD_ASK_KEY) || 0) < 24 * 3600 * 1000) return;
       gdAsking = true;
       for(let i = 0; i < 110 && window.__rpGdAuto && window.__rpGdAuto.state === 'pending'; i++) await sleep(100);
       if(gdConnected() || !live()) return;
+      try{ localStorage.setItem(GD_ASK_KEY, String(Date.now())); }catch(e){}
       const name = (S.project && S.project.title) || '';
       const ok = await mmConfirm(
         L('Tu as été déconnecté de ton Google Drive depuis ta dernière visite. Veux-tu te reconnecter pour que ce scénario continue d\u2019être sauvegardé sur ton Drive ?',
