@@ -490,6 +490,13 @@
   }
   .sheet-cont.is-bottom{bottom:calc(var(--pm-bottom,2.5cm) * .35); right:var(--pm-right,2.5cm);}
   .sheet-cont.is-top{top:calc(var(--pn-top,1.2cm) + 1.1em); left:var(--pm-left,3cm);}
+  /* Page sans numéro (js/33-free-pages.js) : repère discret à la place du numéro, jamais imprimé. */
+  .sheet.is-free{box-shadow:0 0 0 1px #3699D440, 0 1px 3px #0002, 0 18px 40px -18px #0004;}
+  .sheet-free-tag{
+    position:absolute; top:var(--pn-top,1.2cm); right:var(--pm-right,2.5cm);
+    font-family:var(--sans); font-size:9.5px; font-weight:700; letter-spacing:.09em; text-transform:uppercase;
+    color:var(--accent-2,#3699D4); opacity:.7; -webkit-user-select:none; user-select:none;
+  }
   .sheet-tab{
     position:absolute; left:0; right:0; text-align:center; font-family:var(--sans); font-size:9.5px;
     font-weight:700; letter-spacing:.09em; text-transform:uppercase; color:var(--ink-soft); opacity:.55;

@@ -41,7 +41,7 @@ function wdMeasure(p){
     const res = computePagination(mc, p.format, false, p);
     const first = mc.querySelector('.line');
     const lh = parseFloat(getComputedStyle(first || mc).lineHeight) || res.debug.oneLine || 20;
-    const labels = computePageLabels(res.pages, p).labels;
+    const PLB = computePageLabels(res.pages, p), labels = PLB.labels;
     const lock = pageLockSet(p);
     let heading = '';
     const pages = res.pages.map((divs, k)=>{
@@ -56,7 +56,7 @@ function wdMeasure(p){
         return { id: d.dataset.id || '', type, rows: Math.max(1, Math.round(h / lh)), text: (d.textContent || '').trim(), heading, full: d.dataset.full === '1' };
       });
       const locked = !!(lock && divs[0] && lock.has(plKey(divs[0])));
-      return { k, label: labels[k], rows: Math.round(used / lh), items, locked };
+      return { k, label: labels[k], rows: Math.round(used / lh), items, locked, free: PLB.free[k] };
     });
     return { pages, cap: res.debug.linesPerPage, total: res.pages.length, spill: res.spill || {} };
   } finally { wrap.remove(); }
@@ -64,11 +64,11 @@ function wdMeasure(p){
 function wdOrphans(m, T){
   const out = [];
   m.pages.forEach((pg, k)=>{
-    if(k === 0 || !pg.items.length || pg.locked || m.spill[k] || pg.items.some(i=>i.full)) return;
+    if(k === 0 || !pg.items.length || pg.locked || pg.free || m.spill[k] || pg.items.some(i=>i.full)) return;   // une page sans numéro est voulue telle quelle
     if(pg.rows > T) return;
     const isLast = k === m.pages.length - 1;
     const prev = m.pages.slice(Math.max(0, k - 2), k).reverse();
-    const cands = [].concat(...prev.map(q=> q.items.filter(i=> i.id && (i.type === 'action' || i.type === 'dialogue' || i.type === 'text') && i.rows >= 3).map(i=>Object.assign({ page:q.label }, i))))
+    const cands = [].concat(...prev.filter(q=> !q.free).map(q=> q.items.filter(i=> i.id && (i.type === 'action' || i.type === 'dialogue' || i.type === 'text') && i.rows >= 3).map(i=>Object.assign({ page:q.label }, i))))
       .sort((a, b)=> b.rows - a.rows).slice(0, 3);
     out.push({ k, label: pg.label, rows: pg.rows, isLast, first: pg.items.find(i=>i.id), text: pg.items.map(i=>i.text).filter(Boolean).join(' / '),
       next: !isLast ? m.pages[k + 1].items.find(i=>i.id) : null, cands });

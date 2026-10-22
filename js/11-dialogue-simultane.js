@@ -221,6 +221,7 @@ function onLineKeydown(e){
       }
     }
     const newEl = newElement(nextType, after);
+    if(el.fpg) newEl.fpg = el.fpg;      // Entrée sur une page sans numéro : la nouvelle ligne reste sur cette page
     S.project.elements.splice(insertAt,0,newEl);
     div.textContent = before; div.dataset.empty = before?'':'1';
     if(el.type==='scene') renumberScenes();

@@ -164,8 +164,10 @@ function duplicateScene(id){
   const blocks = getSceneBlocks(); const b = blocks.find(x=>x.sceneId===id); if(!b) return;
   pushUndo();
   const idx = findIdx(id);
+  const fpgMap = {};                  // une page sans numéro dupliquée devient une nouvelle page, distincte de l'originale
   const clones = b.elements.map(e=>{
     const c = newElement(e.type, e.text);
+    if(e.fpg) c.fpg = fpgMap[e.fpg] || (fpgMap[e.fpg] = uid('fpg'));
     if(e.dual) c.dual = true;         // une scène dupliquée garde ses simultanés
     if(e.card) c.card = JSON.parse(JSON.stringify(e.card));   // et le style de ses cartons
     return c;

@@ -142,8 +142,34 @@ function plInfo(pages, k){
   if(c && (!key || key === c)) return { key:'', ckey:c };
   return { key, ckey:'' };
 }
-/* Numéro affiché de chaque page + pages figées qui n'existent plus (omises). */
+/* Pages sans numéro (voir js/33-free-pages.js) : une feuille l'est si son premier bloc appartient à une
+   page sans numéro (data-fpg). Une feuille traversée par un bloc géant (vide) suit la précédente. */
+function pageFreeFlags(pages){
+  const out = []; let prev = false;
+  pages.forEach(pg => {
+    const d = pg.find(x => x && x.dataset && !x.classList.contains('pg-mark'));
+    const f = d ? !!d.dataset.fpg : prev;
+    out.push(f); prev = f;
+  });
+  return out;
+}
+/* Numéro affiché de chaque page + pages figées qui n'existent plus (omises).
+   Les pages sans numéro reçoivent un libellé vide et ne comptent pas : la numérotation (et le verrouillage
+   12A, 12B) ne voit que les autres pages, comme si elles n'existaient pas. `free[k]` les signale,
+   `firstNum` est l'indice de la première page numérotée (celle de « Numéroter aussi la première page »). */
 function computePageLabels(pages, proj){
+  const free = pageFreeFlags(pages);
+  if(!free.some(Boolean)) return Object.assign(pageLabelsCore(pages, proj), { free, firstNum:0 });
+  const keep = []; pages.forEach((pg, k) => { if(!free[k]) keep.push(k); });
+  const r = pageLabelsCore(keep.map(k => pages[k]), proj), labels = pages.map(() => '');
+  keep.forEach((k, q) => { labels[k] = r.labels[q]; });
+  return { labels, omitted: r.omitted, free, firstNum: keep.length ? keep[0] : -1 };
+}
+/* Le numéro de la page k est-il imprimé ? (mêmes règles dans l'éditeur, l'impression et le PDF) */
+function pageNumShown(PLB, k, st){
+  return !PLB.free[k] && !!st.showPageNumbers && (k !== PLB.firstNum || !!st.numberFirstPage);
+}
+function pageLabelsCore(pages, proj){
   proj = proj || S.project;
   /* Numéro de la page 1 (qu'elle l'affiche ou non) : 1 par défaut, donc la page 2 porte le n° 2. 0 est permis (la page 2 porte alors le n° 1). */
   const ps = ensureSettings(proj).pageNumberStart, start = (typeof ps === 'number' && isFinite(ps)) ? ps : 1, pl = proj.pageLock;
@@ -169,12 +195,13 @@ function computePageLabels(pages, proj){
   });
   return { labels, omitted: pl.pages.filter((x, i)=>!used.has(i)).map(x=>x.label) };
 }
-function pageLbl(n){ const l = S.pagination && S.pagination.labels; return (l && l[n-1]) || String(n); }
+function pageLbl(n){ const l = S.pagination && S.pagination.labels; if(l && l[n-1] === '') return L('sans n°','unnumbered'); return (l && l[n-1]) || String(n); }
 function plLock(p){
-  const res = measureExportPages(p), labels = computePageLabels(res.pages, p).labels, pages = [];
-  res.pages.forEach((pg, k)=>{
+  const res = measureExportPages(p), PLB = computePageLabels(res.pages, p), pages = [];
+  const np = res.pages.filter((_, k) => !PLB.free[k]), labels = PLB.labels.filter((_, k) => !PLB.free[k]);   // les pages sans numéro ne sont pas figées
+  np.forEach((pg, k)=>{
     if(!pg.length) return;
-    const inf = plInfo(res.pages, k);
+    const inf = plInfo(np, k);
     pages.push({ label: labels[k], first: inf.key || '', cont: inf.ckey || '' });
   });
   p.pageLock = { pages, date: Date.now(), std: true };
@@ -252,13 +279,15 @@ function computePagination(container, format, apply, proj, inc){
   const hOv = {};                                   // hauteur du RESTE d'une ligne coupée
   const hOf = i => hOv[i] !== undefined ? hOv[i] : m[i].h;
   const isLock = i => !!(lockSet && lockSet.has(plKey(m[i].d)));
+  const fk = i => m[i].d.dataset.fpg || '';           // page sans numéro à laquelle appartient la ligne ('' = scénario)
+  let lastFk = '';
 
   // ---- Blocs logiques (comme _buildBlockQueue) ----
   const dq = [];
   for(let i = 0; i < m.length;){
     if(typ(i) === 'character'){
       const ls = [i]; i++;
-      while(i < m.length && (typ(i) === 'parenthetical' || typ(i) === 'dialogue') && !isLock(i)){ ls.push(i); i++; }
+      while(i < m.length && (typ(i) === 'parenthetical' || typ(i) === 'dialogue') && !isLock(i) && fk(i) === fk(ls[0])){ ls.push(i); i++; }
       dq.push({ type:'character', lines:ls, cue:false });
     } else { dq.push({ type:typ(i), lines:[i] }); i++; }
   }
@@ -287,7 +316,7 @@ function computePagination(container, format, apply, proj, inc){
       domBottom[i] = tops[q] + hOf(i);
       pages[pageIdx].push(m[i].d); pgIdx[pageIdx].push(i);
     });
-    filled[pageIdx] = true; y = domBottom[ls[ls.length - 1]];
+    filled[pageIdx] = true; y = domBottom[ls[ls.length - 1]]; lastFk = fk(ls[ls.length - 1]);
   };
   // Changement de page parce que le bloc courant est reporté en entier (_breakPage) :
   // une entête de scène restée seule en bas de page est emmenée avec lui.
@@ -350,10 +379,14 @@ function computePagination(container, format, apply, proj, inc){
       breaks.push({ to: pageIdx + 2, why:'lock', free: Math.max(0, limit() - y), need:0, type: typ(i0) });
       newPage();
     }
+    if(!b.cue && !b.contLine && filled[pageIdx] && fk(i0) !== lastFk){         // page sans numéro : elle commence sur sa propre feuille, et la suite aussi
+      breaks.push({ to: pageIdx + 2, why:'freepage', free: Math.max(0, limit() - y), need:0, type: typ(i0) });
+      newPage();
+    }
 
     // Cas A : entête de scène + sonde du bloc suivant
     if(b.type === 'scene'){
-      const nb = dq[0];
+      const nb = (dq[0] && fk(dq[0].lines[0]) === fk(i0)) ? dq[0] : null;     // le bloc suivant est sur une autre feuille : rien à garder avec lui
       const nbBig = !!(nb && nb.type === 'card' && m[i0].h + gapOf(nb.lines[0]) + m[nb.lines[0]].h > contentH);   // carton page entière : il ne peut pas suivre l'entête
       const need = m[i0].h + ((nb && !nbBig) ? gapOf(nb.lines[0]) + ((nb.type === 'scene' || nb.type === 'transition' || nb.type === 'card') ? 1 : 2) * oneLine : 0);
       let first = firstTop(i0, 0);
@@ -749,20 +782,21 @@ function paginateEditor(force){
   let html = '';
   for(let k = 0; k < res.pageCount; k++){
     const top = k * (pageH + PAGE_GAP);
-    const num = PLB.labels[k];
-    const showNum = st.showPageNumbers && (k > 0 || st.numberFirstPage);
+    const num = PLB.labels[k], isFree = PLB.free[k];
+    const showNum = pageNumShown(PLB, k, st);
     // « CONTINUITÉ : » en bas de page quand la scène se poursuit sur la
     // suivante, « (continuité) » en haut de la page qui la reprend.
-    const contBottom = st.showContinued && sceneOfPage[k+1] && sceneOfPage[k+1].continued;
-    const contTop = st.showContinued && sceneOfPage[k] && sceneOfPage[k].continued;
-    html += `<div class="sheet" style="top:${top}px;height:${pageH}px;">
+    // Une page sans numéro n'en porte jamais (et la page qui la précède n'annonce pas une suite).
+    const contBottom = st.showContinued && !isFree && !PLB.free[k+1] && sceneOfPage[k+1] && sceneOfPage[k+1].continued;
+    const contTop = st.showContinued && !isFree && sceneOfPage[k] && sceneOfPage[k].continued;
+    html += `<div class="sheet${isFree ? ' is-free' : ''}" style="top:${top}px;height:${pageH}px;">
       ${k > 0 ? `<div class="pg-dot" style="top:${res.geo.mTop + 6}px"></div>` : ''}
-      ${showNum ? `<div class="sheet-num">${num}.</div>` : ''}
+      ${showNum ? `<div class="sheet-num">${num}.</div>` : ''}${isFree ? `<div class="sheet-free-tag">${esc(L('Page sans numéro','Unnumbered page'))}</div>` : ''}
       ${contTop ? `<div class="sheet-cont is-top">${esc(pageContWord('top'))}</div>` : ''}
       ${contBottom ? `<div class="sheet-cont is-bottom">${esc(pageContWord('bottom'))}</div>` : ''}
     </div>`;
     if(k < res.pageCount - 1){
-      html += `<div class="sheet-tab" style="top:${top + pageH + 8}px;">fin de page ${num}</div>`;
+      html += `<div class="sheet-tab" style="top:${top + pageH + 8}px;">${isFree ? L('fin de page sans numéro','end of unnumbered page') : 'fin de page ' + num}</div>`;
     }
   }
   (res.splits || []).forEach(sp => {

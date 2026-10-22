@@ -150,8 +150,9 @@ function printScript(){
 
   // Mêmes sauts de page que dans l'éditeur : une feuille = une page PDF.
   const res = measureExportPages(p);
-  const PLX = computePageLabels(res.pages, p).labels;
+  const PLB = computePageLabels(res.pages, p), PLX = PLB.labels;
   const cont = p.settings.showContinued ? firstSceneOfEachPage(res.pages, numbers, res.spill) : {};
+  PLB.free.forEach((f, k) => { if(f) delete cont[k]; });   // une page sans numéro ne porte aucune mention de continuité
   res.pages.forEach((linesOfPage, k)=>{
     // Feuille entièrement occupée par le débordement d'un bloc géant :
     // elle n'existe pas en tant que page, le bloc la traverse déjà.
@@ -160,7 +161,7 @@ function printScript(){
     sheet.className = 'print-page';
     if(res.spill[k+1]) sheet.style.height = 'auto';   // laisse le bloc géant se répartir
     const num = PLX[k];
-    if(p.settings.showPageNumbers && (k>0 || p.settings.numberFirstPage)){
+    if(pageNumShown(PLB, k, p.settings)){
       const n = document.createElement('div'); n.className='sheet-num'; n.textContent = num + '.';
       sheet.appendChild(n);
     }
@@ -168,7 +169,7 @@ function printScript(){
       const ct = document.createElement('div'); ct.className='sheet-cont is-top';
       ct.textContent = pageContWord('top'); sheet.appendChild(ct);
     }
-    if(cont[k+1]){
+    if(cont[k+1] && !PLB.free[k] && !PLB.free[k+1]){
       const c = document.createElement('div'); c.className='sheet-cont is-bottom';
       c.textContent = pageContWord('bottom'); sheet.appendChild(c);
     }
