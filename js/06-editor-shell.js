@@ -146,6 +146,8 @@ function goHome(){ closeMoreMenu(); stopReading(); stopDictation(); flushAutosav
 function renderTabBody(){
   const c = document.getElementById('centerPane'); const side = document.getElementById('sidePane');
   side.classList.add('hidden'); side.innerHTML='';
+  /* v94 : onglets « document » (contenu sur une colonne) : leur en-tête s'aligne sur cette colonne */
+  c.classList.toggle('pane-doc', ['structure','outline','guide','characters','tags','notes','reports','stats','history','graveyard','settings'].indexOf(S.tab) >= 0);
   if(S.tab==='editor') renderEditorTab();
   else if(S.tab==='cards') c.innerHTML = renderCards();
   else if(S.tab==='structure') c.innerHTML = renderStructure();

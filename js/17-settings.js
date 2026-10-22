@@ -42,7 +42,7 @@ document.addEventListener('change', setPageNumPreviewRefresh);
 function renderSettings(){
   const p = S.project;
   return `<div class="cards-toolbar"><div class="pane-title" style="margin:0;">${L('Paramètres','Settings')}</div></div>
-  <div style="padding:8px 24px 60px;max-width:600px;">
+  <div style="padding:8px 24px 60px;max-width:860px;">
     <div class="fmt-choice sset-nav">
 ${[['projet',L('Projet','Project')],['page',L('Mise en page','Layout')],['backup',L('Sauvegarde','Backup')]].map(x=>`      <div class="fmt-opt sset-tab ${__setSec===x[0]?'active':''}" data-act="setSettingsSection" data-sec="${x[0]}"><div class="t">${x[1]}</div></div>`).join('\n')}
     </div>

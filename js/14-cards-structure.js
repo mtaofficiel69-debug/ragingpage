@@ -22,7 +22,7 @@ function renderCards(){
     </div>`;
   }).join('');
   return `
-    <div class="cards-toolbar"><div class="pane-title" style="margin:0;">${L('Vue Cartes','Card View')} — ${blocks.length} ${L(blocks.length===1?'scène':'scènes', blocks.length===1?'scene':'scenes')}</div>
+    <div class="cards-toolbar"><div class="pane-title" style="margin:0;">${L('Cartes','Cards')}${paneCount(blocks.length)}</div>
       <button class="btn btn-sm" data-act="switchTab" data-id="editor">${L('Retour à l\u2019éditeur','Back to the editor')}</button></div>
     <div class="cards-hint">${L('Glisse une carte pour réorganiser les scènes (un trait indique où elle ira) · au clavier : Alt + flèches · Ctrl+Z annule.','Drag a card to reorder scenes (a line shows where it will land) · keyboard: Alt + arrows · Ctrl+Z undoes.')}</div>
     <div class="cards-grid" id="cardsGrid">${cards || `<p style="color:var(--ink-soft);padding:20px;">${L('Aucune scène pour l\u2019instant. Ajoute une ligne de type Scène dans l\u2019éditeur.','No scene yet. Add a Scene-type line in the editor.')}</p>`}</div>`;
@@ -205,7 +205,7 @@ let dragBeatId = null;
 function renderStructure(){
   const beats = ensureStructure(S.project).beats;
   const cards = beats.map((b,i)=> structureCardHtml(b, i+1)).join('');
-  return `<div class="cards-toolbar"><div class="pane-title" style="margin:0;">${L('Structure','Structure')}</div>
+  return `<div class="cards-toolbar"><div class="pane-title" style="margin:0;">${L('Structure','Structure')}${paneCount(beats.length)}</div>
       <div style="display:flex; gap:8px;">
         <button class="btn btn-sm btn-ghost" data-act="openStructureTemplateMenu">${icon('layers')} ${L('Gabarit','Template')}</button>
         <button class="btn btn-sm" data-act="switchTab" data-id="editor">${L('Retour à l\u2019éditeur','Back to the editor')}</button>
@@ -387,10 +387,10 @@ function renderOutline(){
         <input type="text" style="max-width:200px;" placeholder="${L('tags, séparés, virgule','tags, comma-separated')}" data-act="editSceneTags" data-id="${b.sceneId}" value="${esc(meta.tags.join(', '))}"></div>
     </div>`;
   }).join('');
-  return `<div class="cards-toolbar"><div class="pane-title" style="margin:0;">Outline</div></div>
+  return `<div class="cards-toolbar"><div class="pane-title" style="margin:0;">Outline${paneCount(blocks.length)}</div></div>
     <div class="wh-wrap">
       <p class="wh-lead">${L('Un résumé d’une phrase par scène : la colonne vertébrale de ton scénario.','A one-sentence summary per scene: the backbone of your screenplay.')}</p>
-      ${rows ? `<div class="flat-list">${rows}</div>` : whEmpty(L('Aucune scène.','No scene.'))}
+      ${rows ? `<div class="flat-list">${rows}</div>` : whEmpty(L('Aucune scène.','No scene.'), 'list')}
     </div>`;
 }
 
