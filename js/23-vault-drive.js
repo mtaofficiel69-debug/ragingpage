@@ -388,6 +388,8 @@ async function gdConnect(){
     await gdRequestToken(true);
     GD.err = '';
     toast(L('Google Drive connecté.','Google Drive connected.'));
+    // Se connecter depuis un scénario encore « non décidé » = le relier (c'est ce qu'on vient de demander).
+    if(S.project && S.view === 'editor' && gdLinkState(S.project.id) === null) gdSetLinked(S.project.id, true);
     await gdPush(true);
   }catch(e){
     GD.err = 'auth';
@@ -419,26 +421,73 @@ async function gdUpload(fileId, name, content){
   if(!res.ok) throw new Error('upload-' + res.status);
   return (await res.json()).id;
 }
-async function gdPush(silent){
-  if(!S.project || GD.busy) return;
+/* ---- UN SCÉNARIO = UN FICHIER DRIVE, ET SEULEMENT SI ON L'A DEMANDÉ ----
+   Chaque scénario décide pour lui-même : relié (envoyé sur le Drive, dans SON propre fichier), refusé, ou pas
+   encore décidé (une petite carte le propose, voir 31a-drive-chip.js). Un scénario déjà envoyé avant cette
+   mise à jour (il a un fichier Drive) reste relié. Rangé dans ce navigateur, par identifiant de scénario. */
+const GD_LINK_KEY = id => 'scriptmm_gdrive_link_' + id;
+const GD_DIRTY_KEY = id => 'scriptmm_gdrive_dirty_' + id;
+function gdLinkState(pid){
+  try{ const v = localStorage.getItem(GD_LINK_KEY(pid)); if(v === '1') return true; if(v === '0') return false; }catch(e){}
+  return gdFileId(pid) ? true : null;
+}
+function gdSetLinked(pid, on){ try{ localStorage.setItem(GD_LINK_KEY(pid), on ? '1' : '0'); }catch(e){} }
+/* « Modifié depuis le dernier envoi » : posé à chaque vraie modification (scheduleAutosave), retiré après un
+   envoi réussi. Avant, la date d'enregistrement servait de repère : revenir de l'accueil réenregistrait le
+   scénario sans rien changer, et la pastille repassait « en attente ». */
+const GD_DIRTY = {};
+function gdIsDirty(pid){ if(GD_DIRTY[pid] !== undefined) return GD_DIRTY[pid]; try{ return (GD_DIRTY[pid] = localStorage.getItem(GD_DIRTY_KEY(pid)) === '1'); }catch(e){ return false; } }
+function gdSetDirty(pid, on){
+  if(gdIsDirty(pid) === on) return;
+  GD_DIRTY[pid] = on;
+  try{ on ? localStorage.setItem(GD_DIRTY_KEY(pid), '1') : localStorage.removeItem(GD_DIRTY_KEY(pid)); }catch(e){}
+  try{ if(typeof updateDriveChip === 'function') updateDriveChip(); }catch(e){}   // la pastille suit tout de suite (OK <-> en attente)
+}
+let GD_EDIT_SEQ = 0;
+/* Un fichier Drive n'appartient qu'à un seul scénario : si un autre scénario de ce navigateur pointe déjà
+   vers lui (copie, ancienne version...), on en crée un nouveau plutôt que d'écraser l'autre. */
+function gdFileOwnedElsewhere(pid, fid){
+  if(!fid) return false;
+  try{
+    const pre = GD_FILE_KEY('');
+    for(let i = 0; i < localStorage.length; i++){
+      const k = localStorage.key(i);
+      if(k && k.indexOf(pre) === 0 && k !== GD_FILE_KEY(pid) && localStorage.getItem(k) === fid) return true;
+    }
+  }catch(e){}
+  return false;
+}
+async function gdPush(silent, proj){
+  const P = proj || S.project;
+  if(!P || GD.busy) return;
   if(!gdConnected()){
     if(silent) return;      // un envoi automatique n'ouvre JAMAIS la fenêtre Google : il attend la reconnexion (pastille Drive)
     try{ await gdRequestToken(false); }
     catch(e){ toast(L('Reconnecte Google Drive pour envoyer ce scénario.','Reconnect Google Drive to send this screenplay.')); return; }
   }
+  const linkSt = gdLinkState(P.id);
+  if(linkSt !== true){
+    if(silent) return;                                // jamais d'envoi automatique d'un scénario non relié
+    gdSetLinked(P.id, true);                          // « Envoyer maintenant » sur ce scénario = le relier
+  }
+  if(silent && !gdIsDirty(P.id) && gdFileId(P.id)) return;   // rien de nouveau depuis le dernier envoi
   GD.busy = true; updateVaultChip();
+  const seq = GD_EDIT_SEQ;
   try{
-    const pid = S.project.id;
+    const pid = P.id;
     let fid = gdFileId(pid);
-    const name = safeFileName(S.project.title) + '.smmproj';
+    if(gdFileOwnedElsewhere(pid, fid)) fid = '';
+    const name = safeFileName(P.title) + '.smmproj';
+    const body = vaultPayload(P);
     try{
-      fid = await gdUpload(fid, name, vaultPayload(S.project));
+      fid = await gdUpload(fid, name, body);
     }catch(e){
       if(String(e.message).indexOf('upload-404') === 0 || String(e.message).indexOf('upload-403') === 0){
-        fid = await gdUpload('', name, vaultPayload(S.project)); // le fichier a été supprimé côté Drive : on en recrée un
+        fid = await gdUpload('', name, body); // le fichier a été supprimé côté Drive : on en recrée un
       }else throw e;
     }
     gdSetFileId(pid, fid);
+    if(GD_EDIT_SEQ === seq || !S.project || S.project.id !== pid) gdSetDirty(pid, false);   // modifié pendant l'envoi : reste à envoyer
     GD.at = Date.now(); GD.err = '';
     if(!silent) toast(L('Scénario envoyé dans ton Google Drive.','Screenplay sent to your Google Drive.'));
   }catch(e){
@@ -510,8 +559,14 @@ function vaultSettingsHtml(){
             : `<button class="btn btn-sm btn-primary" data-act="gdConnect">${L('Se connecter avec Google','Sign in with Google')}</button>` }
       </div>
       <div class="sset-status ${gdConnected() ? 'ok' : ''}"><span class="sset-dot"></span><span>${ gdConnected()
-          ? L('Connecté : ton scénario est copié automatiquement','Connected: your screenplay is copied automatically') + (GD.at ? L(' · dernier envoi ',' · last sent ') + esc(timeAgo(GD.at)) : '')
+          ? (S.project && gdLinkState(S.project.id) !== true
+              ? L('Connecté · ce scénario n\u2019est pas relié à ton Drive (il reste dans ce navigateur)','Connected · this screenplay isn\u2019t linked to your Drive (it stays in this browser)')
+              : L('Connecté : ton scénario est copié automatiquement','Connected: your screenplay is copied automatically') + (GD.at ? L(' · dernier envoi ',' · last sent ') + esc(timeAgo(GD.at)) : ''))
           : (gdClientId() ? L('Pas encore connecté : un clic, ton compte Google, et c\u2019est fait','Not connected yet: one click, your Google account, done') : L('Google Drive n\u2019est pas encore activé sur ce site','Google Drive isn\u2019t enabled on this site yet')) }</span></div>
+      ${ gdConnected() && S.project ? `<div class="sset-actions" style="margin-top:8px;">${ gdLinkState(S.project.id) === true
+          ? `<button class="btn btn-sm btn-ghost" data-act="gdLinkToggle">${L('Ne plus envoyer ce scénario sur Drive','Stop sending this screenplay to Drive')}</button>`
+          : `<button class="btn btn-sm" data-act="gdLinkToggle">${icon('cloud')} ${L('Relier ce scénario à mon Drive','Link this screenplay to my Drive')}</button>` }</div>
+        <p class="sset-hint" style="margin:6px 0 0;">${L('Chaque scénario a son propre fichier sur ton Drive et se relie à part.','Each screenplay has its own file on your Drive and is linked separately.')}</p>` : '' }
       ${ GD_BUILTIN_CLIENT_ID ? '' : `<details class="sset-more"><summary>${L('Réglage du site (une seule fois, pour l\u2019hébergeur)','Site setup (one time, for the host)')}</summary>
         <div class="field" style="margin-top:8px;"><label>${L('Identifiant client Google (OAuth)','Google client ID (OAuth)')}</label>
           <input type="text" id="gdClientId" placeholder="xxxxxxxx.apps.googleusercontent.com" value="${esc(cid)}">

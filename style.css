@@ -2112,3 +2112,16 @@ html[data-theme="dark"] .topbar.tb-c4 .vault-chip.ok{color:#5FD39A;} html[data-t
 }
 @media print{ .rail-toggle, .rail-reopen{display:none !important;} }
 
+
+/* Carte « Enregistrer ce scénario sur ton Drive ? » (js/31a-drive-chip.js) : non bloquante, dans le style des
+   boîtes de dialogue du site (.mmd). */
+.gd-ask{position:fixed; right:20px; bottom:76px; z-index:140; width:min(360px, calc(100vw - 32px)); padding:16px 16px 14px; border-radius:12px;
+  background:var(--surface); color:var(--ink); font-family:var(--sans); box-shadow:0 0 0 1px var(--hair), 0 18px 48px rgba(10,10,20,.28); animation:mmdPop .17s cubic-bezier(.2,.8,.3,1);}
+.gd-ask-x{position:absolute; top:8px; right:8px;}
+.gd-ask-h{display:flex; gap:12px; align-items:flex-start; padding-right:22px;}
+.gd-ask-ico{flex:none; width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center; background:rgba(54,153,212,.14); color:var(--accent);}
+.gd-ask-ico .icon{width:18px; height:18px;}
+.gd-ask-h b{display:block; font-size:14.5px; font-weight:700; line-height:1.3; margin-top:1px;}
+.gd-ask-h p{margin:5px 0 0; font-size:13px; line-height:1.45; color:var(--ink-soft);}
+.gd-ask-act{display:flex; justify-content:flex-end; gap:8px; margin-top:14px;}
+@media print{ .gd-ask{display:none !important;} }

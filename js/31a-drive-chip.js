@@ -40,9 +40,13 @@ function updateDriveChip(){
   }else if(GD.err === 'push'){
     cls += ' warn'; txt = L('Drive en erreur','Drive error');
     title = L('Le dernier envoi vers Google Drive a échoué. Clique pour réessayer.','The last send to Google Drive failed. Click to try again.');
-  }else if(sentAt && (S.project.updatedAt || 0) <= sentAt){
+  }else if(gdLinkState(S.project.id) !== true){
+    cls += ' off'; txt = L('Drive : non relié','Drive: not linked');
+    title = L('Ce scénario n\u2019est pas enregistré sur ton Google Drive. Clique pour le relier : il aura son propre fichier, mis à jour tout seul.',
+              'This screenplay isn\u2019t saved to your Google Drive. Click to link it: it gets its own file, updated automatically.');
+  }else if(!gdIsDirty(S.project.id) && gdFileId(S.project.id)){
     cls += ' ok'; txt = L('Drive OK','Drive OK');
-    title = L('Dernier envoi vers ton Google Drive : ','Last sent to your Google Drive: ') + timeAgo(sentAt) + L('. Clique pour envoyer maintenant.','. Click to send now.');
+    title = (sentAt ? L('Dernier envoi vers ton Google Drive : ','Last sent to your Google Drive: ') + timeAgo(sentAt) : L('Ton Google Drive est à jour','Your Google Drive is up to date')) + L('. Clique pour envoyer maintenant.','. Click to send now.');
   }else{
     cls += ' off'; txt = L('Drive : en attente','Drive: pending');
     title = L('Connecté. Ce scénario est envoyé sur ton Drive environ 30 secondes après ta prochaine modification. Clique pour l\u2019envoyer maintenant.',
@@ -64,8 +68,8 @@ updateVaultChip = function(){
   return r;
 };
 const __driveOrigPush = gdPush;
-gdPush = async function(){
-  const pid = S.project && S.project.id, before = GD.at;
+gdPush = async function(silent, proj){
+  const P = proj || S.project, pid = P && P.id, before = GD.at;
   try{ return await __driveOrigPush.apply(this, arguments); }
   finally{
     if(pid && GD.at !== before && !GD.err) DRIVE_SENT[pid] = GD.at;
@@ -111,3 +115,120 @@ gdConnect = async function(){
   __gdWasConnected = gdConnected();
   return r;
 };
+
+/* ---------------------------------------------------------------------
+   UN SCÉNARIO = SON PROPRE FICHIER DRIVE, ET UNE CONNEXION POUR TOUTE L'APPLI
+   · La connexion vaut pour tout le site : accueil, chaque scénario, nouveaux
+     scénarios. Elle ne tombe qu'à l'expiration de l'accès Google ou sur
+     « Se déconnecter ».
+   · Chaque scénario est relié (ou non) à SON fichier Drive. Ouvrir ou créer
+     un scénario pas encore décidé, quand Drive est connecté, affiche une
+     petite carte « Enregistrer ce scénario sur ton Drive ? » (Oui / Non,
+     mémorisé pour ce scénario ; la croix = plus tard). Jamais de fenêtre
+     qui bloque, jamais d'envoi d'un scénario non relié.
+   · Seules les vraies modifications comptent (pas les réenregistrements),
+     et en quittant un scénario ce qui n'était pas parti est envoyé tout de
+     suite, au lieu d'attendre 30 secondes.
+--------------------------------------------------------------------- */
+const __gdOrigScheduleAutosave = scheduleAutosave;
+scheduleAutosave = function(){
+  if(S.project){ GD_EDIT_SEQ++; gdSetDirty(S.project.id, true); }
+  return __gdOrigScheduleAutosave.apply(this, arguments);
+};
+/* Envoi immédiat d'un scénario qu'on quitte (attend la fin d'un envoi en cours). */
+async function gdFlushProject(P){
+  if(!P || !gdConnected() || gdLinkState(P.id) !== true || !gdIsDirty(P.id)) return;
+  clearTimeout(GD.timer);
+  for(let i = 0; i < 100 && GD.busy; i++) await new Promise(r => setTimeout(r, 200));
+  try{ await gdPush(true, P); }catch(e){}
+}
+const __gdOrigGoHome = goHome;
+goHome = function(){
+  const P = S.project;
+  const r = __gdOrigGoHome.apply(this, arguments);     // la sauvegarde finale a lieu ici (flushAutosave)
+  gdFlushProject(P);
+  gdAskHide();
+  return r;
+};
+if(ACTIONS.goHome) ACTIONS.goHome = goHome;
+const __gdOrigOpenProject = openProject;
+openProject = async function(id){
+  const prev = (S.view === 'editor' && S.project && S.project.id !== id) ? S.project : null;
+  if(prev){ try{ flushAutosave(); }catch(e){} gdFlushProject(prev); }
+  gdAskHide();
+  const r = await __gdOrigOpenProject.apply(this, arguments);
+  // Relié et modifié depuis le dernier envoi (site fermé avant l'envoi, par exemple) : il part maintenant.
+  if(S.project && S.project.id === id && gdConnected() && gdLinkState(id) === true && gdIsDirty(id)) setTimeout(() => { if(S.project && S.project.id === id) gdPush(true); }, 2500);
+  return r;
+};
+if(ACTIONS.openProject) ACTIONS.openProject = openProject;
+
+/* ---- la petite carte « Enregistrer ce scénario sur ton Drive ? » ---- */
+const GD_ASK_LATER = {};   // croix : on ne redemande pas pour ce scénario avant la prochaine ouverture du site
+let __gdAskTimer = null;
+function gdAskHide(){ clearTimeout(__gdAskTimer); __gdAskTimer = null; const c = document.getElementById('gdLinkAsk'); if(c) c.remove(); }
+function gdAskShouldShow(){
+  const P = S.project;
+  return !!(P && S.view === 'editor' && gdConnected() && gdLinkState(P.id) === null && !GD_ASK_LATER[P.id] && !document.querySelector('.modal-backdrop, .mmd-backdrop'));
+}
+function gdAskMaybe(){
+  if(!gdAskShouldShow()){ if(!(S.project && S.view === 'editor' && gdConnected() && gdLinkState(S.project.id) === null)) gdAskHide(); return; }
+  const cur = document.getElementById('gdLinkAsk');
+  if(cur && cur.dataset.pid === S.project.id) return;
+  if(__gdAskTimer) return;
+  __gdAskTimer = setTimeout(() => {
+    __gdAskTimer = null;
+    if(!gdAskShouldShow()) return;
+    gdAskHide();
+    const P = S.project;
+    const d = document.createElement('div');
+    d.id = 'gdLinkAsk'; d.className = 'gd-ask'; d.dataset.pid = P.id;
+    d.setAttribute('role', 'dialog'); d.setAttribute('aria-live', 'polite');
+    d.innerHTML = `<button type="button" class="fp-x gd-ask-x" data-act="gdAskLater" title="${L('Plus tard','Later')}" aria-label="${L('Plus tard','Later')}">${icon('close')}</button>
+      <div class="gd-ask-h"><span class="gd-ask-ico">${icon('cloud')}</span><div>
+        <b>${L('Enregistrer ce scénario sur ton Drive\u00a0?','Save this screenplay to your Drive?')}</b>
+        <p>${L('«\u00a0' + esc(P.title || 'Sans titre') + '\u00a0» aura son propre fichier dans ton Google Drive, mis à jour tout seul. Chaque scénario se décide à part.','\u201c' + esc(P.title || 'Untitled') + '\u201d gets its own file in your Google Drive, updated automatically. Each screenplay is decided separately.')}</p>
+      </div></div>
+      <div class="gd-ask-act"><button type="button" class="btn btn-sm btn-ghost" data-act="gdAskNo">${L('Non, pas celui-ci','No, not this one')}</button>
+        <button type="button" class="btn btn-sm btn-primary" data-act="gdAskYes">${L('Oui, l\u2019enregistrer','Yes, save it')}</button></div>`;
+    document.body.appendChild(d);
+  }, 900);
+}
+ACTIONS.gdAskYes = function(){
+  const c = document.getElementById('gdLinkAsk'), pid = c && c.dataset.pid; gdAskHide();
+  if(!S.project || S.project.id !== pid) return;
+  gdSetLinked(pid, true); gdSetDirty(pid, true);
+  gdPush(true).then(() => { if(gdFileId(pid)) toast(L('Ce scénario est maintenant enregistré sur ton Google Drive.','This screenplay is now saved to your Google Drive.')); });
+  updateDriveChip();
+};
+ACTIONS.gdAskNo = function(){
+  const c = document.getElementById('gdLinkAsk'), pid = c && c.dataset.pid; gdAskHide();
+  if(!pid) return;
+  gdSetLinked(pid, false); updateDriveChip();
+  toast(L('Ce scénario reste seulement dans ce navigateur. La pastille « Drive : non relié » permet de changer d\u2019avis.','This screenplay stays in this browser only. The \u201cDrive: not linked\u201d chip lets you change your mind.'));
+};
+ACTIONS.gdAskLater = function(){
+  const c = document.getElementById('gdLinkAsk'), pid = c && c.dataset.pid; gdAskHide();
+  if(pid) GD_ASK_LATER[pid] = true;
+};
+/* La carte suit l'état de la pastille : même moments (rendu, changement de scénario, connexion, minuterie). */
+const __gdAskUpdateChip = updateDriveChip;
+updateDriveChip = function(){
+  const r = __gdAskUpdateChip.apply(this, arguments);
+  try{ gdAskMaybe(); }catch(e){}
+  return r;
+};
+ACTIONS.gdLinkToggle = function(){
+  if(!S.project) return;
+  const pid = S.project.id;
+  if(gdLinkState(pid) === true){
+    gdSetLinked(pid, false);
+    toast(L('Ce scénario n\u2019est plus envoyé sur ton Drive (le fichier déjà envoyé y reste).','This screenplay is no longer sent to your Drive (the file already sent stays there).'));
+  }else{
+    gdSetLinked(pid, true); gdSetDirty(pid, true); gdAskHide();
+    gdPush(true).then(() => { if(gdFileId(pid)) toast(L('Ce scénario est maintenant enregistré sur ton Google Drive.','This screenplay is now saved to your Google Drive.')); });
+  }
+  updateDriveChip();
+  if(S.view === 'editor' && S.tab === 'settings') renderTabBody();
+};
+
