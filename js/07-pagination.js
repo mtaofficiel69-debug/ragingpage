@@ -195,7 +195,7 @@ function pageLabelsCore(pages, proj){
   });
   return { labels, omitted: pl.pages.filter((x, i)=>!used.has(i)).map(x=>x.label) };
 }
-function pageLbl(n){ const l = S.pagination && S.pagination.labels; if(l && l[n-1] === '') return L('sans n°','unnumbered'); return (l && l[n-1]) || String(n); }
+function pageLbl(n){ const l = S.pagination && S.pagination.labels; if(l && l[n-1] === '') return '–'; return (l && l[n-1]) || String(n); }   // page sans numéro : un tiret, aussi court qu'un numéro
 function plLock(p){
   const res = measureExportPages(p), PLB = computePageLabels(res.pages, p), pages = [];
   const np = res.pages.filter((_, k) => !PLB.free[k]), labels = PLB.labels.filter((_, k) => !PLB.free[k]);   // les pages sans numéro ne sont pas figées
