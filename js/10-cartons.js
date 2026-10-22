@@ -294,8 +294,7 @@ function onLineFocus(e){
   // sous les yeux. Appelé après repaginateNow() partout où l'un et l'autre
   // se combinent, la position lue ici est donc déjà la position finale —
   // un seul déplacement de la vue, jamais deux qui se contredisent.
-  ensureLineVisible(div);
-  updatePageIndicator();
+  if(!S.pagination._quickFocus){ ensureLineVisible(div); updatePageIndicator(); }   // focus rapide : la pagination de l'image s'en charge
   showContextPanel(el);
 }
 /* Fait défiler #centerPane, sans effet de bord ni animation (le déplacement

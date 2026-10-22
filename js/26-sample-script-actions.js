@@ -1018,7 +1018,7 @@ const ACTIONS = {
   vaultAttach, vaultReconnect, vaultDetach, vaultOpenFromFile, vaultChipClick, vaultForceWrite,
   dismissStorageBanner, gdSaveClientId, gdConnect, gdDisconnect, gdPushNow, gdPull,
   setLang,
-  toggleNav, navGoScene, toggleDual, toggleMoreMenu, closeMoreMenu,
+  toggleNav, navGoScene, toggleRail, toggleDual, toggleMoreMenu, closeMoreMenu,
   speakScene, toggleDictation,
   openJumpScene, closeJumpScene, jumpToScene,
   closeJumpSceneBg: (id,e)=>{ if(e.target.id==='jumpBackdrop') closeJumpScene(); },

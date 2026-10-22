@@ -33,8 +33,9 @@ function renderEditorShell(){
       return `<div class="rail-item ${S.tab===id?'active':''}" data-act="switchTab" data-id="${id}" data-tip="${label}">${icon(ic)}<span class="lbl">${label}</span></div>`;
     }).join('')
   ).join('');
+  const railShut = railClosed();
   return `
-  <div id="editorView">
+  <div id="editorView"${railShut ? ' class="rail-collapsed"' : ''}>
     <div class="rail">
       <div class="rail-top">
         <div class="rail-brand" data-act="goHome" title="${L('Retour au portfolio','Back to portfolio')}">${mmLogo(38,'rail-logo')}${mmWordmark()}</div>
@@ -42,7 +43,9 @@ function renderEditorShell(){
       </div>
       <div class="rail-nav">${items}</div>
       <div class="rail-bottom" id="railCount">${p.elements.length} ${L('éléments','elements')}</div>
+      <button type="button" class="rail-toggle" data-act="toggleRail" title="${L('Masquer la colonne','Hide the sidebar')}" aria-label="${L('Masquer la colonne','Hide the sidebar')}" aria-expanded="true">${icon('railhide')}</button>
     </div>
+    <button type="button" class="rail-reopen" data-act="toggleRail" title="${L('Afficher la colonne','Show the sidebar')}" aria-label="${L('Afficher la colonne','Show the sidebar')}" aria-expanded="false">${icon('railshow')}</button>
     <div class="main-col">
       <div class="topbar">
         <div class="topbar-left">
@@ -77,6 +80,23 @@ function renderEditorShell(){
     </div>
   </div>`;
 }
+/* COLONNE DE GAUCHE REPLIABLE : ouverte par défaut ; le bouton en bas de la colonne la masque pour laisser
+   toute la place au scénario, l'onglet sur le bord gauche la rouvre. Le choix est mémorisé dans ce navigateur. */
+const RAIL_KEY = 'scriptmm_rail_closed';
+function railClosed(){ try{ return localStorage.getItem(RAIL_KEY) === '1'; }catch(e){ return false; } }
+function toggleRail(){
+  const view = document.getElementById('editorView'); if(!view) return;
+  const shut = !view.classList.contains('rail-collapsed');
+  try{ localStorage.setItem(RAIL_KEY, shut ? '1' : '0'); }catch(e){}
+  view.classList.toggle('rail-collapsed', shut);
+  // La zone du scénario change de largeur : même traitement qu'un redimensionnement de la fenêtre
+  // (échelle de la feuille, barre du haut, repères...).
+  try{ window.dispatchEvent(new Event('resize')); }catch(e){}
+  const to = view.querySelector(shut ? '.rail-reopen' : '.rail-toggle');
+  if(to && document.activeElement && document.activeElement.closest && document.activeElement.closest('.rail-toggle, .rail-reopen')) to.focus({ preventScroll:true });
+}
+/* Cliquer sur ces boutons ne retire pas le curseur du scénario. */
+document.addEventListener('mousedown', e => { if(e.target && e.target.closest && e.target.closest('.rail-toggle, .rail-reopen')) e.preventDefault(); }, true);
 function attachEditorEvents(){
   syncRailTips();
   const si = document.getElementById('searchInput');

@@ -285,6 +285,12 @@ function onLineKeydown(e){
         div.remove();
         if(el.type==='scene' || prevEl.type==='scene') renumberScenes();
         if(wasDual){ rebuildEditorAt(prevEl.id, mergedAt); scheduleAutosave(); return; }
+        if(e.repeat && prevDiv){
+          // Touche maintenue : on enchaîne les fusions et la pagination ne passe qu'une fois par image.
+          prevDiv.textContent = prevEl.text; prevDiv.dataset.empty = prevEl.text?'':'1';
+          focusDivQuick(prevDiv, mergedAt); schedulePaginate(); scheduleAutosave();
+          return;
+        }
         repaginateNow();
         if(prevDiv){ prevDiv.textContent = prevEl.text; prevDiv.dataset.empty = prevEl.text?'':'1'; focusDiv(prevDiv, mergedAt); }
         scheduleAutosave();
@@ -309,6 +315,7 @@ function onLineKeydown(e){
         div.textContent = el.text; div.dataset.empty = el.text?'':'1';
         if(el.type==='scene' || nextEl.type==='scene') renumberScenes();
         if(wasDual){ rebuildEditorAt(el.id, at); scheduleAutosave(); return; }
+        if(e.repeat){ focusDivQuick(div, at); schedulePaginate(); scheduleAutosave(); return; }   // touche maintenue : une pagination par image
         repaginateNow();
         focusDiv(div, at);
         scheduleAutosave();
