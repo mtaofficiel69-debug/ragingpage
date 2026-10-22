@@ -174,7 +174,7 @@ function gdAskShouldShow(){
 function gdAskMaybe(){
   if(!gdAskShouldShow()){ if(!(S.project && S.view === 'editor' && gdConnected() && gdLinkState(S.project.id) === null)) gdAskHide(); return; }
   const cur = document.getElementById('gdLinkAsk');
-  if(cur && cur.dataset.pid === S.project.id) return;
+  if(cur && cur.dataset.pid === S.project.id && cur.dataset.lang === getLang()) return;   // autre langue : la carte est refaite
   if(__gdAskTimer) return;
   __gdAskTimer = setTimeout(() => {
     __gdAskTimer = null;
@@ -182,7 +182,7 @@ function gdAskMaybe(){
     gdAskHide();
     const P = S.project;
     const d = document.createElement('div');
-    d.id = 'gdLinkAsk'; d.className = 'gd-ask'; d.dataset.pid = P.id;
+    d.id = 'gdLinkAsk'; d.className = 'gd-ask'; d.dataset.pid = P.id; d.dataset.lang = getLang();
     d.setAttribute('role', 'dialog'); d.setAttribute('aria-live', 'polite');
     d.innerHTML = `<button type="button" class="fp-x gd-ask-x" data-act="gdAskLater" title="${L('Plus tard','Later')}" aria-label="${L('Plus tard','Later')}">${icon('close')}</button>
       <div class="gd-ask-h"><span class="gd-ask-ico">${icon('cloud')}</span><div>
@@ -231,4 +231,48 @@ ACTIONS.gdLinkToggle = function(){
   updateDriveChip();
   if(S.view === 'editor' && S.tab === 'settings') renderTabBody();
 };
+
+/* ---------------------------------------------------------------------
+   RATTRAPAGE : aucun scénario relié ne reste en retard sur le Drive
+   · Après une (re)connexion, et à l'ouverture du site quand l'accès est
+     encore valable, TOUS les scénarios reliés modifiés depuis leur dernier
+     envoi partent (pas seulement celui qui est ouvert) : modifications
+     faites pendant une coupure, ou juste avant de fermer/recharger le site.
+   · Un scénario supprimé emporte ses réglages Drive (le fichier déjà envoyé
+     reste dans le Drive).
+--------------------------------------------------------------------- */
+let __gdSyncing = false;
+async function gdSyncAllDirty(){
+  if(__gdSyncing || !gdConnected()) return;
+  __gdSyncing = true;
+  try{
+    const ids = (S.projectsIndex || []).map(e => e.id).filter(id => gdLinkState(id) === true && gdIsDirty(id));
+    for(const id of ids){
+      if(!gdConnected()) break;
+      for(let i = 0; i < 150 && GD.busy; i++) await new Promise(r => setTimeout(r, 200));
+      if(!gdIsDirty(id)) continue;                         // déjà parti entre-temps
+      let P = (S.project && S.project.id === id) ? S.project : null;
+      if(!P){ try{ P = await storGet(proj_key(id)); }catch(e){ P = null; } }
+      if(P && P.id === id) await gdPush(true, P);
+    }
+  }catch(e){}
+  __gdSyncing = false;
+}
+const __gdSyncConnect = gdConnect;
+gdConnect = async function(){
+  const r = await __gdSyncConnect.apply(this, arguments);
+  gdSyncAllDirty();
+  return r;
+};
+setTimeout(() => { if(gdConnected()) gdSyncAllDirty(); }, 3000);   // ouverture du site, accès encore valable
+const __gdDelProject = deleteProject;
+deleteProject = async function(id){
+  const r = await __gdDelProject.apply(this, arguments);
+  if(!(S.projectsIndex || []).some(e => e.id === id)){            // vraiment supprimé (pas annulé)
+    try{ [GD_LINK_KEY(id), GD_DIRTY_KEY(id), GD_FILE_KEY(id)].forEach(k => localStorage.removeItem(k)); }catch(e){}
+    delete GD_DIRTY[id];
+  }
+  return r;
+};
+if(ACTIONS.deleteProject) ACTIONS.deleteProject = deleteProject;
 
