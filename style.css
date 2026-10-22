@@ -2125,3 +2125,38 @@ html[data-theme="dark"] .topbar.tb-c4 .vault-chip.ok{color:#5FD39A;} html[data-t
 .gd-ask-h p{margin:5px 0 0; font-size:13px; line-height:1.45; color:var(--ink-soft);}
 .gd-ask-act{display:flex; justify-content:flex-end; gap:8px; margin-top:14px;}
 @media print{ .gd-ask{display:none !important;} }
+
+/* ---------- Palette de commandes (Ctrl+K) et liste sous « Rechercher… » ---------- */
+.cp-backdrop{position:fixed; inset:0; z-index:390; background:rgba(20,20,30,.42); backdrop-filter:blur(2px);}
+.cp-modal{position:fixed; left:50%; top:9vh; transform:translateX(-50%); width:min(640px, calc(100vw - 32px)); background:var(--surface); color:var(--ink); border-radius:14px; font-family:var(--sans);
+  box-shadow:0 0 0 1px var(--hair), 0 24px 64px rgba(10,10,20,.38); overflow:hidden; display:flex; flex-direction:column; max-height:min(640px, 84vh);}
+.cp-in{display:flex; align-items:center; gap:10px; padding:14px 16px; border-bottom:1px solid var(--hair);}
+.cp-in > .icon{width:18px; height:18px; color:var(--ink-soft); flex:none;}
+.cp-in input{flex:1; min-width:0; border:0; outline:none; background:transparent; font:500 16px var(--sans); color:var(--ink);}
+.cp-in input::placeholder{color:var(--ink-soft); opacity:.8;}
+.cp-list{padding:6px; overflow-y:auto; overscroll-behavior:contain; flex:1 1 auto; min-height:0;}
+.cp-drop{position:fixed; z-index:400; background:var(--surface); color:var(--ink); border-radius:12px; font-family:var(--sans);
+  box-shadow:0 0 0 1px var(--hair), 0 18px 48px rgba(10,10,20,.22); padding:6px; max-height:min(480px, 70vh); overflow-y:auto; overscroll-behavior:contain;}
+.cp-sec{font-size:10.5px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-soft); padding:10px 10px 5px;}
+.cp-row{display:flex; align-items:center; gap:11px; padding:8px 10px; border-radius:8px; font-size:13.5px; cursor:pointer; line-height:1.35;}
+.cp-row > .icon{flex:none; width:16px; height:16px; color:var(--ink-soft);}
+.cp-num{flex:none; min-width:22px; font:600 12px var(--mono); color:var(--accent-2); text-align:right;}
+.cp-lab{flex:1; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+.cp-lab b{font-weight:700; background:color-mix(in srgb, var(--accent) 18%, transparent); border-radius:3px; padding:0 1px;}
+.cp-soft{color:var(--ink-soft); font-size:12.5px;}
+.cp-sub{display:block; font-size:12px; color:var(--ink-soft); margin-top:1px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+.cp-where{flex:none; font-size:11.5px; color:var(--ink-soft); max-width:42%; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+.cp-st{flex:none; font-size:11px; font-weight:700; padding:2px 8px; border-radius:999px; background:var(--chip-bg); color:var(--ink-soft);}
+.cp-st.on{background:rgba(47,158,68,.14); color:var(--ok);}
+.cp-kbd{flex:none; display:inline-flex; gap:3px;}
+.cp-kbd span{font:600 10.5px var(--sans); color:var(--ink-soft); border:1px solid var(--hair); border-bottom-width:2px; border-radius:5px; padding:1px 5px; background:var(--surface);}
+.cp-row.sel{background:color-mix(in srgb, var(--accent) 11%, var(--surface)); box-shadow:inset 3px 0 0 var(--accent);}
+.cp-row.sel > .icon{color:var(--accent);}
+.cp-empty{padding:22px 14px; font-size:13px; color:var(--ink-soft); text-align:center; line-height:1.5;}
+.cp-foot{display:flex; flex-wrap:wrap; gap:6px 16px; padding:9px 16px; border-top:1px solid var(--hair); font-size:11.5px; color:var(--ink-soft); background:var(--surface-soft);}
+.cp-foot .cp-kbd{margin-right:5px;}
+.cp-foot-r{margin-left:auto;}
+.cp-drop-foot{display:flex; align-items:center; justify-content:flex-end; gap:6px; padding:8px 10px 4px; margin-top:4px; border-top:1px solid var(--hair); font-size:11.5px; color:var(--ink-soft);}
+.cp-glow{outline:3px solid var(--accent) !important; outline-offset:4px; border-radius:8px; box-shadow:0 0 0 8px color-mix(in srgb, var(--accent) 18%, transparent) !important; transition:outline-color .3s;}
+@media (max-width:640px){ .cp-modal{top:12px;} .cp-where{display:none;} }
+@media print{ .cp-backdrop, .cp-drop{display:none !important;} }
