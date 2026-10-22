@@ -104,15 +104,15 @@ function fontMetrics(fontShorthand, fontSizePx){
 }
 
 /* v85 : surlignages en couleur et soulignements (Ctrl+U) dans les exports.
-   Les plages sont rangées dans el.hl ([début, fin, couleur], la couleur 4 = soulignement). */
+   Les plages sont rangées dans el.hl ([début, fin, couleur], la couleur 4 = soulignement, 5 = gras). */
 const RP_HL_RGBA = [[255,214,10,.55],[52,211,153,.42],[244,114,182,.38],[96,165,250,.42]];
 function rpMarkFlags(el, len){
   const rs = window.rpHlRanges ? window.rpHlRanges(el) : [];
   if(!rs.length) return null;
-  const col = new Int8Array(len).fill(-1), ul = new Uint8Array(len);
-  rs.forEach(r => { for(let i = Math.max(0, r[0]); i < Math.min(len, r[1]); i++){ if(r[2] === 4) ul[i] = 1; else if(RP_HL_RGBA[r[2]]) col[i] = r[2]; } });
-  let any = false; for(let i = 0; i < len; i++){ if(col[i] >= 0 || ul[i]){ any = true; break; } }
-  return any ? { col, ul } : null;
+  const col = new Int8Array(len).fill(-1), ul = new Uint8Array(len), bd = new Uint8Array(len);
+  rs.forEach(r => { for(let i = Math.max(0, r[0]); i < Math.min(len, r[1]); i++){ if(r[2] === 4) ul[i] = 1; else if(r[2] === 5) bd[i] = 1; else if(RP_HL_RGBA[r[2]]) col[i] = r[2]; } });
+  let any = false; for(let i = 0; i < len; i++){ if(col[i] >= 0 || ul[i] || bd[i]){ any = true; break; } }
+  return any ? { col, ul, bd } : null;
 }
 function rpModelOf(id){ return (S.project && S.project.elements || []).find(x => x.id === id) || null; }
 /* Les marques d'une ligne, recalées sur le texte tel que le PDF le relit (espaces fusionnés, rognés). */
@@ -122,15 +122,15 @@ function pdfMarksFor(node, own, finalText){
     const m = rpModelOf(node.dataset.id); if(!m || !m.text) return null;
     if(own.length < m.text.length || own.slice(0, m.text.length) !== m.text) return null;
     const fl = rpMarkFlags(m, own.length); if(!fl) return null;
-    let t = '', col = [], ul = [];
+    let t = '', col = [], ul = [], bd = [];
     for(let i = 0; i < own.length;){
-      if(/\s/.test(own[i])){ let j = i; while(j < own.length && /\s/.test(own[j])) j++; t += ' '; col.push(fl.col[i]); ul.push(fl.ul[i]); i = j; }
-      else { t += own[i]; col.push(fl.col[i]); ul.push(fl.ul[i]); i++; }
+      if(/\s/.test(own[i])){ let j = i; while(j < own.length && /\s/.test(own[j])) j++; t += ' '; col.push(fl.col[i]); ul.push(fl.ul[i]); bd.push(fl.bd[i]); i = j; }
+      else { t += own[i]; col.push(fl.col[i]); ul.push(fl.ul[i]); bd.push(fl.bd[i]); i++; }
     }
     let a = 0, b = t.length; while(a < b && t[a] === ' ') a++; while(b > a && t[b - 1] === ' ') b--;
-    t = t.slice(a, b); col = col.slice(a, b); ul = ul.slice(a, b);
+    t = t.slice(a, b); col = col.slice(a, b); ul = ul.slice(a, b); bd = bd.slice(a, b);
     if(t.length !== finalText.length || t.toLowerCase() !== finalText.toLowerCase()) return null;
-    return { col, ul };
+    return { col, ul, bd };
   }catch(e){ return null; }
 }
 function pdfPaintMarks(doc, b, lines, x){
@@ -167,6 +167,28 @@ function pdfPaintMarks(doc, b, lines, x){
   });
   doc.setTextColor(b.color.r, b.color.g, b.color.b);
 }
+/* Gras posé à la main (Ctrl+B) : la ligne est écrite morceau par morceau, en
+   passant en graisse sur les passages concernés. Sans gras, rien ne change. */
+function pdfTextWithBold(doc, b, lines, x, isBold){
+  const mk = b.marks, safe = pdfSafeText(b.text);
+  const plain = () => lines.forEach((ln, i)=> doc.text(ln, x, b.yPt + i * b.lineHeightPt, { align:b.align, baseline:'alphabetic' }));
+  if(isBold || !mk || !mk.bd || safe.length !== b.text.length || !mk.bd.some(v => v)) return plain();
+  const fN = b.italic ? 'italic' : 'normal', fB = b.italic ? 'bolditalic' : 'bold';
+  let pos = 0;
+  lines.forEach((ln, li) => {
+    const y = b.yPt + li * b.lineHeightPt;
+    let st = safe.indexOf(ln, pos); if(st < 0) st = pos;
+    const en = Math.min(safe.length, st + ln.length); pos = en;
+    const segs = [];
+    for(let i = st; i < en;){ const k = mk.bd[i] ? 1 : 0; let j = i + 1; while(j < en && (mk.bd[j] ? 1 : 0) === k) j++; segs.push([safe.slice(i, j), k]); i = j; }
+    if(segs.length === 1 && !segs[0][1]){ doc.text(ln, x, y, { align:b.align, baseline:'alphabetic' }); return; }
+    const wOf = sg => { doc.setFont(b.font, sg[1] ? fB : fN); return doc.getTextWidth(sg[0]); };
+    const tw = segs.reduce((a, sg) => a + wOf(sg), 0);
+    let xx = b.align === 'right' ? x - tw : b.align === 'center' ? x - tw / 2 : x;
+    segs.forEach(sg => { const w = wOf(sg); doc.text(sg[0], xx, y, { baseline:'alphabetic' }); xx += w; });
+    doc.setFont(b.font, fN);
+  });
+}
 /* Impression navigateur : on remplace le texte de la ligne par des segments marqués. */
 function rpDecoratePrint(root){
   const map = new Map((S.project.elements || []).map(x => [x.id, x]));
@@ -178,15 +200,16 @@ function rpDecoratePrint(root){
     const fl = rpMarkFlags(m, m.text.length); if(!fl) return;
     const frag = document.createDocumentFragment(); const n = m.text.length;
     for(let i = 0; i < n;){
-      const c = fl.col[i], u = fl.ul[i]; let j = i + 1;
-      while(j < n && fl.col[j] === c && fl.ul[j] === u) j++;
+      const c = fl.col[i], u = fl.ul[i], g = fl.bd[i]; let j = i + 1;
+      while(j < n && fl.col[j] === c && fl.ul[j] === u && fl.bd[j] === g) j++;
       const txt = m.text.slice(i, j);
-      if(c < 0 && !u) frag.appendChild(document.createTextNode(txt));
+      if(c < 0 && !u && !g) frag.appendChild(document.createTextNode(txt));
       else {
         const sp = document.createElement('span');
         let css = '-webkit-print-color-adjust:exact; print-color-adjust:exact;';
         if(c >= 0){ const q = RP_HL_RGBA[c]; css += 'background-color:rgba(' + q[0] + ',' + q[1] + ',' + q[2] + ',' + q[3] + ');'; }
         if(u) css += 'text-decoration:underline;';
+        if(g) css += 'font-weight:700;';
         sp.style.cssText = css; sp.textContent = txt; frag.appendChild(sp);
       }
       i = j;
@@ -195,7 +218,7 @@ function rpDecoratePrint(root){
     div.textContent = ''; div.appendChild(frag);
   });
 }
-/* Final Draft : un <Text> par segment, avec Style="Underline" et Background (16 bits par canal). */
+/* Final Draft : un <Text> par segment, avec Style="Bold+Underline" et Background (16 bits par canal). */
 function rpFdxRuns(el, t, rid){
   const n = (el.text || '').length;
   if(!n || t.length < n || t.slice(0, n).toLowerCase() !== el.text.toLowerCase()) return null;
@@ -204,28 +227,34 @@ function rpFdxRuns(el, t, rid){
   const bg = c => { const q = RP_HL_RGBA[c], mix = k => q[k] * q[3] + 255 * (1 - q[3]); return '#' + hx(mix(0)) + hx(mix(1)) + hx(mix(2)); };
   const runs = [];
   for(let i = 0; i < n;){
-    const c = fl.col[i], u = fl.ul[i]; let j = i + 1;
-    while(j < n && fl.col[j] === c && fl.ul[j] === u) j++;
-    runs.push('<Text' + rid + (u ? ' Style="Underline"' : '') + (c >= 0 ? ' Background="' + bg(c) + '"' : '') + '>' + esc(t.slice(i, j)) + '</Text>');
+    const c = fl.col[i], u = fl.ul[i], g = fl.bd[i]; let j = i + 1;
+    while(j < n && fl.col[j] === c && fl.ul[j] === u && fl.bd[j] === g) j++;
+    const sty = [g ? 'Bold' : '', u ? 'Underline' : ''].filter(Boolean).join('+');
+    runs.push('<Text' + rid + (sty ? ' Style="' + sty + '"' : '') + (c >= 0 ? ' Background="' + bg(c) + '"' : '') + '>' + esc(t.slice(i, j)) + '</Text>');
     i = j;
   }
   if(t.length > n) runs.push('<Text' + rid + '>' + esc(t.slice(n)) + '</Text>');
   return runs.join('');
 }
-/* Fountain : le soulignement s'écrit _texte_ (pas de norme pour le surlignage). */
+/* Fountain : le soulignement s'écrit _texte_, le gras **texte** (pas de norme pour le surlignage). */
 function rpFountainUnderline(el, t){
   const n = (el.text || '').length;
   if(!n || t.length < n || t.slice(0, n) !== el.text) return t;
   const fl = rpMarkFlags(el, n); if(!fl) return t;
-  let out = '', last = 0;
-  for(let i = 0; i < n;){
-    if(!fl.ul[i]){ i++; continue; }
-    let j = i; while(j < n && fl.ul[j]) j++;
-    let a = i, b = j; while(a < b && /\s/.test(t[a])) a++; while(b > a && /\s/.test(t[b - 1])) b--;
-    if(b > a){ out += t.slice(last, a) + '_' + t.slice(a, b) + '_'; last = b; }
-    i = j;
-  }
-  return out + t.slice(last);
+  /* Entoure de mk les passages [i, j) où on[k] vaut 1, espaces du bord laissés dehors. */
+  const wrap = (s0, e0, on, mk, inner) => {
+    let out = '', last = s0;
+    for(let i = s0; i < e0;){
+      if(!on[i]){ i++; continue; }
+      let j = i; while(j < e0 && on[j]) j++;
+      let a = i, b = j; while(a < b && /\s/.test(t[a])) a++; while(b > a && /\s/.test(t[b - 1])) b--;
+      if(b > a){ out += inner(last, a) + mk + inner(a, b) + mk; last = b; }
+      i = j;
+    }
+    return out + inner(last, e0);
+  };
+  const under = (a, b) => wrap(a, b, fl.ul, '_', (x, y) => t.slice(x, y));
+  return wrap(0, n, fl.bd, '**', under) + t.slice(n);
 }
 
 /* Relève sur une feuille déjà mise en page par le navigateur tout ce qu'il
@@ -495,7 +524,8 @@ function pdfPaintPage(doc, page){
               : b.align === 'center' ? b.xPt + b.widthPt / 2
               : b.xPt;
       if(b.marks){ try{ pdfPaintMarks(doc, b, lines, x); }catch(e){} }   // v85 : surlignages et soulignements, sous le texte
-      lines.forEach((ln, i)=> doc.text(ln, x, b.yPt + i * b.lineHeightPt, { align:b.align, baseline:'alphabetic' }));
+      if(b.marks){ try{ pdfTextWithBold(doc, b, lines, x, isBold); }catch(e){ lines.forEach((ln, i)=> doc.text(ln, x, b.yPt + i * b.lineHeightPt, { align:b.align, baseline:'alphabetic' })); } }   // gras Ctrl+B
+      else lines.forEach((ln, i)=> doc.text(ln, x, b.yPt + i * b.lineHeightPt, { align:b.align, baseline:'alphabetic' }));
     }
     doc.restoreGraphicsState();
   });

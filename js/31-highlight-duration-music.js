@@ -30,6 +30,7 @@
   ::highlight(rp-hl-2){background-color:rgba(244,114,182,.38);}
   ::highlight(rp-hl-3){background-color:rgba(96,165,250,.42);}
   ::highlight(rp-hl-4){text-decoration:underline; text-decoration-thickness:1px; text-underline-offset:2px;}
+  ::highlight(rp-hl-5){text-shadow:.45px 0 0 currentColor, -.15px 0 0 currentColor;}
 
   .rp-hlbar{position:fixed; z-index:120; display:none; align-items:center; gap:5px; padding:5px 8px; border-radius:999px;
     background:var(--surface); border:1px solid var(--hair); box-shadow:var(--shadow-md); font-family:var(--sans);
@@ -39,6 +40,7 @@
   .rp-hlbar button:hover{transform:scale(1.2);}
   .rp-hlbar .rp-hl-x{background:transparent; color:var(--ink-soft); border:1.5px solid var(--hair); display:grid; place-items:center;}
   .rp-hlbar .rp-hl-u{background:transparent; color:var(--ink); border:1.5px solid var(--hair); font:700 11px/1 var(--sans); text-decoration:underline; display:grid; place-items:center;}
+  .rp-hlbar .rp-hl-b{font-weight:900; text-decoration:none;}
   .rp-hlbar i{width:1px; height:16px; background:var(--hair); margin:0 2px;}
   @keyframes rpPop{from{opacity:0; transform:translateY(4px) scale(.96);} to{opacity:1; transform:none;}}
 
@@ -101,17 +103,19 @@
   function hlNorm(arr, len){
     const out = arr.map(r => [Math.max(0, Math.min(len, r[0])), Math.max(0, Math.min(len, r[1])), r[2] | 0])
                    .filter(r => r[1] > r[0]).sort((a, b) => a[0] - b[0]);
-    const m = [];
+    const m = [], last = {};
     out.forEach(r => {
-      const l = m[m.length - 1];
-      if(l && l[2] === r[2] && r[0] <= l[1]) l[1] = Math.max(l[1], r[1]); else m.push(r);
+      const l = last[r[2]];                          // fusion par couleur : les calques peuvent s'intercaler
+      if(l && r[0] <= l[1]) l[1] = Math.max(l[1], r[1]); else { m.push(r); last[r[2]] = r; }
     });
     return m;
   }
-  function hlCut(arr, s, e, ul){
+  /* Calques indépendants : 0 = couleurs, 1 = soulignement (4), 2 = gras (5). */
+  const hlLay = c => { c = Math.abs(c); return c === 4 ? 1 : c === 5 ? 2 : 0; };
+  function hlCut(arr, s, e, lay){
     const out = [];
     arr.forEach(r => {
-      if((r[2] === 4) !== !!ul || r[1] <= s || r[0] >= e){ out.push(r); return; }   // v85 : couleur et soulignement sont deux calques indépendants
+      if(hlLay(r[2]) !== (lay | 0) || r[1] <= s || r[0] >= e){ out.push(r); return; }   // v85 : couleur, soulignement et gras sont des calques indépendants
       if(r[0] < s) out.push([r[0], s, r[2]]);
       if(r[1] > e) out.push([e, r[1], r[2]]);
     });
@@ -152,7 +156,7 @@
   }
   function hlPaint(){
     if(!HLAPI || HL.hold) return;
-    const sets = [[], [], [], [], []];
+    const sets = [[], [], [], [], [], []];
     if(live()){
       const page = $('page');
       S.project.elements.forEach(el => {
@@ -180,7 +184,7 @@
       const s = i === ai ? sp.aOff : 0, e = i === bi ? sp.bOff : len;
       if(e <= s) continue;
       hlSync(el);
-      let arr = hlCut(el.hl || [], s, e, color === 4 || color === -4);
+      let arr = hlCut(el.hl || [], s, e, hlLay(color));
       if(color >= 0) arr.push([s, e, color]);
       arr = hlNorm(arr, len);
       if(arr.length){ el.hl = arr; el.hlT = el.text || ''; } else { delete el.hl; delete el.hlT; }
@@ -189,7 +193,7 @@
     try{ flushAutosave(); }catch(err){}                 // V82 : sauvegarde immédiate, un rechargement juste après ne perd plus rien
     hlPaint();
   }
-  function hlCovered(sp, ul){
+  function hlCovered(sp, lay){
     const els = S.project.elements, ai = findIdx(sp.a.dataset.id), bi = findIdx(sp.b.dataset.id);
     if(ai < 0 || bi < ai) return false;
     let any = false;
@@ -200,7 +204,7 @@
       if(e <= s) continue;
       any = true;
       hlSync(el);
-      const rs = (el.hl || []).filter(r => (r[2] === 4) === !!ul); let p = s;
+      const rs = (el.hl || []).filter(r => hlLay(r[2]) === (lay | 0)); let p = s;
       for(const r of rs){ if(r[1] <= p) continue; if(r[0] > p) break; p = r[1]; if(p >= e) break; }
       if(p < e) return false;
     }
@@ -248,12 +252,12 @@
     if(bar) return bar;
     bar = document.createElement('div'); bar.className = 'rp-hlbar rp-ui'; bar.id = 'rpHlBar';
     bar.innerHTML = HL.colors.map((c, i) => `<button type="button" data-c="${i}" style="background:${c}" title="${L('Surligner','Highlight')}"></button>`).join('') +
-      `<i></i><button type="button" class="rp-hl-u" data-c="4" title="${L('Souligner (Ctrl+U)','Underline (Ctrl+U)')}">U</button><button type="button" class="rp-hl-x" data-c="-1" title="${L('Retirer le surlignage','Remove highlight')}">${svg('<path d="M4 4l8 8M12 4l-8 8"/>', 10)}</button>`;
+      `<i></i><button type="button" class="rp-hl-u rp-hl-b" data-c="5" title="${L('Gras (Ctrl+B)','Bold (Ctrl+B)')}">B</button><button type="button" class="rp-hl-u" data-c="4" title="${L('Souligner (Ctrl+U)','Underline (Ctrl+U)')}">U</button><button type="button" class="rp-hl-x" data-c="-1" title="${L('Retirer le surlignage','Remove highlight')}">${svg('<path d="M4 4l8 8M12 4l-8 8"/>', 10)}</button>`;
     bar.addEventListener('mousedown', e => e.preventDefault());       // garde la sélection intacte
     bar.addEventListener('click', e => {
       const b = e.target.closest('button[data-c]'); if(!b) return;
       let c = parseInt(b.dataset.c, 10);
-      if(c === 4){ const sp = selectionSpan(); if(sp && hlCovered(sp, true)) c = -4; }   // v85 : « U » souligne, ou retire si c'est déjà souligné
+      if(c === 4 || c === 5){ const sp = selectionSpan(); if(sp && hlCovered(sp, hlLay(c))) c = -c; }   // v85 : « U » / « B » posent la marque, ou la retirent si elle y est déjà
       hlApply(c);
       hlBarHide();
     });
@@ -578,7 +582,15 @@
       if(!HLAPI){ toast(L('Le soulignement n\u2019est pas pris en charge par ce navigateur.', 'Underlining isn\u2019t supported by this browser.')); return; }
       const sp = selectionSpan();
       if(!sp || (!sp.multi && sp.aOff === sp.bOff)){ toast(L('Sélectionne d\u2019abord du texte à souligner.', 'First select some text to underline.')); return; }
-      hlApply(hlCovered(sp, true) ? -4 : 4); hlBarHide();
+      hlApply(hlCovered(sp, 1) ? -4 : 4); hlBarHide();
+      return;
+    }
+    if(mod && !e.altKey && !e.shiftKey && String(e.key).toLowerCase() === 'b' && e.target && e.target.closest && e.target.closest('#page')){   // Ctrl/Cmd+B = gras, mémorisé dans le scénario (le gras du navigateur, lui, se perdait)
+      e.preventDefault(); e.stopPropagation();
+      if(!HLAPI){ toast(L('Le gras n\u2019est pas pris en charge par ce navigateur.', 'Bold isn\u2019t supported by this browser.')); return; }
+      const sp = selectionSpan();
+      if(!sp || (!sp.multi && sp.aOff === sp.bOff)){ toast(L('Sélectionne d\u2019abord du texte à mettre en gras.', 'First select some text to make bold.')); return; }
+      hlApply(hlCovered(sp, 2) ? -5 : 5); hlBarHide();
       return;
     }
     if(mod && e.altKey && !e.shiftKey && e.code === 'KeyY'){                 // Ctrl/Cmd+Alt+Y : musique YouTube
