@@ -359,7 +359,7 @@ function openShortcuts(){
       [['Ouvrir la scène de la carte','Open the card\u2019s scene'], ['Entrée'], ['Sur la carte active.','On the active card.']],
     ]],
     [['Page de titre','Title page'], [
-      [['Gras','Bold'], ['Ctrl/Cmd','B'], ['Dans les champs de la page de titre.','In the title page fields.']],
+      [['Gras','Bold'], ['Ctrl/Cmd','B'], ['Dans le scénario et dans les champs de la page de titre.','In the screenplay and in the title page fields.']],
       [['Italique','Italic'], ['Ctrl/Cmd','I'], ['Dans les champs de la page de titre.','In the title page fields.']],
       [['Souligné','Underline'], ['Ctrl/Cmd','U'], ['Dans les champs de la page de titre.','In the title page fields.']],
       [['Valider le titre ou l\u2019auteur','Confirm the title or the author'], ['Entrée'], ['','']],
