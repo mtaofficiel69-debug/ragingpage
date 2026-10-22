@@ -366,6 +366,7 @@ async function gdRequestToken(interactive){
           GD.token = resp.access_token;
           GD.exp = Date.now() + ((resp.expires_in || 3600) - 120) * 1000;
           try{ localStorage.setItem(GD_ON_KEY, '1'); }catch(e){}
+          gdSaveToken();
           if(GD.resolve) GD.resolve(GD.token);
         }else if(GD.reject){ GD.reject(new Error((resp && resp.error) || 'oauth')); }
         GD.resolve = GD.reject = null;
@@ -375,7 +376,9 @@ async function gdRequestToken(interactive){
   }
   return new Promise((resolve, reject)=>{
     GD.resolve = resolve; GD.reject = reject;
-    try{ GD.tc.requestAccessToken({ prompt: interactive === 'none' ? 'none' : (interactive ? 'consent' : '') }); }
+    // prompt '' : Google ne montre son écran d'autorisation que la toute première fois ; ensuite sa fenêtre se
+    // referme d'elle-même. (« consent » le réaffichait à chaque reconnexion.)
+    try{ GD.tc.requestAccessToken({ prompt: interactive === 'none' ? 'none' : '' }); }
     catch(e){ GD.resolve = GD.reject = null; reject(e); }
   });
 }
@@ -393,7 +396,7 @@ async function gdConnect(){
   if(S.view === 'editor' && S.tab === 'settings') renderTabBody();
 }
 function gdDisconnect(){
-  GD.token = null; GD.exp = 0;
+  GD.token = null; GD.exp = 0; gdSaveToken();
   try{ localStorage.removeItem(GD_ON_KEY); }catch(e){}
   toast(L('Déconnecté de Google Drive (les fichiers déjà envoyés restent dans ton Drive).','Disconnected from Google Drive (files already sent stay in your Drive).'));
   if(S.view === 'editor' && S.tab === 'settings') renderTabBody();
@@ -419,8 +422,9 @@ async function gdUpload(fileId, name, content){
 async function gdPush(silent){
   if(!S.project || GD.busy) return;
   if(!gdConnected()){
+    if(silent) return;      // un envoi automatique n'ouvre JAMAIS la fenêtre Google : il attend la reconnexion (pastille Drive)
     try{ await gdRequestToken(false); }
-    catch(e){ if(!silent) toast(L('Reconnecte Google Drive pour envoyer ce scénario.','Reconnect Google Drive to send this screenplay.')); return; }
+    catch(e){ toast(L('Reconnecte Google Drive pour envoyer ce scénario.','Reconnect Google Drive to send this screenplay.')); return; }
   }
   GD.busy = true; updateVaultChip();
   try{
@@ -441,7 +445,7 @@ async function gdPush(silent){
     GD.err = 'push';
     // Jeton refusé par Google (expiré ou révoqué avant l'heure) : on l'oublie, la pastille propose alors la
     // reconnexion et le prochain clic la refait (voir 31a-drive-chip.js), au lieu de rester bloqué « en erreur ».
-    if(String(e && e.message) === 'upload-401'){ GD.token = null; GD.exp = 0; }
+    if(String(e && e.message) === 'upload-401'){ GD.token = null; GD.exp = 0; gdSaveToken(); }
     if(!silent) toast(L('Envoi vers Google Drive impossible.','Couldn\u2019t send to Google Drive.'));
   }
   GD.busy = false;
@@ -540,29 +544,29 @@ function gdChipClick(){
   if(gdConnected()){ try{ switchTab('settings'); }catch(e){} return; }
   gdConnect();
 }
-/* Reconnexion automatique à Google Drive : si la connexion était active à la
-   fermeture du site, elle est rétablie à la réouverture (d'abord en silence ;
-   sinon au premier clic, la fenêtre Google se refermant d'elle-même). */
+/* CONNEXION QUI SURVIT AU RECHARGEMENT, SANS FENÊTRE GOOGLE IMPRÉVUE.
+   La fenêtre Google ne s'ouvre plus JAMAIS d'elle-même : seulement quand on clique sur un bouton Drive
+   (pastille « Drive à reconnecter », « Oui, me reconnecter », Paramètres). Avant, le site tentait une
+   reconnexion à chaque ouverture (et le navigateur pouvait afficher la page Google sans qu'on ait rien
+   demandé). À la place, l'accès donné par Google (valable environ une heure, limité aux fichiers créés par
+   Raging Page) est gardé dans ce navigateur jusqu'à son expiration : recharger la page ou rouvrir le site
+   dans l'heure ne déconnecte plus. « Se déconnecter » l'efface. */
+const GD_TOK_KEY = 'scriptmm_gdrive_tok';
+function gdSaveToken(){
+  try{
+    if(GD.token && GD.exp > Date.now()) localStorage.setItem(GD_TOK_KEY, JSON.stringify({ t:GD.token, e:GD.exp }));
+    else localStorage.removeItem(GD_TOK_KEY);
+  }catch(e){}
+}
 window.__rpGdAuto = { state:'idle' };   // V82 : la fenêtre de reconnexion attend la tentative silencieuse
 (function(){
-  let busy = false;
-  function wanted(){ try{ return localStorage.getItem(GD_ON_KEY) === '1'; }catch(e){ return false; } }
-  function refresh(){
-    try{ updateVaultChip(); }catch(e){}
-    try{ if(S.view === 'editor' && S.tab === 'settings') renderTabBody(); }catch(e){}
-  }
-  if(wanted()) window.__rpGdAuto.state = 'pending';
-  async function attempt(mode){
-    if(busy || gdConnected() || !wanted() || !gdClientId()){ window.__rpGdAuto.state = 'done'; return; }
-    busy = true;
-    try{
-      await Promise.race([ gdRequestToken(mode), new Promise((_, no)=> setTimeout(()=> no(new Error('timeout')), 8000)) ]);
-      GD.err = '';
-      refresh();
-    }catch(e){}
-    busy = false; window.__rpGdAuto.state = 'done';
-  }
-  setTimeout(()=>{ attempt('none'); }, 1200);
+  try{
+    const wanted = localStorage.getItem(GD_ON_KEY) === '1';
+    const raw = wanted ? JSON.parse(localStorage.getItem(GD_TOK_KEY) || 'null') : null;
+    if(raw && raw.t && raw.e > Date.now() + 30000){ GD.token = raw.t; GD.exp = raw.e; }
+    else localStorage.removeItem(GD_TOK_KEY);
+  }catch(e){}
+  window.__rpGdAuto.state = 'done';
 })();
 
 /* ---------------------------------------------------------------------

@@ -87,53 +87,27 @@ gdDisconnect = function(){
 setInterval(()=>{ try{ updateDriveChip(); }catch(e){} }, 15000);
 
 /* ---------------------------------------------------------------------
-   RENOUVELLEMENT DE LA CONNEXION GOOGLE DRIVE (sans être déconnecté)
-   Un site sans serveur ne reçoit de Google qu'un jeton d'accès d'environ une
-   heure, jamais de jeton de renouvellement. Avant, rien ne le renouvelait :
-   au bout d'une heure, la pastille passait à « Drive à reconnecter » et plus
-   rien n'était envoyé, d'où l'impression d'être déconnecté ou « suspendu ».
-   Google n'accepte une nouvelle demande que pendant un geste de l'utilisateur
-   (sinon la fenêtre Google est bloquée par le navigateur). On profite donc du
-   premier clic dans l'interface (jamais dans le texte du scénario : le
-   curseur d'écriture n'est pas dérangé) pendant les 10 dernières minutes du
-   jeton, ou après son expiration. L'accord ayant déjà été donné, la fenêtre
-   Google se ferme d'elle-même. Les modifications faites entre-temps partent
-   aussitôt sur le Drive.
+   EXPIRATION DE LA CONNEXION GOOGLE DRIVE — sans jamais ouvrir Google tout seul
+   L'accès donné par Google dure environ une heure (un site sans serveur n'en
+   obtient pas de plus long). Quand il expire, rien ne s'ouvre : la pastille
+   passe à « Drive à reconnecter », un seul message discret le signale, et
+   l'écriture continue (tout reste sauvegardé dans le navigateur). Un clic sur
+   la pastille reconnecte ; la fenêtre Google se referme alors d'elle-même et
+   les modifications faites entre-temps partent aussitôt sur le Drive.
 --------------------------------------------------------------------- */
-const GD_RENEW_BEFORE = 10 * 60 * 1000;    // renouvellement possible dans les 10 dernières minutes
-let __gdRenewBusy = false, __gdRenewAt = 0;
-function gdNeedsRenew(){
-  if(!driveWanted() || !gdClientId() || GD.busy || __gdRenewBusy) return false;
-  if(window.__rpGdAuto && window.__rpGdAuto.state === 'pending') return false;
-  return !GD.token || Date.now() > GD.exp - GD_RENEW_BEFORE;
-}
-async function gdRenewToken(){
-  __gdRenewBusy = true; __gdRenewAt = Date.now();
-  let to = null;
-  const timeout = new Promise((_, no) => { to = setTimeout(() => no(new Error('timeout')), 60000); });
-  try{
-    if(gdConnected() && GD.tc){
-      // L'ancien jeton reste valable pendant la demande : les envois en cours ne sont pas interrompus.
-      const ask = new Promise((ok, no) => { GD.resolve = ok; GD.reject = no; GD.tc.requestAccessToken({ prompt:'' }); });
-      await Promise.race([ask, timeout]);
-    }else{
-      await Promise.race([gdRequestToken(''), timeout]);
-    }
-    GD.err = '';
-    // Ce qui a été modifié pendant la coupure (ou depuis le dernier envoi) part maintenant.
-    if(S.project && (S.project.updatedAt || 0) > (DRIVE_SENT[S.project.id] || 0)) gdPush(true);
-  }catch(e){
-    GD.resolve = GD.reject = null;
-  }finally{
-    clearTimeout(to);
-    __gdRenewBusy = false;
-    try{ updateDriveChip(); }catch(e){}
+let __gdWasConnected = gdConnected();
+setInterval(() => {
+  const now = gdConnected();
+  if(__gdWasConnected && !now && driveWanted() && S.project && S.view === 'editor'){
+    toast(L('Google Drive : la connexion a expiré. Ton travail reste sauvegardé ici ; clique sur la pastille « Drive à reconnecter » quand tu veux reprendre l\u2019envoi.',
+            'Google Drive: the connection has expired. Your work is still saved here; click the \u201cDrive to reconnect\u201d chip whenever you want sending to resume.'));
   }
-}
-document.addEventListener('pointerdown', e => {
-  if(!e.isTrusted || !gdNeedsRenew()) return;
-  if(Date.now() - __gdRenewAt < 60000) return;      // au plus une tentative par minute
-  const t = e.target;
-  if(t && t.closest && t.closest('#page, [contenteditable], input, textarea, select, .mmd-backdrop, [data-act="driveChipClick"], [data-act="gdConnect"], [data-act="gdChipClick"], [data-act="gdDisconnect"]')) return;
-  gdRenewToken();
-}, true);
+  __gdWasConnected = now;
+}, 15000);
+/* Après une (re)connexion, ce qui n'était pas encore parti est envoyé tout de suite. */
+const __driveConnect2 = gdConnect;
+gdConnect = async function(){
+  const r = await __driveConnect2.apply(this, arguments);
+  __gdWasConnected = gdConnected();
+  return r;
+};
