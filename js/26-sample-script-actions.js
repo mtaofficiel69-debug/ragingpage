@@ -1042,12 +1042,12 @@ function moreMenuHtml(){
   const T = t => `<div class="tb-more-title">${t}</div>`;
   return `${T(L('Écriture','Writing'))}
     ${dualBtnHtml('')}
-    <button class="btn" data-act="openFreePageMenu" title="${L('Dédicace, citation, synopsis, intercalaire, page blanche... : autant que tu veux, où tu veux, sans toucher à la numérotation','Dedication, quote, synopsis, divider, blank page...: as many as you like, wherever you like, without touching the numbering')}">${icon('emptypage')} ${L('Page sans numéro…','Unnumbered page…')}</button>
+    <button class="btn" data-act="openFreePageMenu" title="${L('Dédicace, citation, synopsis, intercalaire, page blanche... : autant que tu veux, où tu veux, sans toucher à la numérotation','Dedication, quote, synopsis, divider, blank page...: as many as you like, wherever you like, without touching the numbering')}">${icon('nonum')} ${L('Page sans numéro…','Unnumbered page…')}</button>
     <button class="btn" data-act="openReplace">${icon('findrep')} Rechercher / remplacer</button>
     <button class="btn" data-act="openSynonyms">${icon('bubbles')} Synonymes</button>
     <button class="btn" data-act="wdOpenRename">${icon('cursor')} ${L('Renommer partout…','Rename everywhere…')}</button>
     <button class="btn" data-act="wdOpenVariants">${icon('copy')} ${L('Variantes de noms…','Name variants…')}</button>
-    <button class="btn" data-act="openRevisions" title="Ctrl+Alt+R">${icon('palette')} ${L('Révisions colorées','Colour revisions')}</button>
+    <button class="btn" data-act="openRevisions" title="Ctrl+Alt+R">${icon('asterisk')} ${L('Révisions colorées','Colour revisions')}</button>
     <button class="btn" data-act="toggleRevMark" title="Ctrl+Alt+M">${icon('flag')} ${L('Marquer / démarquer la ligne','Mark / unmark line')}</button>
     ${T(L('Analyse','Insights'))}
     <button class="btn" data-act="wdOpenOrphans">${icon('emptypage')} ${L('Pages presque vides…','Nearly-empty pages…')}</button>
@@ -1063,7 +1063,7 @@ function moreMenuHtml(){
     ${dictateBtnHtml('')}
     ${T(L('Général','General'))}
     <button class="btn" data-act="openCreateModal">${icon('newdoc')} Nouveau scénario</button>
-    <button class="btn" data-act="gdChipClick">${icon('upload')} ${ gdConnected() ? L('Google Drive : connecté \u2713','Google Drive: connected \u2713') : L('Connecter Google Drive','Connect Google Drive') }</button>
+    <button class="btn" data-act="gdChipClick">${icon('cloud')} ${ gdConnected() ? L('Google Drive : connecté \u2713','Google Drive: connected \u2713') : L('Connecter Google Drive','Connect Google Drive') }</button>
     <button class="btn" data-act="openShortcuts">${icon('keyboard')} Raccourcis</button>`;
 }
 function toggleMoreMenu(id, e){

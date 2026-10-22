@@ -2067,3 +2067,27 @@
 .fp-act.is-danger .icon{color:var(--danger);}
 .fp-act.is-danger:hover{background:color-mix(in srgb, var(--danger) 8%, var(--surface));}
 
+/* Barre du haut ajustée à la place réelle (js/34-topbar-fit.js) : mêmes paliers que « v36 » ci-dessus,
+   appliqués seulement quand la barre déborde vraiment. */
+.topbar.tb-c1 select.tb-font, .topbar.tb-c1 select.tb-font + .tb-div{display:none;}
+.topbar.tb-c2 .btn[data-act="goHome"] .tb-lbl{display:none;}
+.topbar.tb-c2 .btn[data-act="goHome"]{padding:7px 9px;}
+.topbar.tb-c2 .search-box input{width:110px;}
+.topbar.tb-c3 .btn[data-act="insertCard"] .tb-lbl, .topbar.tb-c3 .btn[data-act="openLayout"] .tb-lbl{display:none;}
+.topbar.tb-c4 .save-status{min-width:0; padding:5px 9px;}
+.topbar.tb-c4 .save-status #saveLabel{display:none;}
+.topbar.tb-c4 .vault-chip{min-width:0; width:14px; height:14px; padding:0; font-size:0; background:currentColor; border-color:transparent; align-self:center;}
+.topbar.tb-c4 .vault-chip.ok{color:#127a4b;} .topbar.tb-c4 .vault-chip.warn{color:#c47a00;} .topbar.tb-c4 .vault-chip.off{color:var(--ink-soft);}
+html[data-theme="dark"] .topbar.tb-c4 .vault-chip{background:currentColor; border-color:transparent;}
+html[data-theme="dark"] .topbar.tb-c4 .vault-chip.ok{color:#5FD39A;} html[data-theme="dark"] .topbar.tb-c4 .vault-chip.warn{color:#F2B45A;} html[data-theme="dark"] .topbar.tb-c4 .vault-chip.off{color:var(--ink);}
+.topbar.tb-c5 .btn .tb-lbl{display:none;}
+.topbar.tb-c5 .btn{padding:7px 9px;}
+.topbar.tb-c5 .btn.btn-primary{padding:8px 11px;}
+.topbar.tb-c6{padding:0 12px; gap:8px;}
+.topbar.tb-c6 .search-box input{width:70px;}
+.topbar.tb-c6 .pg-indicator{min-width:0; padding:4px 8px;}
+.topbar.tb-c6 .tb-div{margin:0 4px;}
+.topbar.tb-c7 .search-box input{width:48px;}
+.topbar.tb-c7 .btn[data-act="doUndo"], .topbar.tb-c7 .btn[data-act="doRedo"], .topbar.tb-c7 .topbar-left .tb-div:nth-of-type(n+2){display:none;}
+.topbar.tb-c8 .lang-flags{display:none;}
+

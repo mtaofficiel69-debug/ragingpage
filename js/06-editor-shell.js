@@ -85,6 +85,7 @@ function attachEditorEvents(){
   document.addEventListener('mouseup', onDocMouseUp);
   document.addEventListener('mousemove', onDocMouseMove);
   window.addEventListener('resize', onWindowResize);
+  tbFitWatch();
 }
 /* Infobulle native seulement quand la colonne est réduite (libellés cachés) :
    sinon elle répète le libellé déjà visible, d'où l'impression de survol « en double ». */

@@ -36,7 +36,7 @@ function navTitle(){
     : 'Navigateur de scènes fermé : cliquer pour afficher la liste des scènes à côté du texte.';
 }
 function navBtnHtml(cls){
-  return `<button class="btn btn-tw ${cls||''}" data-act="toggleNav" aria-pressed="${S.navOpen?'true':'false'}" title="${navTitle()}">${icon('list')} Scènes<span class="tw-dot${S.navOpen?' on':''}"></span></button>`;
+  return `<button class="btn btn-tw ${cls||''}" data-act="toggleNav" aria-pressed="${S.navOpen?'true':'false'}" title="${navTitle()}">${icon('sidebar')} Scènes<span class="tw-dot${S.navOpen?' on':''}"></span></button>`;
 }
 function toggleNav(){
   S.navOpen = !S.navOpen;

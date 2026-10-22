@@ -94,9 +94,9 @@ function fpSelectedRange(){
   }catch(e){ return null; }
 }
 const FP_MODELS = [
-  ['text',   'emptypage', ['Page de texte','Text page'], ['Synopsis, note d’intention, remerciements... Laissée vide, elle sort blanche.','Synopsis, statement, acknowledgments... Left empty, it prints blank.']],
-  ['center', 'align',     ['Texte centré sur la page','Text centered on the page'], ['Dédicace, citation, épigraphe.','Dedication, quote, epigraph.']],
-  ['title',  'card',      ['Grand titre sur la page','Big title on the page'], ['ACTE I, intercalaire, titre d’épisode.','ACT I, divider, episode title.']]
+  ['text',   'tplText',   ['Page de texte','Text page'], ['Synopsis, note d’intention, remerciements... Laissée vide, elle sort blanche.','Synopsis, statement, acknowledgments... Left empty, it prints blank.']],
+  ['center', 'tplCenter', ['Texte centré sur la page','Text centered on the page'], ['Dédicace, citation, épigraphe.','Dedication, quote, epigraph.']],
+  ['title',  'tplTitle',  ['Grand titre sur la page','Big title on the page'], ['ACTE I, intercalaire, titre d’épisode.','ACT I, divider, episode title.']]
 ];
 let fpModel = 'text';
 function openFreePageMenu(anchorId){
@@ -114,7 +114,7 @@ function openFreePageMenu(anchorId){
   const html = `<div class="modal-backdrop" id="fpBackdrop" data-act="closeFreePageMenuBg"><div class="modal fp-modal" data-stop="1" role="dialog" aria-modal="true">
       <button type="button" class="fp-x" data-act="closeFreePageMenu" title="${L('Fermer (Échap)','Close (Esc)')}" aria-label="${L('Fermer','Close')}">${icon('close')}</button>
       <div class="fp-head">
-        <span class="fp-ico">${icon('emptypage')}</span>
+        <span class="fp-ico">${icon('nonum')}</span>
         <div><h2>${L('Page sans numéro','Unnumbered page')}</h2>
           <p class="fp-sub">${L('Elle ne compte pas : <b>les pages du scénario gardent leur numéro</b>. Autant que tu veux, où tu veux.','It isn’t counted: <b>the script pages keep their numbers</b>. As many as you like, wherever you like.')}</p></div>
       </div>
@@ -202,8 +202,8 @@ function fpPanelHtml(el){
     <p class="fp-note">${L('Pas de numéro, ne compte pas : la page suivante garde son numéro. Entrée ajoute une ligne sur cette page.','No number, not counted: the next page keeps its number. Enter adds a line on this page.')}</p>
     <div class="fp-acts">
       ${row('fpExit', 'plus', L('Continuer le scénario après','Continue the script after'))}
-      ${row('fpAddAfter', 'emptypage', L('Ajouter une autre page sans numéro','Add another unnumbered page'))}
-      ${row('fpUnset', 'undo', L('Remettre dans la numérotation','Put back into the numbering'))}
+      ${row('fpAddAfter', 'nonum', L('Ajouter une autre page sans numéro','Add another unnumbered page'))}
+      ${row('fpUnset', 'hash', L('Remettre dans la numérotation','Put back into the numbering'))}
       ${row('fpDelete', 'trash', L('Supprimer cette page','Delete this page'), 'is-danger')}
     </div>
   </div>`;
