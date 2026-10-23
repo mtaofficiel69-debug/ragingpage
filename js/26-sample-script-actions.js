@@ -1023,7 +1023,7 @@ const ACTIONS = {
   toggleTagFilter, showCharDetail, runReportChar, reportPreset,
   tpPill, tpPanelTab, tpFmFav, tpFullscreen, tpFullscreenExit, tpTbFont, tpTbColorToggle, tpTbColor, tpTbSizeStep, tpTbFmt, tpTbAlign, tpTbReset, tpFmPick, tpFmSetCat, tpSetFont, tpSetAlign, tpSetColor, tpSetBg, tpSetPattern, tpRemoveImage,
   tpToggleDraw, tpFinishDraw, tpClearDrawing, tpSetPenColor, tpSetPenSize,
-  tpFreeImgCenter, tpFreeImgRatio, tpFreeImgRemove,
+  tpFreeImgCenter, tpFreeImgRatio, tpFreeImgRemove, tpFtxAdd, tpFtxDel,
   toggleTheme, goToPage, toggleTypewriterMode,
   openSeriesHub, renameSeries, renameSeason, openAddEpisodeModal, openAddSeasonModal, epPickFmt, closeEpModal, confirmAddEpisode,
   openSeriesExportMenu, closeSeriesExportMenu, seriesExportSelectAll, doSeriesExport,

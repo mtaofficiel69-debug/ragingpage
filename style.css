@@ -760,6 +760,11 @@
   .titlepage .tp-extra-wrap{display:flex; flex-direction:column; gap:5px; margin:16px 0 0;}
   .titlepage .tp-extra-line{font-size:var(--tp-sub-size,12pt);}   /* même encre que les autres textes, sans voile (avant : opacity .85) */
   .titlepage .tp-foot{margin-top:auto; font-size:var(--tp-foot-size,10pt); opacity:.7;}
+  /* v96 : textes libres — chacun dans son cadre (pleine largeur utile, il porte l'alignement et le déplacement) ;
+     seul le texte lui-même capte la souris, pour ne jamais masquer les textes en dessous. */
+  .titlepage .tp-ftx-layer{position:absolute; top:3cm; left:3cm; right:3cm; bottom:3cm; z-index:2; pointer-events:none;}
+  .titlepage .tp-ftx{position:absolute; top:0; left:0; right:0;}
+  .titlepage .tp-ftx-in{display:inline-block; max-width:100%; pointer-events:auto; overflow-wrap:break-word; vertical-align:top;}
   /* v51 : chaque élément de la page de titre a sa propre police, taille, couleur, alignement, gras / italique / souligné.
      Sans réglage, chaque variable retombe sur la valeur d'avant : rendu strictement identique. */
   .titlepage .tp-title{font-family:var(--tp-title-font,inherit); font-weight:var(--tp-title-weight,700); font-style:var(--tp-title-style,inherit); text-decoration:var(--tp-title-deco,none); color:var(--tp-title-color,inherit); align-self:var(--tp-title-self,auto); text-align:var(--tp-title-ta,inherit);}
@@ -913,6 +918,11 @@
   .tp-editing .tp-extra-wrap:empty{min-height:1.5em; min-width:9em;}
   .tp-editing .tp-extra-wrap:empty::before, .tp-editing .tp-author-name:empty::before{content:attr(data-ph); opacity:.32;}
   .tp-editing .tp-author-name:empty{min-width:7em; min-height:1.3em;}
+  .tp-editing .tp-ftx-in:empty{min-width:7em; min-height:1.3em;}
+  .tp-editing .tp-ftx-in:empty::before{content:attr(data-ph); opacity:.32;}
+  .tp-pill.tp-pill-add{border-style:dashed; color:var(--accent-2);}
+  .tp-pill.tp-pill-add:hover{border-color:var(--accent); background:#3699D414;}
+  .tp-tb-btn.tp-tb-del:hover{color:#D64545;}
   .tp-editing .tp-ph-grp{opacity:.4;}
   /* menu de polices : chaque nom est écrit dans sa propre police */
   .tp-fm-wrap{position:relative;}

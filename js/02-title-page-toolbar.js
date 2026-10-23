@@ -160,7 +160,31 @@ const TP_ELEMENTS = [
 ];
 const TP_COLORS = ['#23262E','#5C6270','#3699D4','#1F6FA0','#2F9E44','#D64545','#B8860B','#7B4B94','#8B5E3C','#EEF1F5','#DCEEFB','#ffffff'];
 let tpSel = 'page', tpFmOpen = false, tpColorOpen = false, tpFmCatSel = 'all';
-function tpEl(k){ return TP_ELEMENTS.find(e=>e.key===k); }
+function tpEl(k){ return TP_ELEMENTS.find(e=>e.key===k) || tpFtxEl(k); }
+/* Textes libres (design.texts = [{id, text}]) : autant qu'on veut, chacun indépendant des autres.
+   Leur clé (« tx… ») passe partout où passent les textes fixes : police, taille, couleur, alignement,
+   gras / italique / souligné et position se rangent dans le design sous le même nom (d[k+'Font'], d.pos[k]…). */
+function tpFtxList(d){ return d && Array.isArray(d.texts) ? d.texts : []; }
+function tpIsFtx(k){ return typeof k==='string' && /^tx[a-z0-9]+$/.test(k); }
+function tpFtxEl(k){
+  if(!tpIsFtx(k) || !S.project || !S.project.titlePageDesign) return undefined;
+  const d = S.project.titlePageDesign, i = tpFtxList(d).findIndex(t=>t.id===k);
+  if(i<0) return undefined;
+  let nm = String(tpFtxList(d)[i].text||'').split('\n').map(x=>x.trim()).filter(Boolean)[0] || '';
+  if(nm.length > 18) nm = nm.slice(0, 17).trim() + '…';
+  return {key:k, fr:nm || 'Texte '+(i+1), en:nm || 'Text '+(i+1), size:k+'Size', fallback:'subSize', free:true};
+}
+function tpFtxLinesHtml(text){
+  const lines = String(text||'').split('\n');
+  return lines.length===1 && !lines[0] ? '' : lines.map(l=>`<div class="tp-ftx-l">${l ? esc(l) : '<br>'}</div>`).join('');
+}
+function tpFtxHtml(d){
+  const list = tpFtxList(d); if(!list.length) return '';
+  const v = (k,p,f)=>`var(--tp-${k}-${p},${f})`;
+  return `<div class="tp-ftx-layer">` + list.map(t=>{ const k = t.id;
+    return `<div class="tp-ftx" data-ftx="${k}" style="text-align:${v(k,'ta','var(--tp-text-align,center)')}"><div class="tp-ftx-in" style="font-family:${v(k,'font','inherit')}; font-size:${v(k,'size','var(--tp-sub-size,12pt)')}; font-weight:${v(k,'weight','inherit')}; font-style:${v(k,'style','inherit')}; text-decoration:${v(k,'deco','none')}; color:${v(k,'color','inherit')};">${tpFtxLinesHtml(t.text)}</div></div>`;
+  }).join('') + `</div>`;
+}
 function tpSizeOf(d,k){ const e = tpEl(k); return +(d[e.size] || (e.fallback ? d[e.fallback] : 0)) || 12; }
 function tpEffFont(d,k){ return k==='page' ? d.font : (d[k+'Font'] || d.font); }
 function tpEffColor(d,k){ return k==='page' ? d.color : (d[k+'Color'] || d.color); }
@@ -172,12 +196,13 @@ function tpIsFmt(d,k,f){
 }
 function tpApplyElementStyles(el, d){
   const set = (v,val)=>{ if(val===''||val==null) el.style.removeProperty(v); else el.style.setProperty(v,val); };
-  TP_ELEMENTS.forEach(e=>{
+  TP_ELEMENTS.concat(tpFtxList(d).map(t=>({key:t.id, free:true}))).forEach(e=>{
     const k = e.key, f = (d.fmt && d.fmt[k]) || {}, al = d[k+'Align'] || '';
+    if(e.free) set('--tp-'+k+'-size', d[k+'Size'] ? d[k+'Size']+'pt' : '');
     set('--tp-'+k+'-font', d[k+'Font'] ? tpFontFamily(d[k+'Font']) : '');
     set('--tp-'+k+'-color', d[k+'Color'] || '');
     set('--tp-'+k+'-ta', al);
-    if(k!=='by' && k!=='author') set('--tp-'+k+'-self', al==='left'?'flex-start':al==='right'?'flex-end':al==='center'?'center':'');
+    if(k!=='by' && k!=='author' && !e.free) set('--tp-'+k+'-self', al==='left'?'flex-start':al==='right'?'flex-end':al==='center'?'center':'');
     if(k==='title') set('--tp-title-weight', tpIsFmt(d,'title','b') ? '700' : '400');
     else set('--tp-'+k+'-weight', f.b===undefined ? '' : (f.b ? '700' : '400'));
     set('--tp-'+k+'-style', f.i===undefined ? '' : (f.i ? 'italic' : 'normal'));
@@ -200,7 +225,7 @@ function tpCloseMenus(){ tpFmOpen = false; tpColorOpen = false; tpFmSnap = null;
 function tpFmSnapshot(){
   const d = ensureTPDesign(S.project), ok = id => id && TP_FONTS.some(f=>f.id===id);
   const used = [];
-  [d.font, ...TP_ELEMENTS.map(e=>d[e.key+'Font'])].forEach(id=>{ if(ok(id) && !used.includes(id)) used.push(id); });
+  [d.font, ...TP_ELEMENTS.map(e=>d[e.key+'Font']), ...tpFtxList(d).map(t=>d[t.id+'Font'])].forEach(id=>{ if(ok(id) && !used.includes(id)) used.push(id); });
   return {used, recents: tpRecents.filter(id=>ok(id) && !used.includes(id)).slice(0,5)};
 }
 function tpFmPopHtml(k){
@@ -291,8 +316,9 @@ const TP_ALIGN_ICON = {
   left:'<path d="M2 3.5h12M2 6.5h8M2 9.5h12M2 12.5h8"/>', center:'<path d="M2 3.5h12M4 6.5h8M2 9.5h12M4 12.5h8"/>', right:'<path d="M2 3.5h12M6 6.5h8M2 9.5h12M6 12.5h8"/>'
 };
 function tpPillsHtml(){
-  const items = [{key:'page', fr:'Toute la page', en:'Whole page'}, ...TP_ELEMENTS];
-  return `<span class="tp-pills-lbl">${L('Modifier','Edit')}</span>` + items.map(e=>`<button type="button" class="tp-pill ${tpSel===e.key?'on':''}" data-act="tpPill" data-id="${e.key}">${L(e.fr,e.en)}</button>`).join('');
+  const items = [{key:'page', fr:'Toute la page', en:'Whole page'}, ...TP_ELEMENTS, ...tpFtxList(ensureTPDesign(S.project)).map(t=>tpFtxEl(t.id))];
+  return `<span class="tp-pills-lbl">${L('Modifier','Edit')}</span>` + items.map(e=>`<button type="button" class="tp-pill ${tpSel===e.key?'on':''}" data-act="tpPill" data-id="${e.key}">${L(e.fr,e.en)}</button>`).join('')
+    + `<button type="button" class="tp-pill tp-pill-add" data-act="tpFtxAdd" title="${L('Ajouter un texte libre, à placer où tu veux','Add a free text, to place anywhere')}">+ ${L('Texte','Text')}</button>`;
 }
 function tpToolbarHtml(){
   const d = ensureTPDesign(S.project), k = tpSel, page = k==='page', none = k==='none';
@@ -316,7 +342,7 @@ function tpToolbarHtml(){
     <span class="tp-tb-sep"></span>${alignBtns}
     <span class="tp-tb-sep"></span>
     <span class="tp-col-wrap"><button type="button" class="tp-tb-btn" data-act="tpTbColorToggle" title="${none?hint:L('Couleur du texte','Text color')}"${off}><span class="tp-tb-dot" style="background:${col}"></span><span class="tp-fm-caret">▾</span></button>${colPop}</span>
-    <span class="tp-tb-sep"></span><button type="button" class="tp-tb-btn txt" data-act="tpTbReset" title="${(page||none)?hint:L('Remettre ce texte comme la page','Reset this text to the page style')}"${dis}>${L('Réinitialiser','Reset')}</button>`;
+    <span class="tp-tb-sep"></span><button type="button" class="tp-tb-btn txt" data-act="tpTbReset" title="${(page||none)?hint:L('Remettre ce texte comme la page','Reset this text to the page style')}"${dis}>${L('Réinitialiser','Reset')}</button>${tpIsFtx(k) ? `<button type="button" class="tp-tb-btn tp-tb-del" data-act="tpFtxDel" data-id="${k}" title="${L('Supprimer ce texte','Delete this text')}"><svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 4h11M6.5 4V2.5h3V4M4 4l.7 9.5h6.6L12 4M6.8 6.5v4.5M9.2 6.5v4.5"/></svg></button>` : ''}`;
 }
 function tpRenderToolbar(){
   const t = document.getElementById('tpToolbar'); if(!t) return;
@@ -480,7 +506,7 @@ function tpTbReset(){
   const d = ensureTPDesign(S.project), e = tpEl(tpSel), def = defaultTPDesign();
   d[tpSel+'Font'] = ''; d[tpSel+'Color'] = ''; d[tpSel+'Align'] = '';
   if(d.fmt) delete d.fmt[tpSel];
-  if(d.pos) delete d.pos[tpSel];
+  if(d.pos && !e.free) delete d.pos[tpSel];   // un texte libre garde sa place
   d[e.size] = def[e.size];
   tpStyleChanged();
 }
@@ -508,6 +534,8 @@ function tpDecoratePreview(shell, tp){
   mark('.tp-author-name','author',true,L('Nom de l\u2019auteur','Author name'));
   mark('.tp-extra-wrap','extra',true,L('Phrases en plus…','Extra lines…'));
   mark('.tp-foot','foot');
+  tp.querySelectorAll('.tp-ftx').forEach(w=>{ const n = w.querySelector('.tp-ftx-in'); if(!n) return;
+    n.dataset.tpk = w.dataset.ftx; n.setAttribute('contenteditable','true'); n.setAttribute('spellcheck','false'); n.dataset.ph = L('Ton texte…','Your text…'); });
   tpBindPreview(shell);
   tpApplyPositions(tp);
   tpMoveBind(shell);
@@ -559,7 +587,7 @@ function tpBindPreview(shell){
     const k = keyOf(e.target); if(!k || !e.target.isContentEditable) return;
     e.preventDefault();
     let t = (e.clipboardData || window.clipboardData).getData('text') || '';
-    if(k!=='extra') t = t.replace(/\s*\n\s*/g,' ');
+    if(k!=='extra' && !tpIsFtx(k)) t = t.replace(/\s*\n\s*/g,' ');
     document.execCommand('insertText', false, t);
   });
   shell.addEventListener('input', e=>{
@@ -575,6 +603,10 @@ function tpBindPreview(shell){
     }else if(k==='extra'){
       p.titlePageExtra = String(e.target.innerText||'').split('\n').map(s=>s.replace(/\s+$/,'')).join('\n').replace(/\n{3,}/g,'\n\n').replace(/^\n+|\n+$/g,'');
       tpSyncField('tpExtraText', p.titlePageExtra); scheduleAutosave();
+    }else if(tpIsFtx(k)){
+      const t = tpFtxList(ensureTPDesign(p)).find(x=>x.id===k); if(!t) return;
+      t.text = String(e.target.innerText||'').replace(/\r/g,'').split('\n').map(s=>s.replace(/\s+$/,'')).join('\n').replace(/\n+$/,'');
+      scheduleAutosave(); tpUpdateMoveHandle();
     }
   });
   shell.addEventListener('focusout', e=>{
@@ -586,6 +618,7 @@ function tpBindPreview(shell){
     }
     if(k==='author'){ p.author = String(p.author||'').trim(); if(p.author) setDefaultAuthor(p.author); }
     if(k==='extra') e.target.innerHTML = tpExtraLinesHtml(p.titlePageExtra);
+    if(tpIsFtx(k)){ const t = tpFtxList(ensureTPDesign(p)).find(x=>x.id===k); if(t){ e.target.innerHTML = tpFtxLinesHtml(t.text); tpRenderToolbar(); } }   // le nom de la pastille suit le texte
   });
 }
 document.addEventListener('mousedown', e=>{
@@ -944,7 +977,7 @@ function tpInnerHtml(p){
       <div class="tp-author">${tpAuthorInnerHtml(p.author)}</div>
       <div class="tp-extra-wrap">${tpExtraLinesHtml(p.titlePageExtra)}</div>
       <div class="tp-foot">${esc(p.contact||'')}${p.tpShowFoot&&p.contact&&p.version?' · ':''}${p.tpShowFoot&&p.version?('v'+esc(p.version)):''}${p.tpShowFoot&&p.date?(' · '+esc(p.date)):''}</div>
-    </div>`;
+    </div>${tpFtxHtml(ensureTPDesign(p))}`;
 }
 /* Builds a full .titlepage element (background image layer + drawing
    layer + text content), applies the design variables, and returns it.

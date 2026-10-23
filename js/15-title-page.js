@@ -59,6 +59,11 @@ function tpControlsHtmlAll(){
           </div>
         </div>
         <div class="tp-field">
+          <label class="tp-field-label">${L('Textes libres','Free texts')}</label>
+          <button type="button" class="btn btn-sm" data-act="tpFtxAdd">+ ${L('Ajouter un texte','Add a text')}</button>
+          <p class="tp-field-help">${L('Autant que tu veux. Chacun se déplace avec sa poignée ronde et se règle à part dans la barre du haut : police, taille, couleur, alignement, gras…','As many as you like. Each one moves with its round handle and has its own settings in the toolbar above: font, size, color, alignment, bold…')}</p>
+        </div>
+        <div class="tp-field">
           <label class="tp-field-label" for="tpFreeImgInput">${L('Image à la place du titre','Image in place of the title')}</label>
           <input type="file" id="tpFreeImgInput" accept="image/*,.png,.jpg,.jpeg,.webp,.gif,.svg,.bmp,.avif">
           <p class="tp-field-help" title="${L('Tous les formats d\u2019image sont acceptés (PNG avec transparence, JPG, WebP, GIF, SVG…). Coins = proportions gardées, côtés = étirer.','All image formats are accepted (PNG with transparency, JPG, WebP, GIF, SVG…). Corners = keep proportions, sides = stretch.')}">${L('Glisse l\u2019image pour la déplacer, tire les points bleus pour la redimensionner.','Drag the image to move it, pull the blue handles to resize it.')}</p>
@@ -360,6 +365,55 @@ function afterTPChangeLight(){
 }
 
 /* =====================================================================
+   v96 — TEXTES LIBRES SUR LA PAGE DE TITRE
+   « + Texte » ajoute un texte indépendant de tous les autres : il se tape
+   directement sur la page, se déplace avec la poignée ronde (aimantation
+   comprise) et a ses propres réglages dans la barre du haut. Il est
+   enregistré dans le design (texts, pos et styles sous sa clé) : aperçu,
+   plein écran, impression et PDF le montrent au même endroit.
+===================================================================== */
+function tpFtxAdd(){
+  if(S.tpDrawMode) return;
+  const d = ensureTPDesign(S.project);
+  if(!Array.isArray(d.texts)) d.texts = [];
+  let id; do{ id = 'tx' + Math.random().toString(36).slice(2, 8); }while(d.texts.some(t=>t.id===id) || !tpIsFtx(id));
+  // posé sur la première place libre (une ligne sous l'autre), pour ne jamais en cacher un autre
+  const used = d.texts.map(t=>tpPosOf(d, t.id).y), slots = [];
+  for(let y = 40; y <= 76; y += 4) slots.push(y);
+  const y = slots.find(v=>!used.some(u=>Math.abs(u - v) < 2)) ?? slots[d.texts.length % slots.length];
+  d.texts.push({ id, text:L('Nouveau texte','New text') });
+  tpSetPos(d, id, 0, y);
+  scheduleAutosave();
+  refreshTPPreview();
+  tpSelect(id); tpRenderToolbar();
+  const el = document.querySelector('#tpPreviewShell [data-tpk="' + id + '"]');
+  if(el){
+    try{ el.focus({ preventScroll:true }); const r = document.createRange(); r.selectNodeContents(el); const sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(r); }catch(err){}
+  }
+}
+function tpFtxDel(id){
+  const d = ensureTPDesign(S.project);
+  id = id || tpSel; if(!tpIsFtx(id)) return;
+  const i = tpFtxList(d).findIndex(t=>t.id===id); if(i<0) return;
+  d.texts.splice(i, 1);
+  ['Font','Color','Align','Size'].forEach(x=>{ delete d[id + x]; });
+  if(d.fmt) delete d.fmt[id];
+  if(d.pos) delete d.pos[id];
+  if(!d.texts.length) delete d.texts;
+  scheduleAutosave();
+  tpSel = 'none'; tpCloseMenus();
+  refreshTPPreview(); tpRenderToolbar();
+}
+/* Suppr / Retour arrière sur un texte libre sélectionné (sans curseur dedans) : il est supprimé. */
+document.addEventListener('keydown', e => {
+  if(!S || S.tab !== 'titlepage' || S.tpDrawMode || tpFsEl || !tpIsFtx(tpSel) || !document.getElementById('tpRoot')) return;
+  if(e.key !== 'Delete' && e.key !== 'Backspace') return;
+  const t = e.target;
+  if(t && ((t.matches && t.matches('input, textarea, select')) || t.isContentEditable)) return;
+  e.preventDefault(); tpFtxDel(tpSel);
+});
+
+/* =====================================================================
    PAGE DE TITRE — DÉPLACEMENT LIBRE DES TEXTES
    ---------------------------------------------------------------------
    Chaque texte de la page de titre (titre, sous-titre, « Écrit par »,
@@ -409,11 +463,15 @@ function tpSetPos(d, k, x, y){
 function tpApplyPositions(tp, d){
   if(!tp) return;
   d = d || ensureTPDesign(S.project);
-  for(const k in TP_POS_SEL){
-    const n = tp.querySelector(TP_POS_SEL[k]); if(!n) continue;
+  const put = (n, k) => {
     const q = tpPosOf(d, k);
     n.style.transform = (q.x || q.y) ? `translate(calc(var(--page-w,21cm) * ${q.x/100}), calc(var(--page-h,29.7cm) * ${q.y/100}))` : '';
+  };
+  for(const k in TP_POS_SEL){
+    const n = tp.querySelector(TP_POS_SEL[k]); if(!n) continue;
+    put(n, k);
   }
+  tp.querySelectorAll('.tp-ftx[data-ftx]').forEach(n => put(n, n.dataset.ftx));   // textes libres : même décalage, posé sur leur cadre
 }
 function tpTextRects(n){
   let out = [];
@@ -531,7 +589,7 @@ function tpMakeMoveHandle(tp){
     e.preventDefault(); e.stopPropagation();
     const k = h.dataset.k; if(!tpEl(k)) return;
     const d = ensureTPDesign(S.project);
-    tpSetPos(d, k, 0, 0); tpApplyPositions(tp, d); tpUpdateMoveHandle(); scheduleAutosave();
+    tpSetPos(d, k, 0, tpIsFtx(k) ? tpPosOf(d, k).y : 0);   // texte libre : recentré, à la même hauteur tpApplyPositions(tp, d); tpUpdateMoveHandle(); scheduleAutosave();
   });
   tp.appendChild(h);
   return h;
