@@ -758,7 +758,7 @@
   .titlepage .tp-author-label{margin-bottom:4px;}
   .titlepage .tp-author-name{}
   .titlepage .tp-extra-wrap{display:flex; flex-direction:column; gap:5px; margin:16px 0 0;}
-  .titlepage .tp-extra-line{font-size:var(--tp-sub-size,12pt); opacity:.85;}
+  .titlepage .tp-extra-line{font-size:var(--tp-sub-size,12pt);}   /* même encre que les autres textes, sans voile (avant : opacity .85) */
   .titlepage .tp-foot{margin-top:auto; font-size:var(--tp-foot-size,10pt); opacity:.7;}
   /* v51 : chaque élément de la page de titre a sa propre police, taille, couleur, alignement, gras / italique / souligné.
      Sans réglage, chaque variable retombe sur la valeur d'avant : rendu strictement identique. */
