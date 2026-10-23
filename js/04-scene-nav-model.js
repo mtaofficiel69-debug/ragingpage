@@ -533,6 +533,12 @@ function ensureTPDesign(p){
     const ok = typeof fi.src==='string' && /^data:image\//.test(fi.src) && [fi.x,fi.y,fi.w,fi.h].every(v=>typeof v==='number' && isFinite(v)) && fi.w>0 && fi.h>0;
     if(!ok) p.titlePageDesign.freeImg = null;
   }
+  // v96 : textes libres — on ne garde que des entrées complètes (après un import par exemple).
+  const tx = p.titlePageDesign.texts;
+  if(tx !== undefined){
+    const ok = Array.isArray(tx) ? tx.filter(t=>t && typeof t.id==='string' && /^tx[a-z0-9]+$/.test(t.id) && typeof t.text==='string') : [];
+    if(ok.length) p.titlePageDesign.texts = ok; else delete p.titlePageDesign.texts;
+  }
   return p.titlePageDesign;
 }
 
