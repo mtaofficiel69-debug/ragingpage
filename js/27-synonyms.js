@@ -8,103 +8,489 @@
    Format du dictionnaire : voir l'en-tête de SYN_DB_TEXT.
 ===================================================================== */
 const SYN_DB_TEXT = `
-v|Fixer, dévisager|fixer>d;dévisager>d;toiser>d;river {p} regard>sur;darder {p} regard>sur;braquer {p} regard>sur;planter {p} regard>dans;ancrer {p} regard>dans|regarder
-v|Observer, scruter|observer>d;scruter>d;examiner>d;détailler>d;étudier>d;inspecter>d|regarder
-v|Contempler, admirer|contempler>d;admirer>d;s'attarder>sur|regarder
-v|Coup d'œil rapide|jeter un coup d'œil>à;jeter un œil>à;lancer un regard>vers;glisser un regard>vers;risquer un œil>vers;lorgner>d;zieuter>d|regarder
-v|Épier, surveiller|épier>d;guetter>d;surveiller>d;espionner>d|regarder
+v|Fixer, dévisager|fixer>d;dévisager>d;toiser>d;river {p} regard>sur;darder {p} regard>sur;braquer {p} regard>sur;planter {p} regard>dans;ancrer {p} regard>dans;transpercer du regard>d;couver des yeux>d|regarder
+v|Observer, scruter|observer>d;scruter>d;examiner>d;détailler>d;étudier>d;inspecter>d;considérer>d;sonder>d;passer en revue>d;ausculter>d|regarder
+v|Contempler, admirer|contempler>d;admirer>d;s'attarder>sur;dévorer des yeux>d;couver du regard>d|regarder
+v|Coup d'œil rapide|jeter un coup d'œil>à;jeter un œil>à;lancer un regard>vers;glisser un regard>vers;risquer un œil>vers;lorgner>d;zieuter>d;jeter un regard>vers;balayer du regard>d;parcourir des yeux>d|regarder
+v|Épier, surveiller|épier>d;guetter>d;surveiller>d;espionner>d;observer en cachette>d;garder un œil>sur;pister>d|regarder
 v|Détourner le regard|détourner {p} regard>de;détourner les yeux>de;éviter {p} regard>d;fuir {p} regard>d;esquiver {p} regard>d|regarder
 v|Baisser, lever les yeux|baisser les yeux>sur;baisser {p} regard>sur;lever les yeux>vers;lever {p} regard>vers;relever {p} regard>vers;tourner {p} regard>vers;porter {p} regard>sur;diriger {p} regard>vers|regarder
 v|Se tourner, se retourner|se tourner>vers;se retourner>vers;pivoter>vers;faire volte-face>i;faire demi-tour>i;tourner la tête>vers;tourner les talons>i;se détourner>de|tourner,retourner
 v|Soupirer|soupirer>i;pousser un soupir>i;pousser un long soupir>i;laisser échapper un soupir>i;lâcher un soupir>i;expirer longuement>i;souffler>i|
-v|Avancer lentement|s'avancer>vers;progresser>i;cheminer>i;avancer à pas lents>vers;se traîner>vers|avancer
-v|Marcher sans but|déambuler>i;errer>i;flâner>i;vagabonder>i;arpenter>d;tourner en rond>i|marcher
-v|Aller vers|se diriger>vers;s'approcher>de;se rapprocher>de;gagner>d;rejoindre>d;atteindre>d|avancer,marcher
+v|Avancer lentement|s'avancer>vers;progresser>i;cheminer>i;avancer à pas lents>vers;se traîner>vers;approcher à pas comptés>de;s'approcher à pas de loup>de|avancer
+v|Marcher sans but|déambuler>i;errer>i;flâner>i;vagabonder>i;arpenter>d;tourner en rond>i;traîner>i;divaguer>i;se balader>i|marcher
+v|Aller vers|se diriger>vers;s'approcher>de;se rapprocher>de;gagner>d;rejoindre>d;atteindre>d;se rendre>à;filer>vers;regagner>d|avancer,marcher
 v|Avancer avec détermination|foncer>vers;s'élancer>vers;se précipiter>vers;marcher d'un pas décidé>vers|avancer,marcher,courir
-v|Entrer|entrer>dans;pénétrer>dans;s'introduire>dans;s'engouffrer>dans;faire irruption>dans;franchir le seuil>de|
-v|Sortir, quitter|sortir>de;quitter>d;s'éclipser>i;s'esquiver>i;déguerpir>i;s'éloigner>de;partir>i|
-v|Sourire|sourire>à;esquisser un sourire>à;ébaucher un sourire>à;adresser un sourire>à;afficher un sourire>i;sourire en coin>i|
-v|Rire|rire>i;pouffer>i;s'esclaffer>i;éclater de rire>i;ricaner>i;glousser>i|
-v|Pleurer|pleurer>i;sangloter>i;fondre en larmes>i;verser des larmes>i;s'effondrer en larmes>i|
-v|Crier|crier>i;hurler>i;vociférer>i;rugir>i;s'époumoner>i;s'égosiller>i;beugler>i|
-v|Trembler|trembler>i;frissonner>i;frémir>i;tressaillir>i;grelotter>i;vibrer>i|
-v|Se figer|se figer>i;se pétrifier>i;s'immobiliser>i;se raidir>i;se glacer>i|
-v|Dire à voix basse|murmurer>d;chuchoter>d;souffler>d;glisser>d;marmonner>d;susurrer>d|dire
-v|Dire à voix haute|lancer>d;lâcher>d;clamer>d;s'exclamer>i;déclarer>d|dire
-v|Répondre|répondre>à;répliquer>à;rétorquer>d;riposter>à|
-v|Acquiescer|hocher la tête>i;acquiescer>i;opiner>i;approuver>d;faire signe que oui>i;incliner la tête>i|
-v|Se lever|se lever>i;se dresser>i;se redresser>i;se mettre debout>i;bondir>i;sursauter>i|
-v|S'asseoir|s'asseoir>i;s'installer>i;prendre place>i;s'affaler>i;se laisser tomber>i;s'écrouler>i;se poser>i|
-v|Saisir|saisir>d;attraper>d;empoigner>d;agripper>d;s'emparer>de;se saisir>de;prendre>d|prendre
-v|Toucher|toucher>d;effleurer>d;frôler>d;caresser>d;palper>d;tâter>d|
-v|Tenir, serrer|tenir>d;serrer>d;étreindre>d;agripper>d;empoigner>d;s'accrocher>à|
-v|Frapper|frapper>d;cogner>d;heurter>d;marteler>d;tambouriner>sur;cogner>contre|
-v|Jeter|jeter>d;lancer>d;balancer>d;projeter>d;envoyer>d;flanquer>d|
-v|Ressentir|ressentir>d;éprouver>d;percevoir>d;sentir>d|
-v|Voir|voir>d;apercevoir>d;remarquer>d;distinguer>d;repérer>d;discerner>d;constater>d|
-v|Entendre|entendre>d;percevoir>d;discerner>d;capter>d;tendre l'oreille>vers|écouter
-v|Attendre|attendre>d;patienter>i;guetter>d;ronger {p} frein>i;faire le pied de grue>i|
-v|Courir|courir>i;filer>i;détaler>i;se précipiter>vers;s'élancer>vers;foncer>vers;dévaler>d|
-v|Tomber|tomber>i;s'effondrer>i;s'écrouler>i;s'affaisser>i;chuter>i;dégringoler>i;s'étaler>i|
-v|Parler|parler>à;s'adresser>à;discuter>avec;s'entretenir>avec;converser>avec;s'exprimer>i|
-v|Penser|penser>à;songer>à;réfléchir>à;méditer>sur;ruminer>d|
-v|Commencer|commencer>à;se mettre>à;se lancer>dans;entamer>d;amorcer>d;entreprendre>d|
-v|Sembler|sembler>i;paraître>i;se montrer>i|
-v|Rester|rester>i;demeurer>i;se tenir>i;se maintenir>i;persister>i|
-v|Respirer|respirer>i;inspirer>i;prendre une inspiration>i;reprendre {p} souffle>i|
-v|Ouvrir|ouvrir>d;entrouvrir>d;pousser>d;écarter>d;ouvrir en grand>d|
-v|Fermer|fermer>d;refermer>d;claquer>d;verrouiller>d;rabattre>d|
+v|Entrer|entrer>dans;pénétrer>dans;s'introduire>dans;s'engouffrer>dans;faire irruption>dans;franchir le seuil>de;débarquer>dans;surgir>dans;se glisser>dans|
+v|Sortir, quitter|sortir>de;quitter>d;s'éclipser>i;s'esquiver>i;déguerpir>i;s'éloigner>de;partir>i;s'en aller>i;filer>i;prendre congé>i;se retirer>i;décamper>i|
+v|Sourire|sourire>à;esquisser un sourire>à;ébaucher un sourire>à;adresser un sourire>à;afficher un sourire>i;sourire en coin>i;rayonner>i;sourire jusqu'aux oreilles>i|
+v|Rire|rire>i;pouffer>i;s'esclaffer>i;éclater de rire>i;ricaner>i;glousser>i;se marrer>i;rigoler>i;se tordre de rire>i;rire aux éclats>i|
+v|Pleurer|pleurer>i;sangloter>i;fondre en larmes>i;verser des larmes>i;s'effondrer en larmes>i;larmoyer>i;pleurnicher>i;avoir les larmes aux yeux>i;éclater en sanglots>i|
+v|Crier|crier>i;hurler>i;vociférer>i;rugir>i;s'époumoner>i;s'égosiller>i;beugler>i;brailler>i;gueuler>i;s'écrier>i;tonner>i|
+v|Trembler|trembler>i;frissonner>i;frémir>i;tressaillir>i;grelotter>i;vibrer>i;trembloter>i;flageoler>i|
+v|Se figer|se figer>i;se pétrifier>i;s'immobiliser>i;se raidir>i;se glacer>i;rester pétrifié>i;se tétaniser>i;rester cloué sur place>i|
+v|Dire à voix basse|murmurer>d;chuchoter>d;souffler>d;glisser>d;marmonner>d;susurrer>d;bredouiller>d;balbutier>d;bafouiller>d;souffler à l'oreille>d|dire
+v|Dire à voix haute|lancer>d;lâcher>d;clamer>d;s'exclamer>i;déclarer>d;annoncer>d;proclamer>d;scander>d;tonner>i|dire
+v|Répondre|répondre>à;répliquer>à;rétorquer>d;riposter>à;renchérir>i;objecter>d|
+v|Acquiescer|hocher la tête>i;acquiescer>i;opiner>i;approuver>d;faire signe que oui>i;incliner la tête>i;consentir>à;opiner du chef>i;donner son accord>i|
+v|Se lever|se lever>i;se dresser>i;se redresser>i;se mettre debout>i;bondir>i;sursauter>i;se relever>i;se hisser>i;se remettre debout>i|
+v|S'asseoir|s'asseoir>i;s'installer>i;prendre place>i;s'affaler>i;se laisser tomber>i;s'écrouler>i;se poser>i;s'accroupir>i;se caler>dans;s'enfoncer>dans|
+v|Saisir|saisir>d;attraper>d;empoigner>d;agripper>d;s'emparer>de;se saisir>de;prendre>d;happer>d;rafler>d;arracher>d;cueillir>d|prendre
+v|Toucher|toucher>d;effleurer>d;frôler>d;caresser>d;palper>d;tâter>d;tapoter>d;masser>d;pincer>d|
+v|Tenir, serrer|tenir>d;serrer>d;étreindre>d;agripper>d;empoigner>d;s'accrocher>à;enlacer>d;cramponner>d;presser>d|
+v|Frapper|frapper>d;cogner>d;heurter>d;marteler>d;tambouriner>sur;cogner>contre;taper>sur;gifler>d;boxer>d;rouer de coups>d|
+v|Jeter|jeter>d;lancer>d;balancer>d;projeter>d;envoyer>d;flanquer>d;lâcher>d;expédier>d;catapulter>d|
+v|Ressentir|ressentir>d;éprouver>d;percevoir>d;sentir>d;endurer>d;subir>d|
+v|Voir|voir>d;apercevoir>d;remarquer>d;distinguer>d;repérer>d;discerner>d;constater>d;entrevoir>d;surprendre>d;déceler>d|
+v|Entendre|entendre>d;percevoir>d;discerner>d;capter>d;tendre l'oreille>vers;ouïr>d;surprendre>d|écouter
+v|Attendre|attendre>d;patienter>i;guetter>d;ronger {p} frein>i;faire le pied de grue>i;poireauter>i;languir>i;compter les minutes>i|
+v|Courir|courir>i;filer>i;détaler>i;se précipiter>vers;s'élancer>vers;foncer>vers;dévaler>d;galoper>i;cavaler>i;sprinter>i;prendre ses jambes à son cou>i|
+v|Tomber|tomber>i;s'effondrer>i;s'écrouler>i;s'affaisser>i;chuter>i;dégringoler>i;s'étaler>i;basculer>i;trébucher>i;s'étaler de tout son long>i;choir>i|
+v|Parler|parler>à;s'adresser>à;discuter>avec;s'entretenir>avec;converser>avec;s'exprimer>i;bavarder>avec;causer>avec;dialoguer>avec;échanger>avec|
+v|Penser|penser>à;songer>à;réfléchir>à;méditer>sur;ruminer>d;cogiter>i;gamberger>i;se demander>d|
+v|Commencer|commencer>à;se mettre>à;se lancer>dans;entamer>d;amorcer>d;entreprendre>d;débuter>i;démarrer>d;s'atteler>à|
+v|Sembler|sembler>i;paraître>i;se montrer>i;avoir l'air>i;donner l'impression>de|
+v|Rester|rester>i;demeurer>i;se tenir>i;se maintenir>i;persister>i;s'attarder>i;stationner>i;camper>i|
+v|Respirer|respirer>i;inspirer>i;prendre une inspiration>i;reprendre {p} souffle>i;haleter>i;reprendre haleine>i|
+v|Ouvrir|ouvrir>d;entrouvrir>d;pousser>d;écarter>d;ouvrir en grand>d;déverrouiller>d;ouvrir à la volée>d|
+v|Fermer|fermer>d;refermer>d;claquer>d;verrouiller>d;rabattre>d;clore>d;boucler>d|
 n|Les yeux|regard~nm;prunelle~nf;pupille~nf;iris~nm|œil:yeux
 n|Les yeux, familier|mirette~nf;quinquet~nm;châsse~nf|œil:yeux
 n|Le regard, les yeux|yeux~nmp;prunelles~nfp;pupilles~nfp;iris~nm|regard
 n|Le regard, l'expression|air~nm;expression~nf;mine~nf;lueur~nf|regard
 n|Le regard, l'acte de regarder|coup d'œil~nm:coups d'œil;œillade~nf;examen~nm;contemplation~nf|regard
 n|Le soupir|souffle~nm;expiration~nf;gémissement~nm;plainte~nf;murmure~nm;râle~nm|soupir
-n|La bouche|lèvres~nfp|bouche
+n|La bouche|lèvres~nfp;babines~nfp|bouche
 n|La bouche, familier|gueule~nf;bec~nm|bouche
-n|Le visage|face~nf;figure~nf;traits~nmp;physionomie~nf;faciès~nm;tête~nf|visage
-n|Le silence|calme~nm;quiétude~nf;mutisme~nm|silence
-n|Le bruit fort|vacarme~nm;fracas~nm;tapage~nm;tumulte~nm;boucan~nm|bruit
-n|Le bruit léger|son~nm;murmure~nm;bruissement~nm;froissement~nm;chuchotement~nm|bruit
+n|Le visage|face~nf;figure~nf;traits~nmp;physionomie~nf;faciès~nm;tête~nf;frimousse~nf;bouille~nf;minois~nm|visage
+n|Le silence|calme~nm;quiétude~nf;mutisme~nm;paix~nf;accalmie~nf|silence
+n|Le bruit fort|vacarme~nm;fracas~nm;tapage~nm;tumulte~nm;boucan~nm;raffut~nm;brouhaha~nm;tintamarre~nm|bruit
+n|Le bruit léger|son~nm;murmure~nm;bruissement~nm;froissement~nm;chuchotement~nm;clapotis~nm;tintement~nm;crissement~nm|bruit
 n|La voix|ton~nm;timbre~nm;intonation~nf;organe~nm|voix
-n|Un instant|seconde~nf;moment~nm;éclair~nm|instant
+n|Un instant|seconde~nf;moment~nm;éclair~nm;minute~nf|instant
 n|Un geste|mouvement~nm;signe~nm|geste
-n|La peur|frayeur~nf;effroi~nm;terreur~nf;angoisse~nf;crainte~nf;épouvante~nf|peur
-n|La colère|rage~nf;fureur~nf;courroux~nm;irritation~nf;emportement~nm|colère
-n|La tristesse|chagrin~nm;peine~nf;mélancolie~nf;affliction~nf;désespoir~nm|tristesse
-n|La lumière|clarté~nf;éclat~nm;lueur~nf;luminosité~nf;rayon~nm|lumière
-n|L'ombre|obscurité~nf;pénombre~nf;ténèbres~nfp;noirceur~nf|ombre
-a|Étonné|stupéfait;ébahi;médusé;sidéré;interdit;abasourdi;ahuri|étonné,surpris
-a|Fatigué|épuisé;las;exténué;harassé;éreinté|fatigué
-a|Triste|abattu;morose;sombre;mélancolique;accablé;chagriné|triste
-a|Silencieux|muet;taciturne;mutique;discret|silencieux
+n|La peur|frayeur~nf;effroi~nm;terreur~nf;angoisse~nf;crainte~nf;épouvante~nf;panique~nf;appréhension~nf;trouille~nf|peur
+n|La colère|rage~nf;fureur~nf;courroux~nm;irritation~nf;emportement~nm;exaspération~nf;indignation~nf|colère
+n|La tristesse|chagrin~nm;peine~nf;mélancolie~nf;affliction~nf;désespoir~nm;détresse~nf;spleen~nm;abattement~nm|tristesse
+n|La lumière|clarté~nf;éclat~nm;lueur~nf;luminosité~nf;rayon~nm;halo~nm;faisceau~nm;reflet~nm|lumière
+n|L'ombre|obscurité~nf;pénombre~nf;ténèbres~nfp;noirceur~nf;noir~nm;nuit~nf|ombre
+a|Étonné|stupéfait;ébahi;médusé;sidéré;interdit;abasourdi;ahuri;estomaqué;éberlué;interloqué;déconcerté|étonné,surpris
+a|Fatigué|épuisé;las;exténué;harassé;éreinté;vanné;crevé;lessivé;fourbu;à bout|fatigué
+a|Triste|abattu;morose;sombre;mélancolique;accablé;chagriné;malheureux;peiné;désolé;affligé|triste
+a|Silencieux|muet;taciturne;mutique;discret;coi;réservé;feutré|silencieux
 x|Bouche bée|sans voix;la mâchoire pendante;interdit~a;médusé~a;stupéfait~a;sidéré~a;pétrifié~a;muet de stupeur~a|bouche bée
 x|Bouche entrouverte|les lèvres entrouvertes;la bouche à demi ouverte;{pf} bouche légèrement ouverte;les lèvres à peine écartées;les lèvres légèrement écartées;la bouche semi-ouverte|bouche entrouverte,bouche ouverte,lèvres entrouvertes
-x|En colère|furieux~a;furibond~a;excédé~a;irrité~a;hors de soi|en colère
-x|Doucement|lentement;tendrement;avec douceur;en douceur;délicatement;calmement;posément|doucement
+x|En colère|furieux~a;furibond~a;excédé~a;irrité~a;hors de soi;fou de rage;enragé~a;remonté~a|en colère
+x|Doucement|lentement;tendrement;avec douceur;en douceur;délicatement;calmement;posément;avec précaution;sans brusquerie|doucement
 x|Lentement|doucement;posément;sans hâte;avec lenteur;à pas lents;calmement|lentement
-x|Soudain|brusquement;tout à coup;d'un coup;subitement;soudainement;sans prévenir;en un instant|soudain
-x|Puis|ensuite;alors;après quoi;peu après;un instant plus tard;à ce moment|puis,ensuite
+x|Soudain|brusquement;tout à coup;d'un coup;subitement;soudainement;sans prévenir;en un instant;brutalement;tout d'un coup|soudain
+x|Puis|ensuite;alors;après quoi;peu après;un instant plus tard;à ce moment;par la suite|puis,ensuite
 x|Fixement|intensément;avec insistance;sans ciller;obstinément;longuement|fixement
 x|Silencieusement|sans bruit;sans un mot;en silence;discrètement;à pas feutrés;dans un silence total|silencieusement
-x|Rapidement|vite;promptement;en hâte;à toute vitesse;prestement;sans attendre|rapidement,vite
-x|Très|extrêmement;terriblement;profondément;infiniment;grandement;fort|très
-x|Un peu|légèrement;à peine;faiblement;vaguement;quelque peu|un peu
-x|Encore|toujours;de nouveau;une fois de plus;à nouveau|encore
-x|Peut-être|sans doute;probablement;éventuellement|peut-être
-x|Tout de suite|aussitôt;immédiatement;sur-le-champ;sans attendre;illico|tout de suite
-x|Longtemps|longuement;pendant un moment;un long moment;des heures|longtemps
+x|Rapidement|vite;promptement;en hâte;à toute vitesse;prestement;sans attendre;à la hâte;en un éclair;en vitesse|rapidement,vite
+x|Très|extrêmement;terriblement;profondément;infiniment;grandement;fort;vraiment;particulièrement;énormément|très
+x|Un peu|légèrement;à peine;faiblement;vaguement;quelque peu;un brin;un tantinet|un peu
+x|Encore|toujours;de nouveau;une fois de plus;à nouveau;derechef|encore
+x|Peut-être|sans doute;probablement;éventuellement;possiblement;sait-on jamais|peut-être
+x|Tout de suite|aussitôt;immédiatement;sur-le-champ;sans attendre;illico;à l'instant;séance tenante|tout de suite
+x|Longtemps|longuement;pendant un moment;un long moment;des heures;une éternité|longtemps
+v|Ramasser|ramasser>d;récupérer>d;recueillir>d;relever>d|ramasser
+v|Poser|poser>d;déposer>d;placer>d;mettre>d;installer>d;reposer>d|poser
+v|Donner|donner>d;tendre>d;passer>d;remettre>d;offrir>d;confier>d|donner
+v|Chercher|chercher>d;fouiller>d;explorer>d;rechercher>d;farfouiller>d;fureter>i|chercher
+v|Trouver|trouver>d;découvrir>d;dénicher>d;tomber sur>d;mettre la main>sur|trouver
+v|Montrer|montrer>d;désigner>d;indiquer>d;pointer>d;exhiber>d;brandir>d|montrer
+v|Montrer du doigt|pointer du doigt>d;désigner du menton>d;indiquer d'un geste>d|montrer
+v|Arriver|arriver>i;débarquer>i;surgir>i;se pointer>i;apparaître>i;faire son entrée>i|arriver
+v|Revenir|revenir>i;rentrer>i;retourner>i;réapparaître>i;faire marche arrière>i|revenir
+v|Partir|partir>i;s'en aller>i;filer>i;décamper>i;mettre les voiles>i;prendre la porte>i|partir
+v|Fuir|fuir>i;s'enfuir>i;détaler>i;prendre la fuite>i;se sauver>i;déguerpir>i|fuir
+v|Se cacher|se cacher>i;se dissimuler>i;se planquer>i;se tapir>i;se terrer>i|cacher
+v|Cacher|cacher>d;dissimuler>d;camoufler>d;planquer>d;masquer>d;enfouir>d|cacher
+v|Essayer|essayer>de;tenter>de;s'efforcer>de;chercher>à;tâcher>de|essayer
+v|Aider|aider>d;secourir>d;épauler>d;assister>d;soutenir>d;prêter main-forte>à|aider
+v|Appeler|appeler>d;héler>d;interpeller>d;apostropher>d|appeler
+v|Téléphoner|téléphoner>à;passer un coup de fil>à;composer le numéro>de|téléphoner
+v|Pousser|pousser>d;bousculer>d;repousser>d;écarter>d;propulser>d|pousser
+v|Tirer|tirer>d;traîner>d;haler>d;remorquer>d;tracter>d|tirer
+v|Embrasser|embrasser>d;étreindre>d;enlacer>d;serrer dans ses bras>d;donner un baiser>à|embrasser
+v|Comprendre|comprendre>d;saisir>d;piger>d;réaliser>d;percuter>i;deviner>d|comprendre
+v|Se souvenir|se souvenir>de;se rappeler>d;se remémorer>d;revoir>d|souvenir,rappeler
+v|Oublier|oublier>d;négliger>d;omettre>d;perdre de vue>d|oublier
+v|Vouloir|vouloir>d;désirer>d;souhaiter>d;convoiter>d;rêver>de|vouloir
+v|Aimer|aimer>d;adorer>d;chérir>d;affectionner>d;apprécier>d|aimer
+v|Détester|détester>d;haïr>d;exécrer>d;abhorrer>d;ne pas supporter>d|détester
+v|Hésiter|hésiter>i;tergiverser>i;balancer>i;tâtonner>i;se tâter>i|hésiter
+v|Refuser|refuser>d;décliner>d;rejeter>d;repousser>d;secouer la tête>i|refuser
+v|Accepter|accepter>d;consentir>à;admettre>d;céder>i|accepter
+v|Arrêter, cesser|arrêter>d;cesser>d;stopper>d;interrompre>d;suspendre>d|arrêter
+v|S'arrêter|s'arrêter>i;s'immobiliser>i;faire halte>i;marquer une pause>i;piler>i|arrêter
+v|Continuer|continuer>d;poursuivre>d;reprendre>d;persévérer>i|continuer
+v|Finir|finir>d;terminer>d;achever>d;conclure>d;boucler>d|finir
+v|Manger|manger>d;dévorer>d;engloutir>d;grignoter>d;avaler>d;se goinfrer>de|manger
+v|Boire|boire>d;siroter>d;avaler>d;descendre>d;lamper>d;s'enfiler>d|boire
+v|Dormir|dormir>i;sommeiller>i;somnoler>i;roupiller>i;s'assoupir>i;piquer du nez>i|dormir
+v|Se réveiller|se réveiller>i;s'éveiller>i;ouvrir les yeux>i;émerger>i|réveiller
+v|Écrire|écrire>d;noter>d;griffonner>d;gribouiller>d;rédiger>d;inscrire>d|écrire
+v|Lire|lire>d;parcourir>d;déchiffrer>d;feuilleter>d;survoler>d|lire
+v|Se battre|se battre>avec;se bagarrer>avec;lutter>contre;s'affronter>i;en venir aux mains>i|battre
+v|Tuer|tuer>d;abattre>d;éliminer>d;assassiner>d;liquider>d;descendre>d|tuer
+v|Mourir|mourir>i;décéder>i;expirer>i;s'éteindre>i;rendre l'âme>i;succomber>i|mourir
+v|Conduire|conduire>d;piloter>d;rouler>i;filer>i|conduire
+v|Monter|monter>d;grimper>d;gravir>d;escalader>d;se hisser>sur|monter
+v|Descendre|descendre>d;dévaler>d;dégringoler>d;redescendre>d|descendre
+v|Briller|briller>i;scintiller>i;étinceler>i;miroiter>i;luire>i;rayonner>i|briller
+v|Changer|changer>d;modifier>d;transformer>d;bouleverser>d;métamorphoser>d|changer
+v|Casser|casser>d;briser>d;fracasser>d;rompre>d;pulvériser>d|casser
+v|Se cogner|se cogner>contre;heurter>d;percuter>d;buter>contre|cogner
+v|Gémir|gémir>i;geindre>i;grogner>i;râler>i;couiner>i|gémir
+v|Rougir|rougir>i;s'empourprer>i;piquer un fard>i|rougir
+v|Pâlir|pâlir>i;blêmir>i;blanchir>i;devenir livide>i|pâlir
+v|Avaler sa salive|déglutir>i;avaler sa salive>i;ravaler>d|déglutir
+v|S'éloigner, reculer|s'éloigner>de;reculer>i;battre en retraite>i;prendre ses distances>avec|éloigner,reculer
+v|Se pencher|se pencher>vers;s'incliner>vers;se courber>i;se baisser>i|pencher
+v|Allumer|allumer>d;éclairer>d;mettre en marche>d|allumer
+v|Éteindre|éteindre>d;couper>d;souffler>d|éteindre
+v|Sonner|sonner>i;retentir>i;tinter>i;carillonner>i;vibrer>i|sonner
+v|Expliquer|expliquer>d;préciser>d;détailler>d;clarifier>d;exposer>d|expliquer
+v|Demander|demander>d;questionner>d;interroger>d;s'enquérir>de|demander
+v|Mentir|mentir>i;inventer>d;bluffer>i;raconter des histoires>i|mentir
+v|Avouer|avouer>d;admettre>d;reconnaître>d;confesser>d|avouer
+v|Menacer|menacer>d;intimider>d;défier>d|menacer
+v|Rassurer|rassurer>d;réconforter>d;consoler>d;apaiser>d;calmer>d|rassurer
+v|Se calmer|se calmer>i;s'apaiser>i;se détendre>i;reprendre ses esprits>i|calmer
+v|S'énerver|s'énerver>i;s'emporter>i;exploser>i;sortir de ses gonds>i;perdre patience>i|énerver
+v|Hausser les épaules|hausser les épaules>i;lever les yeux au ciel>i;faire la moue>i|hausser
+v|Froncer les sourcils|froncer les sourcils>i;plisser les yeux>i;se renfrogner>i|froncer
+v|Cligner des yeux|cligner des yeux>i;battre des paupières>i;ciller>i|cligner
+v|Se faufiler|se faufiler>vers;se glisser>vers;ramper>vers;s'avancer à pas de loup>vers|faufiler
+n|La maison|demeure~nf;foyer~nm;logis~nm;domicile~nm;bâtisse~nf;baraque~nf|maison
+n|L'appartement|logement~nm;studio~nm;appart~nm|appartement
+n|La pièce|salle~nf;chambre~nf;séjour~nm|pièce
+n|La rue|ruelle~nf;avenue~nf;boulevard~nm;allée~nf;chaussée~nf|rue
+n|La voiture|auto~nf;véhicule~nm;bagnole~nf;caisse~nf|voiture
+n|L'homme|type~nm;individu~nm;gars~nm;monsieur~nm;bonhomme~nm|homme
+n|La femme|dame~nf;jeune femme~nf;inconnue~nf|femme
+n|L'enfant|gamin~nm;gosse~nm;petit~nm;bambin~nm;môme~nm|enfant
+n|La nuit|obscurité~nf;soir~nm;ténèbres~nfp|nuit
+n|Le matin|aube~nf;aurore~nf;petit jour~nm;lever du jour~nm|matin
+n|Le soir|crépuscule~nm;tombée de la nuit~nf;soirée~nf|soir
+n|La porte|entrée~nf;battant~nm;seuil~nm|porte
+n|La fenêtre|vitre~nf;carreau~nm;baie vitrée~nf|fenêtre
+n|La main|paume~nf;poing~nm;doigts~nmp|main
+n|Les larmes|pleurs~nmp;sanglots~nmp|larmes,larme
+n|Le cri|hurlement~nm;clameur~nf;exclamation~nf;appel~nm|cri
+n|Le coup|choc~nm;impact~nm;heurt~nm;gifle~nf|coup
+n|Le sourire|rictus~nm;risette~nf;sourire en coin~nm|sourire
+n|Le cœur|poitrine~nf;âme~nf|cœur
+n|La ville|cité~nf;métropole~nf;agglomération~nf|ville
+n|Le chemin|sentier~nm;route~nf;piste~nf;voie~nf|chemin
+n|La forêt|bois~nm;sous-bois~nm;futaie~nf|forêt
+n|La mer|océan~nm;flots~nmp;large~nm|mer
+n|Le ciel|firmament~nm;voûte céleste~nf;nuages~nmp|ciel
+n|La pluie|averse~nf;ondée~nf;bruine~nf;crachin~nm;déluge~nm|pluie
+n|Le vent|brise~nf;bourrasque~nf;rafale~nf;souffle~nm|vent
+n|Le feu|flammes~nfp;brasier~nm;incendie~nm|feu
+n|L'argent|fric~nm;pognon~nm;oseille~nf;liquide~nm|argent
+n|Le travail|boulot~nm;job~nm;emploi~nm;tâche~nf|travail
+n|L'ami|copain~nm;camarade~nm;pote~nm;compagnon~nm|ami
+n|Le problème|souci~nm;ennui~nm;difficulté~nf;embrouille~nf|problème
+n|La joie|bonheur~nm;allégresse~nf;gaieté~nf;euphorie~nf|joie
+n|La honte|gêne~nf;embarras~nm;humiliation~nf|honte
+n|La surprise|étonnement~nm;stupeur~nf;stupéfaction~nf|surprise
+n|La fatigue|épuisement~nm;lassitude~nf;exténuation~nf|fatigue
+n|Le corps|silhouette~nf;carcasse~nf|corps
+n|La table|bureau~nm;comptoir~nm;établi~nm|table
+n|Le lit|couche~nf;matelas~nm;pieu~nm|lit
+n|Le téléphone|portable~nm;mobile~nm;combiné~nm|téléphone
+n|L'arme|pistolet~nm;revolver~nm;flingue~nm;fusil~nm|arme
+n|La lettre|missive~nf;courrier~nm;mot~nm;billet~nm|lettre
+a|Grand|immense;gigantesque;énorme;imposant;colossal|grand
+a|Petit|minuscule;menu;frêle;chétif;exigu|petit
+a|Beau|magnifique;superbe;splendide;ravissant;séduisant|beau
+a|Belle|magnifique;superbe;splendide;ravissante;séduisante|belle
+a|Laid|affreux;hideux;disgracieux;moche|laid
+a|Vieux|âgé;ancien;usé;vétuste;décrépit|vieux
+a|Jeune|juvénile;adolescent|jeune
+a|Sombre|obscur;ténébreux;noir;lugubre|sombre
+a|Froid|glacial;glacé;frais;gelé|froid
+a|Chaud|brûlant;torride;bouillant;étouffant|chaud
+a|Calme|serein;paisible;tranquille;posé;placide|calme
+a|Nerveux|agité;fébrile;tendu;anxieux;crispé|nerveux
+a|Inquiet|soucieux;préoccupé;anxieux;angoissé|inquiet
+a|Effrayé|apeuré;terrifié;épouvanté;terrorisé;affolé|effrayé
+a|Heureux|ravi;comblé;radieux;enchanté;aux anges|heureux
+a|Content|satisfait;ravi;réjoui|content
+a|Gêné|embarrassé;mal à l'aise;confus;troublé|gêné
+a|Fier|orgueilleux;hautain;altier|fier
+a|Seul|solitaire;isolé;esseulé|seul
+a|Vide|désert;dépeuplé;inoccupé;abandonné|vide
+a|Rapide|vif;prompt;fulgurant;véloce|rapide
+a|Lent|nonchalant;traînant;indolent|lent
+a|Fort|costaud;robuste;puissant;solide;baraqué|fort
+a|Faible|fragile;frêle;chancelant;épuisé|faible
+a|Sale|crasseux;poisseux;souillé;dégoûtant|sale
+a|Propre|net;impeccable;immaculé;nickel|propre
+a|Étrange|bizarre;curieux;insolite;singulier;déroutant|étrange,bizarre
+a|Pâle|blême;livide;blafard;cireux|pâle
+a|Ivre|soûl;éméché;pompette;bourré|ivre
+a|Malade|souffrant;fiévreux;mal en point|malade
+a|Blessé|meurtri;touché;amoché|blessé
+a|Mort|décédé;sans vie;inanimé|mort
+a|Furieux|enragé;furibond;fou de rage|furieux
+a|Gentil|aimable;doux;bienveillant;attentionné|gentil
+a|Méchant|cruel;malveillant;odieux;mauvais|méchant
+a|Intelligent|brillant;malin;futé;astucieux|intelligent
+a|Bête|idiot;stupide;sot;niais|bête
+a|Bruyant|tapageur;assourdissant;sonore|bruyant
+a|Énorme|gigantesque;colossal;monumental;démesuré|énorme
+a|Joli|mignon;charmant;gracieux|joli
+x|Enfin|finalement;au bout du compte;en fin de compte;pour finir|enfin
+x|D'abord|en premier;tout d'abord;pour commencer;avant tout|d'abord
+x|Parfois|quelquefois;de temps en temps;par moments;de temps à autre|parfois
+x|Souvent|fréquemment;régulièrement;maintes fois;bien des fois|souvent
+x|Toujours|sans cesse;constamment;en permanence;continuellement|toujours
+x|Jamais|à aucun moment;en aucun cas;nullement|jamais
+x|Presque|quasiment;pratiquement;à peu près;pour ainsi dire|presque
+x|Vraiment|réellement;véritablement;sincèrement;franchement|vraiment
+x|Beaucoup|énormément;considérablement;largement;pas mal|beaucoup
+x|Trop|excessivement;à l'excès;exagérément|trop
+x|Ensemble|côte à côte;de concert;main dans la main|ensemble
+x|Partout|en tout lieu;de tous côtés;aux quatre coins|partout
+x|Brusquement|sèchement;vivement;d'un geste vif;abruptement|brusquement
+x|Calmement|posément;tranquillement;sereinement;sans s'énerver|calmement
+x|Nerveusement|fébrilement;anxieusement;avec agitation|nerveusement
+x|Tristement|mélancoliquement;d'un air triste;le cœur lourd|tristement
+x|En silence|sans un mot;sans bruit;silencieusement|en silence
+x|À bout de souffle|essoufflé~a;haletant~a;hors d'haleine;le souffle court|essoufflé,à bout de souffle
+x|Les larmes aux yeux|les yeux embués;les yeux humides;au bord des larmes;les yeux rougis|larmes aux yeux
+x|Mal à l'aise|gêné~a;embarrassé~a;troublé~a;dans ses petits souliers|mal à l'aise
+x|Au même moment|au même instant;simultanément;pile à ce moment|au même moment
+x|Plus tard|par la suite;un peu après;quelques instants plus tard|plus tard
+x|Tout à coup|soudain;subitement;brusquement;sans crier gare|tout à coup
+`;
+/* Dictionnaire anglais : même format, types en majuscules (V verbe, N nom, A adjectif, X expression). Les verbes
+   et les noms anglais prennent la forme du mot cliqué (looked → glanced, rooms → chambers) : voir synEnForm. */
+const SYN_DB_EN = `
+V|Stare|stare>at;gaze>at;glare>at;peer>at;eye>d;fix>on|look,stare
+V|Look closely|examine>d;study>d;scrutinize>d;inspect>d;survey>d;observe>d|look,watch
+V|Quick look|glance>at;peek>at;peep>at;sneak a look>at;steal a glance>at;cast a glance>at|look
+V|Watch, spy|watch>d;observe>d;spy>on;keep an eye>on;monitor>d|watch
+V|Look away|look away>i;avert>d;turn away>i;glance away>i|look
+V|Turn|turn>i;spin around>i;whirl around>i;swivel>i;pivot>i;turn around>i|turn
+V|Sigh|sigh>i;exhale>i;let out a sigh>i;breathe out>i|sigh
+V|Walk slowly|stroll>i;amble>i;saunter>i;wander>i;meander>i;shuffle>i|walk
+V|Walk with purpose|stride>i;march>i;stalk>i;pace>i;storm>i|walk
+V|Walk quietly|tiptoe>i;creep>i;sneak>i;slip>i;pad>i|walk
+V|Run|run>i;dash>i;sprint>i;race>i;bolt>i;rush>i;hurry>i;scramble>i|run
+V|Go toward|head>toward;approach>d;move>toward;close in>on|go,walk,approach
+V|Enter|enter>d;come in>i;step in>i;walk in>i;burst in>i;barge in>i;slip in>i|enter
+V|Leave|leave>d;exit>d;depart>i;walk out>i;storm out>i;slip out>i;take off>i|leave,exit
+V|Smile|smile>at;grin>at;beam>at;smirk>at;crack a smile>i|smile
+V|Laugh|laugh>i;chuckle>i;giggle>i;snicker>i;burst out laughing>i;cackle>i;guffaw>i|laugh
+V|Cry|cry>i;weep>i;sob>i;well up>i;break down>i;burst into tears>i;whimper>i|cry
+V|Shout|shout>i;yell>i;scream>i;shriek>i;bellow>i;roar>i;holler>i|shout,yell,scream
+V|Tremble|tremble>i;shake>i;shiver>i;quiver>i;shudder>i;quake>i|tremble,shake
+V|Freeze|freeze>i;stiffen>i;go still>i;stop dead>i;stand frozen>i|freeze
+V|Say quietly|whisper>d;murmur>d;mutter>d;mumble>d;breathe>d|say,whisper
+V|Say loudly|announce>d;declare>d;exclaim>d;blurt out>d;call out>d|say
+V|Say|say>d;tell>d;state>d;add>d;remark>d;note>d|say
+V|Answer|answer>d;reply>d;respond>i;retort>d;fire back>i|answer,reply
+V|Nod|nod>i;agree>i;nod along>i;give a nod>i|nod
+V|Stand up|stand up>i;get up>i;rise>i;jump up>i;straighten up>i|stand,get up
+V|Sit down|sit down>i;take a seat>i;settle>i;slump>i;flop down>i;perch>i;collapse>i|sit
+V|Grab|grab>d;seize>d;snatch>d;grasp>d;clutch>d;grip>d|grab,take
+V|Touch|touch>d;brush>d;stroke>d;caress>d;tap>d;graze>d|touch
+V|Hold|hold>d;clutch>d;squeeze>d;cling>to;hug>d|hold
+V|Hit|hit>d;strike>d;punch>d;slap>d;smack>d;whack>d;pound>d|hit
+V|Throw|throw>d;toss>d;hurl>d;fling>d;chuck>d;lob>d|throw
+V|See|see>d;notice>d;spot>d;catch sight>of;glimpse>d;make out>d|see
+V|Hear|hear>d;catch>d;overhear>d;pick up>d|hear,listen
+V|Wait|wait>i;linger>i;hang back>i;hold on>i|wait
+V|Fall|fall>i;collapse>i;tumble>i;stumble>i;trip>i;topple>i;crumple>i|fall
+V|Talk|talk>to;speak>to;chat>with;converse>with;discuss>d|talk,speak
+V|Think|think>i;ponder>d;wonder>i;reflect>i;consider>d;muse>i|think
+V|Start|start>d;begin>d;launch>d;set about>d;get going>i|start,begin
+V|Seem|seem>i;appear>i;look>i|seem
+V|Stay|stay>i;remain>i;linger>i;stick around>i|stay
+V|Breathe|breathe>i;inhale>i;gasp>i;pant>i;draw breath>i|breathe
+V|Open|open>d;unlock>d;pull open>d;push open>d;fling open>d|open
+V|Close|close>d;shut>d;slam>d;lock>d;pull shut>d|close,shut
+V|Take|take>d;pick up>d;collect>d;fetch>d|take
+V|Put|put>d;place>d;set>d;lay>d;drop>d;rest>d|put
+V|Give|give>d;hand>d;pass>d;offer>d;slide>d|give
+V|Search|search>d;look for>d;hunt for>d;rummage>through;dig through>d;scour>d|search
+V|Find|find>d;discover>d;come across>d;stumble upon>d;dig up>d|find
+V|Show|show>d;point to>d;point at>d;indicate>d;reveal>d;display>d|show
+V|Arrive|arrive>i;show up>i;turn up>i;appear>i;pull up>i|arrive
+V|Return|return>i;come back>i;go back>i;head back>i;reappear>i|return
+V|Flee|flee>i;run away>i;escape>i;bolt>i;take off>i;make a run for it>i|flee
+V|Hide|hide>i;duck>i;crouch>i;take cover>i|hide
+V|Try|try>to;attempt>to;struggle>to;strive>to|try
+V|Help|help>d;assist>d;support>d;aid>d;give a hand>i|help
+V|Call|call>d;call out>to;shout for>d;summon>d;hail>d|call
+V|Push|push>d;shove>d;nudge>d;press>d;thrust>d|push
+V|Pull|pull>d;drag>d;tug>d;yank>d;haul>d|pull
+V|Kiss, hug|kiss>d;embrace>d;hug>d;hold close>d|kiss,hug
+V|Understand|understand>d;realize>d;get>d;grasp>d;figure out>d|understand,realize
+V|Remember|remember>d;recall>d;recollect>d;think back>i|remember
+V|Forget|forget>d;overlook>d;lose track>of|forget
+V|Want|want>d;wish>for;crave>d;long>for;desire>d|want
+V|Love|love>d;adore>d;cherish>d;treasure>d|love
+V|Hate|hate>d;loathe>d;despise>d;detest>d|hate
+V|Hesitate|hesitate>i;pause>i;falter>i;waver>i;hang back>i|hesitate
+V|Refuse|refuse>d;decline>d;reject>d;turn down>d|refuse
+V|Stop|stop>i;halt>i;pause>i;freeze>i;come to a stop>i|stop
+V|Continue|continue>d;keep going>i;carry on>i;go on>i;press on>i|continue
+V|Finish|finish>d;end>d;complete>d;wrap up>d|finish
+V|Eat|eat>d;devour>d;wolf down>d;munch>d;nibble>d;gobble>d|eat
+V|Drink|drink>d;sip>d;gulp>d;swig>d;knock back>d|drink
+V|Sleep|sleep>i;doze>i;nap>i;snooze>i;drift off>i|sleep
+V|Wake up|wake up>i;stir>i;come to>i;awaken>i|wake
+V|Write|write>d;scribble>d;jot down>d;note>d;scrawl>d|write
+V|Read|read>d;scan>d;skim>d;pore over>d;browse>d|read
+V|Fight|fight>d;struggle>i;wrestle>d;brawl>i;scuffle>i|fight
+V|Kill|kill>d;murder>d;slay>d;take out>d;finish off>d|kill
+V|Die|die>i;pass away>i;perish>i;expire>i;slip away>i|die
+V|Drive|drive>d;steer>d;speed>i;cruise>i;pull away>i|drive
+V|Climb|climb>d;scale>d;clamber>up;scramble>up;ascend>d|climb
+V|Shine|shine>i;glow>i;gleam>i;glint>i;sparkle>i;glitter>i;shimmer>i|shine
+V|Break|break>d;smash>d;shatter>d;crack>d;snap>d|break
+V|Groan|groan>i;moan>i;whimper>i;grunt>i;wince>i|groan,moan
+V|Blush|blush>i;flush>i;redden>i;turn red>i|blush
+V|Swallow|swallow>i;gulp>i;swallow hard>i|swallow
+V|Back away|back away>i;step back>i;retreat>i;recoil>i;shrink back>i|back away,retreat
+V|Lean|lean>toward;bend>down;stoop>i;crouch>i;hunch>over|lean,bend
+V|Ask|ask>d;inquire>i;question>d;demand>d|ask
+V|Explain|explain>d;clarify>d;describe>d;spell out>d|explain
+V|Lie|lie>i;bluff>i;make up>d;fib>i|lie
+V|Admit|admit>d;confess>d;acknowledge>d;own up>i|admit
+V|Threaten|threaten>d;intimidate>d;menace>d;warn>d|threaten
+V|Comfort|comfort>d;reassure>d;soothe>d;console>d;calm>d|comfort,reassure
+V|Calm down|calm down>i;relax>i;settle down>i;cool off>i|calm
+V|Get angry|snap>i;blow up>i;fly off the handle>i;fume>i;see red>i|angry
+V|Shrug|shrug>i;pout>i;smirk>i|shrug
+V|Frown|frown>i;scowl>i;squint>i;grimace>i|frown
+V|Blink|blink>i;wink>i;blink rapidly>i|blink
+V|Sneak|sneak>i;slip>i;slink>i;creep>i;edge>toward|sneak
+N|The eyes|gaze;stare;glance;look|eyes,eye
+N|The gaze|look;stare;glance;glare;eyes|gaze
+N|The face|features;expression;countenance;visage|face
+N|Silence|quiet;hush;stillness;calm|silence
+N|A loud noise|racket;din;clamor;uproar;commotion;crash;bang|noise
+N|A faint sound|murmur;rustle;whisper;hum;creak;click|sound
+N|The voice|tone;timbre;pitch|voice
+N|A moment|instant;second;minute;beat|moment
+N|Fear|terror;dread;panic;fright;horror;anxiety|fear
+N|Anger|rage;fury;wrath;irritation|anger
+N|Sadness|sorrow;grief;gloom;despair;melancholy|sadness
+N|Light|glow;gleam;glare;radiance;beam|light
+N|Darkness|shadow;gloom;dark;dimness|darkness,shadow
+N|The house|home;place;residence;building|house
+N|The room|chamber;space;quarters|room
+N|The street|road;avenue;alley;lane;boulevard|street
+N|The car|vehicle;ride;auto|car
+N|The man|guy;fellow;gentleman;stranger|man
+N|The woman|lady;girl;stranger|woman
+N|The child|kid;boy;girl;youngster;toddler|child,kid
+N|The night|evening;dark;nighttime|night
+N|The morning|dawn;daybreak;sunrise|morning
+N|The door|doorway;entrance;exit|door
+N|The window|pane;glass|window
+N|The hand|fist;palm;fingers|hand
+N|Tears|sobs;weeping|tears
+N|A scream|cry;shriek;yell;shout;howl|scream
+N|A blow|hit;punch;slap;strike;knock|blow
+N|A smile|grin;smirk;beam|smile
+N|The city|town;metropolis|city
+N|The path|trail;track;way;road|path
+N|Money|cash;dough;funds|money
+N|The job|work;gig;task|job
+N|The friend|pal;buddy;mate;companion|friend
+N|A problem|issue;trouble;snag;hitch|problem
+N|Joy|happiness;delight;glee;bliss|joy
+N|Shame|embarrassment;humiliation|shame
+N|Surprise|astonishment;amazement;shock|surprise
+N|The gun|pistol;revolver;weapon;handgun|gun
+N|The phone|cell;cellphone;mobile|phone
+N|The rain|downpour;drizzle;shower|rain
+N|The wind|breeze;gust;draft|wind
+A|Surprised|astonished;amazed;stunned;startled;taken aback;dumbfounded|surprised
+A|Tired|exhausted;weary;worn out;drained;spent|tired
+A|Sad|unhappy;gloomy;glum;downcast;miserable;heartbroken|sad
+A|Quiet|silent;hushed;mute;still;wordless|quiet,silent
+A|Angry|furious;livid;irate;enraged;mad;fuming|angry
+A|Scared|afraid;frightened;terrified;petrified;spooked|scared,afraid
+A|Nervous|anxious;tense;jittery;edgy;on edge;uneasy|nervous
+A|Worried|concerned;troubled;uneasy;anxious|worried
+A|Happy|glad;cheerful;delighted;thrilled;elated;overjoyed|happy
+A|Calm|serene;peaceful;composed;collected;relaxed|calm
+A|Big|huge;enormous;massive;giant;vast;towering|big,large
+A|Small|tiny;little;minuscule;slight;compact|small,little
+A|Beautiful|gorgeous;stunning;lovely;striking;pretty|beautiful,pretty
+A|Ugly|hideous;grotesque;unsightly|ugly
+A|Old|elderly;aged;ancient;worn;battered|old
+A|Young|youthful;juvenile|young
+A|Dark|dim;gloomy;shadowy;murky;pitch-black|dark
+A|Cold|freezing;icy;chilly;frigid|cold
+A|Hot|scorching;sweltering;boiling;stifling|hot
+A|Strange|odd;weird;bizarre;peculiar;eerie;uncanny|strange,weird
+A|Pale|ashen;pallid;wan;white as a sheet|pale
+A|Drunk|tipsy;wasted;hammered;intoxicated|drunk
+A|Embarrassed|awkward;sheepish;flustered;self-conscious|embarrassed
+A|Alone|lonely;solitary;isolated|alone
+A|Empty|deserted;bare;vacant;abandoned|empty
+A|Fast|quick;swift;rapid;speedy|fast,quick
+A|Slow|sluggish;unhurried;leisurely|slow
+A|Strong|powerful;sturdy;muscular;burly|strong
+A|Weak|frail;feeble;fragile;shaky|weak
+A|Dirty|filthy;grimy;grubby;muddy|dirty
+A|Clean|spotless;immaculate;neat;tidy|clean
+A|Loud|noisy;deafening;booming;thunderous|loud
+A|Kind|gentle;caring;warm;considerate|kind
+A|Mean|cruel;nasty;vicious;spiteful|mean,cruel
+A|Smart|clever;bright;sharp;brilliant|smart,clever
+A|Stupid|dumb;foolish;idiotic;dense|stupid
+A|Dead|lifeless;deceased;gone|dead
+A|Hurt|injured;wounded;bruised;battered|hurt,injured
+X|Suddenly|all of a sudden;abruptly;without warning;in a flash;out of nowhere|suddenly
+X|Slowly|gradually;leisurely;unhurriedly;at a crawl|slowly
+X|Quickly|fast;rapidly;swiftly;hastily;in a hurry|quickly
+X|Quietly|silently;softly;without a sound;in a whisper|quietly
+X|Gently|softly;tenderly;delicately;carefully|gently
+X|Then|next;after that;afterward;a moment later|then
+X|Very|extremely;really;incredibly;deeply;terribly|very
+X|A little|slightly;a bit;somewhat;barely|a little,slightly
+X|Again|once more;once again;anew|again
+X|Maybe|perhaps;possibly;probably|maybe,perhaps
+X|Immediately|at once;instantly;right away;straight away|immediately
+X|Finally|at last;eventually;in the end|finally
+X|Often|frequently;regularly;repeatedly|often
+X|Always|constantly;forever;all the time|always
+X|Never|not once;at no time;not ever|never
+X|Almost|nearly;practically;all but|almost
+X|Really|truly;genuinely;honestly|really
+X|Nervously|anxiously;uneasily;tensely|nervously
+X|Angrily|furiously;heatedly;bitterly|angrily
+X|Sadly|sorrowfully;glumly;wistfully|sadly
+X|Out of breath|breathless;panting;gasping;winded|out of breath,breathless
+X|Later|afterward;eventually;subsequently|later
+X|Together|side by side;as one;jointly|together
+X|Everywhere|all over;far and wide;all around|everywhere
+X|Carefully|cautiously;gingerly;warily|carefully
 `;
 const SYN = { groups:null, open:false, tab:'alt', last:null, query:'', items:[], timer:null, repMode:'words', repMin:3, repOpen:null, repData:null, repTimer:null };
 const SYN_ER = ['e','es','ent','ons','ez','ait','aient','ais','ant','é','ée','és','ées','a','èrent','er','era','erait','erai','eras','eront'];
 function synEsc(s){ return String(s).replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
 function synParse(){
   if(SYN.groups) return SYN.groups;
-  SYN.groups = SYN_DB_TEXT.trim().split('\n').map(line=>{
+  SYN.groups = (SYN_DB_TEXT.trim() + '\n' + SYN_DB_EN.trim()).split('\n').map(line=>{
     const p = line.split('|');
     const t = p[0], nuance = p[1], alts = (p[2]||'').split(';').filter(Boolean), heads = (p[3]||'').split(',').filter(Boolean);
+    const en = /^[VNAX]$/.test(t);   // groupes anglais : V verbe, N nom, A adjectif, X expression
     const items = alts.map(a=>{
-      if(t==='v'){ const m=a.split('>'); return {text:m[0], cons:m[1]||'d', lemma:m[0]}; }
+      if(t==='v' || t==='V'){ const m=a.split('>'); return {text:m[0], cons:m[1]||'d', lemma:m[0]}; }
+      if(en) return {text:a, lemma:a};
       if(t==='n'){ const q=a.split(':'), w=q[0].split('~'); return {text:w[0], tag:w[1]||'', pl:q[1]||'', lemma:w[0]}; }
       const w=a.split('~'); return {text:w[0], adj:w[1]==='a', lemma:w[0]};
     });
@@ -112,7 +498,7 @@ function synParse(){
     heads.forEach(h=>h.split(':').forEach(k=>keys.push({k:k.replace(/^\^/,'').toLowerCase(), head:true})));
     if(!heads.length && items[0]) keys.push({k:items[0].lemma.toLowerCase(), head:true});
     items.forEach(i=>{ if(i.lemma.indexOf('{')<0) keys.push({k:i.lemma.toLowerCase(), head:false}); });
-    return {t, nuance, items, keys};
+    return {t, nuance, items, keys, en};
   });
   return SYN.groups;
 }
@@ -132,6 +518,7 @@ function synApplyCase(src, txt){
 }
 /* Construit la forme à insérer pour une alternative, d'après le mot cliqué. */
 function synForm(g, it, word, key){
+  if(g.en) return synEnForm(g, it, word, key);
   let t = it.text.replace(/\{p[sf]?\}/g, m=> m==='{pf}'?'sa':'son');
   if(g.t==='v'){
     if(key && key.length>=6 && /er$/.test(key) && !/^(se |s')/.test(it.text)){
@@ -160,20 +547,110 @@ function synForm(g, it, word, key){
   }
   return {txt:t, ok:true};
 }
+/* ---- Anglais : formes des verbes (s, -ed, -ing, participe) et pluriel des noms ----
+   On reconnaît « whispered », « looking », « ran »… et l'alternative prend la même forme. */
+const SYN_EN_IRR = {
+  be:['was','been','being','is'], have:['had','had','having','has'], do:['did','done','doing','does'], go:['went','gone','going','goes'],
+  come:['came','come'], see:['saw','seen'], run:['ran','run'], sit:['sat','sat'], stand:['stood','stood'], take:['took','taken'],
+  give:['gave','given'], get:['got','gotten'], make:['made','made'], say:['said','said'], tell:['told','told'], think:['thought','thought'],
+  know:['knew','known'], feel:['felt','felt'], find:['found','found'], leave:['left','left'], hold:['held','held'], bring:['brought','brought'],
+  keep:['kept','kept'], fall:['fell','fallen'], throw:['threw','thrown'], hear:['heard','heard'], speak:['spoke','spoken'], break:['broke','broken'],
+  catch:['caught','caught'], shake:['shook','shaken'], rise:['rose','risen'], wake:['woke','woken'], hide:['hid','hidden'], strike:['struck','struck'],
+  swing:['swung','swung'], slide:['slid','slid'], spin:['spun','spun'], stride:['strode','stridden'], creep:['crept','crept'], sweep:['swept','swept'],
+  weep:['wept','wept'], sleep:['slept','slept'], freeze:['froze','frozen'], begin:['began','begun','beginning'], drink:['drank','drunk'], eat:['ate','eaten'],
+  write:['wrote','written'], read:['read','read'], shoot:['shot','shot'], fight:['fought','fought'], fly:['flew','flown'], drive:['drove','driven'],
+  ride:['rode','ridden'], cling:['clung','clung'], fling:['flung','flung'], stick:['stuck','stuck'], dig:['dug','dug'], tear:['tore','torn'],
+  wear:['wore','worn'], bite:['bit','bitten'], blow:['blew','blown'], draw:['drew','drawn'], grow:['grew','grown'], burst:['burst','burst'],
+  cast:['cast','cast'], cut:['cut','cut'], hit:['hit','hit'], hurt:['hurt','hurt'], let:['let','let'], put:['put','put'], quit:['quit','quit','quitting'],
+  set:['set','set'], shut:['shut','shut'], spread:['spread','spread'], thrust:['thrust','thrust'], bend:['bent','bent'], lay:['laid','laid'],
+  seek:['sought','sought'], slay:['slew','slain'], sling:['slung','slung'], slink:['slunk','slunk'], shine:['shone','shone'], forget:['forgot','forgotten','forgetting'],
+  understand:['understood','understood'], mean:['meant','meant'], lose:['lost','lost'], buy:['bought','bought'], send:['sent','sent'], spend:['spent','spent'],
+  stink:['stank','stunk'], swim:['swam','swum'], sing:['sang','sung'], ring:['rang','rung'], sink:['sank','sunk'], steal:['stole','stolen'],
+  admit:['admitted','admitted','admitting'], overhear:['overheard','overheard'], overlook:['overlooked','overlooked'], become:['became','become'],
+  awaken:['awakened','awakened'], lie:['lied','lied','lying'], die:['died','died','dying'], speed:['sped','sped'],
+  hang:['hung','hung'], flee:['fled','fled'], shrink:['shrank','shrunk'], strive:['strove','striven'], sneak:['snuck','snuck']
+};
+function synEnVerb(v, form){
+  if(form === 'base') return v;
+  const irr = SYN_EN_IRR[v];
+  if(form === 'ed' && irr) return irr[0];
+  if(form === 'pp') return irr ? irr[1] : synEnVerb(v, 'ed');
+  if(form === 'ing' && irr && irr[2]) return irr[2];
+  if(form === 's' && irr && irr[3]) return irr[3];
+  const cvc = /^[^aeiou]*[aeiou][^aeiouwxy]$/.test(v) && !/^(ex|fix|mix)$/.test(v);   // nod → nodded, grin → grinning
+  if(form === 's'){
+    if(/(s|x|z|ch|sh|o)$/.test(v)) return v + 'es';
+    if(/[^aeiou]y$/.test(v)) return v.slice(0, -1) + 'ies';
+    return v + 's';
+  }
+  if(form === 'ing'){
+    if(/ie$/.test(v)) return v.slice(0, -2) + 'ying';
+    if(/(ee|ye|oe)$/.test(v)) return v + 'ing';
+    if(/e$/.test(v)) return v.slice(0, -1) + 'ing';
+    if(cvc) return v + v.slice(-1) + 'ing';
+    return v + 'ing';
+  }
+  if(/e$/.test(v)) return v + 'd';
+  if(/[^aeiou]y$/.test(v)) return v.slice(0, -1) + 'ied';
+  if(cvc) return v + v.slice(-1) + 'ed';
+  return v + 'ed';
+}
+/* Une expression verbale : seul le premier mot se conjugue (« look away » → « looked away »). */
+function synEnPhrase(p, form){ const i = p.indexOf(' '); return i < 0 ? synEnVerb(p, form) : synEnVerb(p.slice(0, i), form) + p.slice(i); }
+const SYN_EN_PL = { man:'men', woman:'women', child:'children', gentleman:'gentlemen', foot:'feet', tooth:'teeth', person:'people', mouse:'mice' };
+function synEnPlural(n){
+  if(SYN_EN_PL[n]) return SYN_EN_PL[n];
+  if(/(s|x|z|ch|sh)$/.test(n)) return n + 'es';
+  if(/[^aeiou]y$/.test(n)) return n.slice(0, -1) + 'ies';
+  return n + 's';
+}
+/* Forme d'un mot anglais par rapport à sa tête : base, s, ed, pp, ing (verbes) ; sg, pl (noms) ; null si aucun rapport. */
+function synEnWordForm(g, key, w){
+  if(w === key) return g.t === 'N' ? 'sg' : 'base';
+  if(key.indexOf(' ') >= 0){
+    if(g.t === 'V') for(const f of ['ed', 'pp', 'ing', 's']) if(synEnPhrase(key, f) === w) return f;
+    return null;
+  }
+  if(g.t === 'V'){
+    for(const f of ['ed', 'pp', 'ing', 's']) if(synEnVerb(key, f) === w) return f;
+    return null;
+  }
+  if(g.t === 'N') return synEnPlural(key) === w ? 'pl' : null;
+  return null;
+}
+function synEnWord(g, key, w){ return synEnWordForm(g, key, w) !== null; }
+/* Expression verbale trouvée dans le texte sélectionné, sous n'importe quelle forme (« stood up » pour « stand up »). */
+function synEnPhraseIn(g, key, q){
+  if(q.indexOf(key) >= 0) return key;
+  if(g.t === 'V') for(const f of ['ed', 'pp', 'ing', 's']){ const p = synEnPhrase(key, f); if(q.indexOf(p) >= 0) return p; }
+  return null;
+}
+function synEnMatch(g, key, q, toks){
+  if(key.indexOf(' ') >= 0){ const p = synEnPhraseIn(g, key, q); return p ? q.split(p).length - 1 : 0; }
+  let n = 0; for(const w of toks) if(synEnWord(g, key, w)) n++; return n;
+}
+function synEnForm(g, it, word, key){
+  const f = (key && word) ? synEnWordForm(g, key, String(word).toLowerCase()) : null;
+  if(g.t === 'V') return { txt: synEnPhrase(it.text, f || 'base'), ok:true };
+  if(g.t === 'N') return { txt: (f === 'pl' && !/s$/.test(it.text)) ? synEnPlural(it.text) : it.text, ok:true };
+  return { txt: it.text, ok:true };
+}
 function synLookup(q){
   const ql = q.toLowerCase().trim(), toks = synTokens(ql), out = [];
   if(!toks.length) return out;
+  const lang = (S.project && S.project.format === 'us') ? 'en' : 'fr';   // à égalité, la langue du scénario passe devant
   synParse().forEach(g=>{
     let best = null;
+    const match = g.en ? (k=>synEnMatch(g, k, ql, toks)) : (k=>synMatch(k, ql, toks));
     g.keys.forEach(kk=>{
-      if(synMatch(kk.k, ql, toks)){ if(!best || (kk.head && !best.head) || (kk.k.length>best.k.length && kk.head===best.head)) best = kk; }
+      if(match(kk.k)){ if(!best || (kk.head && !best.head) || (kk.k.length>best.k.length && kk.head===best.head)) best = kk; }
     });
     if(!best) return;
-    const w = best.k.indexOf(' ')>=0 ? best.k : (toks.find(x=>synWordMatch(best.k,x))||toks[0]);
+    const w = best.k.indexOf(' ')>=0 ? (g.en ? (synEnPhraseIn(g, best.k, ql) || best.k) : best.k) : (toks.find(x=> g.en ? synEnWord(g, best.k, x) : synWordMatch(best.k,x))||toks[0]);
     const list = g.items.filter(i=> i.lemma.toLowerCase()!==best.k && i.lemma.toLowerCase()!==ql).map(i=>{
       const f = synForm(g, i, w, best.k); return {g, it:i, txt:f.txt, ok:f.ok};
     });
-    if(list.length) out.push({g, score:(best.head?2:1)+(best.k.indexOf(' ')>=0?1:0), list});
+    if(list.length) out.push({g, score:(best.head?2:1)+(best.k.indexOf(' ')>=0?1:0)+((g.en ? 'en' : 'fr') === lang ? 0.5 : 0), list});
   });
   return out.sort((a,b)=>b.score-a.score).slice(0,8);
 }
@@ -265,7 +742,7 @@ function synCss(){
   document.head.appendChild(st);
 }
 function synChip(i, r){
-  const cons = (r.g.t==='v' && r.it.cons && r.it.cons!=='d' && r.it.cons!=='i') ? ' '+r.it.cons : '';
+  const cons = ((r.g.t==='v' || r.g.t==='V') && r.it.cons && r.it.cons!=='d' && r.it.cons!=='i') ? ' '+r.it.cons : '';
   const tag = r.g.t==='n' ? (r.it.tag?'<small>'+synEsc(r.it.tag.replace('nm','m.').replace('nf','f.').replace(/p$/,' pl.'))+'</small>':'') : '';
   return `<button class="sy-chip${r.ok?'':' inf'}" data-i="${i}" title="${r.ok?L('Remplacer dans le texte','Replace in the text'):L('Insère l’infinitif : à conjuguer','Inserts the infinitive: to be conjugated')}">${synEsc(r.txt)}${cons?'<small>'+synEsc(cons.trim())+'</small>':''}${tag}</button>`;
 }
