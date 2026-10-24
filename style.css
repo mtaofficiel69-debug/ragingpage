@@ -2587,40 +2587,23 @@ html[data-theme="dark"] .pgi-hover{color:#7CC4EE;}
 html[data-theme="dark"] .lay-type{color:#7CC4EE;}
 @media (prefers-reduced-motion:reduce){ .lay-diag-b{transition:none;} }
 
-/* ---------- ACCUEIL : « Reprendre » et « Note de production » (js/05-home-series.js) ----------
-   Posés dans des espaces vides (à droite du titre, dans la colonne de gauche) : rien d'autre ne bouge. */
-#homeView .wd-resume{margin-left:auto; align-self:center; display:inline-flex; align-items:center; gap:10px; height:34px; margin-top:-2px; margin-bottom:-2px; max-width:min(440px, 60%); padding:0 12px 0 6px;
-  border:1px solid var(--hair); border-radius:10px; background:var(--surface); color:var(--ink); cursor:pointer; font-family:var(--sans); text-align:left;
-  box-shadow:0 1px 2px #0000000d; transition:border-color .12s, box-shadow .12s, transform .12s;}
-#homeView .wd-resume:hover{border-color:var(--accent); box-shadow:0 6px 18px -10px #1F6FA066;}
-#homeView .wd-resume:active{transform:translateY(1px);}
-/* Petit clap : les bandes du clap de l'accueil, en miniature. */
-#homeView .wd-resume-clap{flex:none; position:relative; width:28px; height:24px; border-radius:5px; background:var(--accent-2); overflow:hidden;}
-#homeView .wd-resume-clap::before{content:""; position:absolute; left:0; right:0; top:0; height:9px; background:repeating-linear-gradient(-55deg, #fff 0 4px, var(--accent-2) 4px 8px); transform-origin:0 100%; transition:transform .18s ease;}
-#homeView .wd-resume-clap::after{content:""; position:absolute; left:5px; right:5px; top:14px; height:2px; border-radius:1px; background:#ffffff99; box-shadow:0 5px 0 #ffffff66;}
-#homeView .wd-resume:hover .wd-resume-clap::before{transform:rotate(-14deg);}
-#homeView .wd-resume-t{display:flex; flex-direction:column; min-width:0; line-height:1.15;}
-#homeView .wd-resume-t small{font-size:10.5px; font-weight:700; text-transform:uppercase; letter-spacing:.08em; color:var(--accent-2);}
-#homeView .wd-resume-t b{font-family:var(--script-font,var(--mono)); font-size:13.5px; font-weight:700; text-transform:uppercase; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
-#homeView .wd-resume-when{flex:none; font-size:12px; color:var(--ink-soft); white-space:nowrap;}
-#homeView .wd-resume-go{flex:none; width:15px; height:15px; color:var(--accent-2); transition:transform .12s;}
-#homeView .wd-resume:hover .wd-resume-go{transform:translateX(2px);}
-html[data-theme="dark"] #homeView .wd-resume-t small, html[data-theme="dark"] #homeView .wd-resume-go{color:#7CC4EE;}
-/* Note de production : une page de scénario annotée, en marge de la colonne. */
-#homeView .wd-tip{position:relative; margin:12px 4px 0; padding:10px 12px 8px 15px; border:1px solid var(--hair); border-radius:8px; background:var(--paper); color:var(--paper-ink);
-  box-shadow:0 1px 2px #0000000d, 0 10px 24px -18px #00000055;}
-#homeView .wd-tip::before{content:""; position:absolute; left:0; top:10px; bottom:10px; width:3px; border-radius:0 3px 3px 0; background:var(--accent);}
-#homeView .wd-tip-h{display:flex; align-items:center; justify-content:space-between; margin-bottom:6px;}
-#homeView .wd-tip-k{font-family:var(--script-font,var(--mono)); font-size:10.5px; font-weight:700; letter-spacing:.06em; color:var(--accent-2);}
-#homeView .wd-tip-n{font-family:var(--script-font,var(--mono)); font-size:10.5px; color:var(--paper-ink-soft); font-variant-numeric:tabular-nums;}
-#homeView .wd-tip-t{display:block; font-size:13.5px; font-weight:600; color:var(--paper-ink); margin-bottom:3px;}
-#homeView .wd-tip-p{margin:0; font-size:12.5px; line-height:1.5; color:var(--paper-ink-soft);}
-#homeView .wd-tip-nav{display:inline-flex; align-items:center; gap:3px;}
+/* ---------- ACCUEIL : « Reprendre » et l'astuce du jour (js/05-home-series.js) ----------
+   Dans le ton de l'accueil : pas de cadre, mêmes polices et couleurs que les liens de la colonne.
+   Posés dans des espaces vides (à droite du titre, sous les liens de la colonne) : rien d'autre ne bouge. */
+#homeView .wd-resume{margin-left:auto; align-self:center; display:inline-flex; align-items:center; gap:7px; max-width:min(380px, 55%); height:30px; margin-top:-2px; margin-bottom:-2px; padding:0 10px;
+  border:0; border-radius:6px; background:transparent; color:var(--ink-soft); cursor:pointer; font-family:var(--sans); font-size:14px; transition:background .12s, color .12s;}
+#homeView .wd-resume:hover{background:var(--overlay-hover); color:var(--ink);}
+#homeView .wd-resume-l{flex:none;}
+#homeView .wd-resume-t{min-width:0; font-weight:600; color:var(--ink); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+#homeView .wd-resume .icon{flex:none; width:15px; height:15px; color:var(--accent); transition:transform .12s;}
+#homeView .wd-resume:hover .icon{transform:translateX(2px);}
+#homeView .wd-tip{margin-top:4px; align-items:flex-start;}
+#homeView .wd-tip > .icon:first-child{margin-top:1px;}
+#homeView .wd-tip > span{flex:1; min-width:0;}
+#homeView .wd-tip em{font-style:normal; font-size:11.5px; font-weight:500; color:var(--ink-soft); margin-left:4px; font-variant-numeric:tabular-nums;}
+#homeView .wd-tip small{line-height:1.45;}
+#homeView .wd-tip .wd-tip-go{flex:none; align-self:center; width:14px; height:14px; color:var(--ink-soft); opacity:0; transition:opacity .12s, transform .12s;}
+#homeView .wd-tip:hover .wd-tip-go, #homeView .wd-tip:focus-visible .wd-tip-go{opacity:1; transform:translateX(2px);}
 #homeView .wd-tip.is-off{display:none;}
-html[data-theme="dark"] #homeView .wd-tip{background:var(--surface); color:var(--ink);}
-html[data-theme="dark"] #homeView .wd-tip-t{color:var(--ink);} html[data-theme="dark"] #homeView .wd-tip-p, html[data-theme="dark"] #homeView .wd-tip-n, html[data-theme="dark"] #homeView .wd-tip-b{color:var(--ink-soft);} html[data-theme="dark"] #homeView .wd-tip-k{color:#7CC4EE;}
-#homeView .wd-tip-b{width:22px; height:20px; padding:0; border:1px solid var(--hair); border-radius:6px; background:transparent; color:var(--paper-ink-soft); font-size:15px; line-height:1; cursor:pointer;}
-#homeView .wd-tip-b:hover{border-color:var(--accent); color:var(--accent-2); background:#3699D414;}
-@media (max-width:900px){ #homeView .wd-tip{display:none;} #homeView .wd-resume-when{display:none;} }
-@media (max-height:760px){ #homeView .wd-tip{display:none;} }
-@media (prefers-reduced-motion:reduce){ #homeView .wd-resume-clap::before, #homeView .wd-resume-go, #homeView .wd-resume{transition:none;} }
+@media (max-width:900px){ #homeView .wd-tip{display:none;} }
+@media (prefers-reduced-motion:reduce){ #homeView .wd-resume, #homeView .wd-resume .icon, #homeView .wd-tip-go{transition:none;} }
