@@ -149,6 +149,7 @@ function renderHome(){
         <button class="btn wd-nav" data-act="openHelp">${icon('read')}<span>${L('Comment faire','How it works')}</span></button>
         <input type="file" id="importFile" accept=".txt,.fountain,.fdx,.pdf,.smmproj,.json" class="hidden">
         </div>
+        ${homeTipHtml()}
         <div class="wd-about">
           <b>${mmWordmark()}</b>
           <p class="wd-tag">${L('L\u2019écriture de scénario, gratuite et sans compte.','Screenwriting, free and without an account.')}</p>
@@ -162,12 +163,64 @@ function renderHome(){
         </div>
       </aside>
       <main class="wd-main">
-        <div class="wd-main-h"><h1>${L('Mes scénarios','My screenplays')}</h1>${nb ? `<span class="wd-count">${nb}</span>` : ''}</div>
+        <div class="wd-main-h"><h1>${L('Mes scénarios','My screenplays')}</h1>${nb ? `<span class="wd-count">${nb}</span>` : ''}${homeResumeHtml()}</div>
         <div class="wd-table">${list}<div class="wd-slug" aria-hidden="true"><span class="wd-slug-n">1</span><span class="wd-slug-t"></span><span class="wd-slug-c"></span><span class="wd-slug-n wd-slug-r">1</span></div></div>
       </main>
     </div>
   </div>`;
 }
+/* Accueil — « Reprendre » : le dernier scénario modifié, en un clic, à côté du titre (sans rien décaler). */
+function homeResumeHtml(){
+  const last = (S.projectsIndex || []).filter(p => p && p.id).slice().sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0))[0];
+  if(!last) return '';
+  const name = last.seriesId && last.episode ? (last.seriesName || last.title) + ' · ' + L('ép. ','ep. ') + last.episode : last.title;
+  return `<button type="button" class="wd-resume" data-act="openProject" data-id="${esc(last.id)}" title="${L('Rouvrir le dernier scénario modifié','Reopen the last screenplay you edited')}">
+    <span class="wd-resume-clap" aria-hidden="true"></span>
+    <span class="wd-resume-t"><small>${L('Reprendre','Resume')}</small><b>${esc(name || L('Sans titre','Untitled'))}</b></span>
+    <span class="wd-resume-when">${timeAgo(last.updatedAt || Date.now())}</span>
+    <svg class="icon wd-resume-go" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h9M8.5 4.5 12 8l-3.5 3.5"/></svg></button>`;
+}
+/* Accueil — « Note de production » : une astuce utile par jour (et les suivantes au clic), dans la colonne de gauche. */
+const HOME_TIPS = [
+  ['Images sur les pages', 'Glisse une photo sur une page du scénario, ou colle-la avec Ctrl+V : elle se pose sans déplacer une seule ligne de texte.', 'Images on pages', 'Drop a photo on a page of the script, or paste it with Ctrl+V: it sits there without moving a single line of text.'],
+  ['Palette de commandes', 'Dans l’éditeur, Ctrl+K (⌘K sur Mac) : tape ce que tu cherches, une scène ou une commande, et Entrée.', 'Command palette', 'In the editor, Ctrl+K (⌘K on Mac): type what you are looking for, a scene or a command, then Enter.'],
+  ['Cartons', '« + Carton » pose un titre, une citation ou un intertitre où tu veux. Les modèles du panneau de droite le mettent en forme en un clic.', 'Title cards', '“+ Card” places a title, a quote or a divider anywhere. The templates in the right panel style it in one click.'],
+  ['Pages sans numéro', 'Dédicace, citation, page blanche : menu ⋮ › Page sans numéro. Les pages du scénario gardent leur numéro.', 'Unnumbered pages', 'Dedication, quote, blank page: menu ⋮ › Unnumbered page. The script pages keep their numbers.'],
+  ['Dialogue simultané', 'Deux personnages qui parlent en même temps : Ctrl+Maj+D sur la réplique, et les voilà côte à côte.', 'Simultaneous dialogue', 'Two characters talking at once: Ctrl+Shift+D on the line, and they sit side by side.'],
+  ['Révisions colorées', 'Ctrl+Alt+R : chaque nouvelle version de tes pages prend sa couleur, avec les astérisques en marge, comme sur un tournage.', 'Colour revisions', 'Ctrl+Alt+R: each new version of your pages gets its colour, with asterisks in the margin, just like on set.'],
+  ['Sides pour un acteur', 'Exporter › Sides pour un acteur : un PDF avec seulement ses scènes, ses répliques surlignées.', 'Actor sides', 'Export › Actor sides: a PDF with only their scenes, their lines highlighted.'],
+  ['Rechercher / remplacer', 'Ctrl+H : renomme un lieu ou un objet dans tout le scénario d’un coup.', 'Find / replace', 'Ctrl+H: rename a place or a prop across the whole script in one go.'],
+  ['Synonymes', 'Ctrl+Maj+Y sur un mot : une liste de synonymes, pour ne pas répéter trois fois « regarde ».', 'Synonyms', 'Ctrl+Shift+Y on a word: a list of synonyms, so you don’t write “looks” three times.'],
+  ['Commentaires', 'Ctrl+Maj+M : une note sur la ligne, qui ne sort jamais à l’impression ni dans le PDF.', 'Comments', 'Ctrl+Shift+M: a note on the line, never printed and never in the PDF.'],
+  ['Sauvegarde complète', 'Exporter › Sauvegarde complète (.smmproj) : tout le projet dans un fichier, à garder hors du navigateur.', 'Full backup', 'Export › Full backup (.smmproj): the whole project in one file, to keep outside the browser.'],
+  ['Mode focus', 'Menu ⋮ › Affichage : le mode focus estompe tout sauf la ligne que tu écris, la machine à écrire garde le curseur au centre.', 'Focus mode', 'Menu ⋮ › View: focus mode dims everything but the line you are writing, typewriter mode keeps the cursor centred.']
+];
+let homeTipK = null;
+function homeTipIndex(){
+  if(homeTipK === null){ const d = new Date(); homeTipK = (d.getFullYear() * 372 + d.getMonth() * 31 + d.getDate()) % HOME_TIPS.length; }
+  return ((homeTipK % HOME_TIPS.length) + HOME_TIPS.length) % HOME_TIPS.length;
+}
+function homeTipInner(){
+  const k = homeTipIndex(), t = HOME_TIPS[k];
+  return `<div class="wd-tip-h"><span class="wd-tip-k">${L('NOTE DE PRODUCTION','PRODUCTION NOTE')}</span>
+      <span class="wd-tip-nav"><button type="button" class="wd-tip-b" data-act="homeTipStep" data-id="-1" aria-label="${L('Astuce précédente','Previous tip')}" title="${L('Astuce précédente','Previous tip')}">‹</button><span class="wd-tip-n">${k + 1}/${HOME_TIPS.length}</span><button type="button" class="wd-tip-b" data-act="homeTipStep" data-id="1" aria-label="${L('Astuce suivante','Next tip')}" title="${L('Astuce suivante','Next tip')}">›</button></span></div>
+    <b class="wd-tip-t">${esc(L(t[0], t[2]))}</b>
+    <p class="wd-tip-p">${esc(L(t[1], t[3]))}</p>`;
+}
+function homeTipHtml(){ return `<div class="wd-tip" id="wdTip" aria-live="polite">${homeTipInner()}</div>`; }
+function homeTipStep(d){
+  homeTipIndex(); homeTipK += Number(d) || 1;
+  const box = document.getElementById('wdTip'); if(box){ box.innerHTML = homeTipInner(); homeTipFit(); }
+}
+/* La note ne prend que de la place libre : si la colonne manque de hauteur, elle s'efface plutôt que de pousser le reste. */
+function homeTipFit(){
+  const box = document.getElementById('wdTip'); if(!box) return;
+  const side = box.closest('.wd-side'), about = side && side.querySelector('.wd-about');
+  box.classList.remove('is-off');
+  if(!side || !about || getComputedStyle(side).display === 'contents') return;
+  if(side.scrollHeight > side.clientHeight + 1) box.classList.add('is-off');
+}
+window.addEventListener('resize', () => { if(document.getElementById('wdTip')) homeTipFit(); });
 function icon(name){
   const p = {
     plus:'<path d="M8 2v12M2 8h12"/>',
@@ -275,6 +328,8 @@ function attachHomeEvents(){
   const f = document.getElementById('importFile');
   if(f) f.addEventListener('change', onImportFile);
   homeReel();
+  homeTipFit();
+  try{ if(document.fonts && document.fonts.status !== 'loaded') document.fonts.ready.then(homeTipFit); }catch(e){}
 }
 
 /* create modal */

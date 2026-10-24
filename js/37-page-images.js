@@ -117,8 +117,10 @@ function pgiRender(force){
   const zk = (S.pagination && S.pagination.zoom) || 1;
   Ls.stack.style.setProperty('--pgi-iz', String(zk < 1 ? 1 / zk : 1));
   const sig = [g.pageH, g.pageW, g.count, pgiOn, pgiSel, pgiCrop, list.length, zk].join('|') + '|' + list.map(m => [m.id, m.page, m.x, m.y, m.w, m.h, m.cl, m.ct, m.cr, m.cb, m.back, m.op, m.src.length].join(',')).join(';');
-  if(!force && sig === pgiSig && Ls.back.isConnected) { pgiBarSync(); return; }
-  pgiSig = sig;
+  // Le calque garde la trace de ce qu'il affiche : un éditeur reconstruit (ajout d'un carton, annuler, collage…)
+  // repart d'un calque neuf, vide, qui doit être redessiné même si les images n'ont pas changé.
+  if(!force && sig === pgiSig && Ls.back._pgiSig === sig && Ls.front._pgiSig === sig) { pgiBarSync(); return; }
+  pgiSig = sig; Ls.back._pgiSig = sig; Ls.front._pgiSig = sig;
   const byPage = { back:{}, front:{} };
   list.forEach(m => { const k = pgiPageOf(m, g.count), side = m.back ? 'back' : 'front'; (byPage[side][k] = byPage[side][k] || []).push(m); });
   ['back','front'].forEach(side => {
@@ -717,6 +719,11 @@ function pgiDrag(e, m, node, handle){
   document.addEventListener('pointerup', up, true);
   document.addEventListener('pointercancel', up, true);
 }
+
+/* Le curseur revient dans le texte (nouveau carton, nouvelle scène…) : on quitte le mode Images pour écrire. */
+document.addEventListener('focusin', e => {
+  if(pgiOn && e.target && e.target.closest && e.target.closest('#page .line')) pgiExit();
+}, true);
 
 /* ---- Clavier (seulement en mode Images, jamais pendant la frappe dans un champ) ---- */
 document.addEventListener('keydown', e => {
