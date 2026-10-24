@@ -2555,3 +2555,72 @@ html[data-theme="dark"] .pgi-hover{color:#7CC4EE;}
 .pgi-list-clear .icon{width:14px; height:14px;}
 .pgi-list-clear:hover{background:color-mix(in srgb, var(--danger) 8%, var(--surface)); border-color:var(--danger);}
 .pgi-list-empty{font-size:12.5px; color:var(--ink-soft); margin:2px 4px 4px;}
+
+/* ---------- PANNEAU « ALIGNER LA LIGNE » (js/10-cartons.js) : même langage que le panneau Carton ---------- */
+.lay-target{display:flex; align-items:center; gap:8px; min-width:0; padding:8px 10px; border:1px solid var(--hair); border-radius:10px; background:var(--surface-soft); margin-bottom:6px;}
+.lay-type{flex:none; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:var(--accent-2); background:#3699D41a; border-radius:6px; padding:3px 7px;}
+.lay-snip{min-width:0; font-family:var(--script-font,var(--mono)); font-size:12px; color:var(--ink); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+.lay-snip em{font-family:var(--sans); font-style:normal; color:var(--ink-soft);}
+.lay-hint{margin:0 0 12px;}
+/* Schéma : la colonne de texte de la page, et la ligne telle qu'elle y est vraiment posée. */
+.lay-diag{position:relative; display:block; padding:12px 14px 24px; margin-bottom:14px; border-radius:10px; background:var(--paper); box-shadow:inset 0 0 0 1px var(--hair);}
+.lay-diag-col{position:relative; display:block; height:44px; border-left:1px dashed #3699D466; border-right:1px dashed #3699D466;}
+.lay-diag-b{position:absolute; top:4px; bottom:4px; display:flex; flex-direction:column; justify-content:space-between; padding:3px 0; border-radius:3px; background:#3699D41f; box-shadow:inset 0 0 0 1px #3699D466; transition:left .15s, right .15s;}
+.lay-diag-b i{display:block; height:4px; border-radius:2px; background:var(--paper-ink); opacity:.55; width:86%; margin:0 6%;}
+.lay-diag-b i:nth-child(2){width:62%;} .lay-diag-b i:nth-child(3){width:74%;}
+.lay-diag-l, .lay-diag-r{position:absolute; bottom:5px; font-family:var(--sans); font-size:11px; font-weight:600; color:var(--ink-soft); font-variant-numeric:tabular-nums;}
+.lay-diag-l{left:14px;} .lay-diag-l::before{content:"← ";}
+.lay-diag-r{right:14px;} .lay-diag-r::after{content:" →";}
+.lay-seg-t{font-size:12px; font-weight:600; margin-left:5px;}
+.lay-ind + .lay-ind{margin-top:14px;}
+.lay-ind .crd-line{margin-top:0;}
+.lay-ind-v{display:inline-flex; align-items:center; gap:4px;}
+.lay-ind-v b{font-size:13px; font-weight:600; color:var(--ink); font-variant-numeric:tabular-nums;}
+.lay-x{width:22px; height:22px; display:inline-flex; align-items:center; justify-content:center; border:0; border-radius:6px; background:transparent; color:var(--ink-soft); cursor:pointer;}
+.lay-x .icon{width:11px; height:11px;}
+.lay-x:hover{background:#3699D414; color:var(--ink);}
+.lay-pre{font-size:11px; line-height:1.2; text-align:center;}
+.lay-mini{position:relative; display:block; width:40px; height:26px; border-radius:3px; background:var(--paper); box-shadow:inset 0 0 0 1px var(--hair);}
+.lay-mini-b{position:absolute; top:4px; bottom:4px; margin:0 4px; display:flex; flex-direction:column; justify-content:space-between;}
+.lay-mini-b i{display:block; height:2.5px; border-radius:2px; background:currentColor; opacity:.6; width:100%;}
+.lay-mini-b i:nth-child(2){width:70%;} .lay-mini-b i:nth-child(3){width:85%;}
+html[data-theme="dark"] .lay-type{color:#7CC4EE;}
+@media (prefers-reduced-motion:reduce){ .lay-diag-b{transition:none;} }
+
+/* ---------- ACCUEIL : « Reprendre » et « Note de production » (js/05-home-series.js) ----------
+   Posés dans des espaces vides (à droite du titre, dans la colonne de gauche) : rien d'autre ne bouge. */
+#homeView .wd-resume{margin-left:auto; align-self:center; display:inline-flex; align-items:center; gap:10px; height:34px; margin-top:-2px; margin-bottom:-2px; max-width:min(440px, 60%); padding:0 12px 0 6px;
+  border:1px solid var(--hair); border-radius:10px; background:var(--surface); color:var(--ink); cursor:pointer; font-family:var(--sans); text-align:left;
+  box-shadow:0 1px 2px #0000000d; transition:border-color .12s, box-shadow .12s, transform .12s;}
+#homeView .wd-resume:hover{border-color:var(--accent); box-shadow:0 6px 18px -10px #1F6FA066;}
+#homeView .wd-resume:active{transform:translateY(1px);}
+/* Petit clap : les bandes du clap de l'accueil, en miniature. */
+#homeView .wd-resume-clap{flex:none; position:relative; width:28px; height:24px; border-radius:5px; background:var(--accent-2); overflow:hidden;}
+#homeView .wd-resume-clap::before{content:""; position:absolute; left:0; right:0; top:0; height:9px; background:repeating-linear-gradient(-55deg, #fff 0 4px, var(--accent-2) 4px 8px); transform-origin:0 100%; transition:transform .18s ease;}
+#homeView .wd-resume-clap::after{content:""; position:absolute; left:5px; right:5px; top:14px; height:2px; border-radius:1px; background:#ffffff99; box-shadow:0 5px 0 #ffffff66;}
+#homeView .wd-resume:hover .wd-resume-clap::before{transform:rotate(-14deg);}
+#homeView .wd-resume-t{display:flex; flex-direction:column; min-width:0; line-height:1.15;}
+#homeView .wd-resume-t small{font-size:10.5px; font-weight:700; text-transform:uppercase; letter-spacing:.08em; color:var(--accent-2);}
+#homeView .wd-resume-t b{font-family:var(--script-font,var(--mono)); font-size:13.5px; font-weight:700; text-transform:uppercase; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+#homeView .wd-resume-when{flex:none; font-size:12px; color:var(--ink-soft); white-space:nowrap;}
+#homeView .wd-resume-go{flex:none; width:15px; height:15px; color:var(--accent-2); transition:transform .12s;}
+#homeView .wd-resume:hover .wd-resume-go{transform:translateX(2px);}
+html[data-theme="dark"] #homeView .wd-resume-t small, html[data-theme="dark"] #homeView .wd-resume-go{color:#7CC4EE;}
+/* Note de production : une page de scénario annotée, en marge de la colonne. */
+#homeView .wd-tip{position:relative; margin:12px 4px 0; padding:10px 12px 8px 15px; border:1px solid var(--hair); border-radius:8px; background:var(--paper); color:var(--paper-ink);
+  box-shadow:0 1px 2px #0000000d, 0 10px 24px -18px #00000055;}
+#homeView .wd-tip::before{content:""; position:absolute; left:0; top:10px; bottom:10px; width:3px; border-radius:0 3px 3px 0; background:var(--accent);}
+#homeView .wd-tip-h{display:flex; align-items:center; justify-content:space-between; margin-bottom:6px;}
+#homeView .wd-tip-k{font-family:var(--script-font,var(--mono)); font-size:10.5px; font-weight:700; letter-spacing:.06em; color:var(--accent-2);}
+#homeView .wd-tip-n{font-family:var(--script-font,var(--mono)); font-size:10.5px; color:var(--paper-ink-soft); font-variant-numeric:tabular-nums;}
+#homeView .wd-tip-t{display:block; font-size:13.5px; font-weight:600; color:var(--paper-ink); margin-bottom:3px;}
+#homeView .wd-tip-p{margin:0; font-size:12.5px; line-height:1.5; color:var(--paper-ink-soft);}
+#homeView .wd-tip-nav{display:inline-flex; align-items:center; gap:3px;}
+#homeView .wd-tip.is-off{display:none;}
+html[data-theme="dark"] #homeView .wd-tip{background:var(--surface); color:var(--ink);}
+html[data-theme="dark"] #homeView .wd-tip-t{color:var(--ink);} html[data-theme="dark"] #homeView .wd-tip-p, html[data-theme="dark"] #homeView .wd-tip-n, html[data-theme="dark"] #homeView .wd-tip-b{color:var(--ink-soft);} html[data-theme="dark"] #homeView .wd-tip-k{color:#7CC4EE;}
+#homeView .wd-tip-b{width:22px; height:20px; padding:0; border:1px solid var(--hair); border-radius:6px; background:transparent; color:var(--paper-ink-soft); font-size:15px; line-height:1; cursor:pointer;}
+#homeView .wd-tip-b:hover{border-color:var(--accent); color:var(--accent-2); background:#3699D414;}
+@media (max-width:900px){ #homeView .wd-tip{display:none;} #homeView .wd-resume-when{display:none;} }
+@media (max-height:760px){ #homeView .wd-tip{display:none;} }
+@media (prefers-reduced-motion:reduce){ #homeView .wd-resume-clap::before, #homeView .wd-resume-go, #homeView .wd-resume{transition:none;} }

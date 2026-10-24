@@ -1013,7 +1013,7 @@ const ACTIONS = {
   openCreateModal, closeModal, closeModalBg: (id,e)=>{ if(e.target.id==='createBackdrop') closeModal(); },
   pickFmt, confirmCreate, openProject, deleteProject, renameProject, triggerImport,
   switchTab, goHome, doUndo, doRedo, openShortcuts, closeShortcuts, openExportMenu, closeExportMenu,
-  exportPDF, printScript, exportTXT, exportFountain, exportFDX, exportBackup, insertScene, insertCard, cardSet, cardStep, cardPreset, cardReset,
+  exportPDF, printScript, exportTXT, exportFountain, exportFDX, exportBackup, insertScene, insertCard, cardSet, cardStep, cardPreset, cardReset, homeTipStep,
   openLayout, layoutSet, layoutPreset, layoutReset, layoutClose,
   focusSceneFromCard, duplicateScene, deleteScene, editOutline, editSceneTags, deleteElement,
   addStructureBeat, setStructureColor, deleteStructureBeat, convertBeatToScene, openStructureScene,

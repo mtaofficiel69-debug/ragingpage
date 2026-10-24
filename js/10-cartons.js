@@ -224,31 +224,84 @@ function layoutPanelHtml(el){
   const l = layoutOf(el), id = el.id;
   const num = v => (v === null || !isFinite(v)) ? null : Number(v);
   const lv = num(l.left), rv = num(l.right);
-  const al = (val, label) => `<button class="btn btn-sm ${(l.align || '') === val ? 'btn-primary' : ''}" data-act="layoutSet" data-id="${id}|align|${val || 'default'}">${label}</button>`;
-  const pre = (name, label) => `<button class="btn btn-sm" data-act="layoutPreset" data-id="${id}|${name}">${label}</button>`;
+  const svg = p => `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">${p}</svg>`;
+  const al = (val, ic, n) => `<button type="button" class="crd-seg-b${(l.align || '') === val ? ' on' : ''}" data-act="layoutSet" data-id="${id}|align|${val || 'default'}" title="${n}" aria-label="${n}">${ic}</button>`;
+  const fmt = v => v.toLocaleString(getLang() === 'en' ? 'en' : 'fr', { minimumFractionDigits:1, maximumFractionDigits:1 }) + ' cm';
+  const ind = (side, v, label) => `<div class="lay-ind">
+      <div class="crd-line"><span class="crd-lbl">${label}</span>
+        <span class="lay-ind-v"><b id="lay${side}Val">${v === null ? L('Par défaut','Default') : fmt(v)}</b>${v === null ? '' : `<button type="button" class="lay-x" data-act="layoutSet" data-id="${id}|${side === 'Left' ? 'left' : 'right'}|default" title="${L('Revenir au retrait par défaut','Back to the default indent')}" aria-label="${L('Par défaut','Default')}">${icon('close')}</button>`}</span></div>
+      <input type="range" class="crd-range" id="lay${side}Range" min="0" max="12" step="0.1" value="${v === null ? 0 : v}" aria-label="${label}">
+    </div>`;
+  const LP = { center:{ align:'center', left:3.5, right:3.5 }, right:{ align:'right', left:6, right:0 }, indent:{ align:null, left:2, right:null } };
+  const isPre = name => name === 'full' ? (!l.align && lv === null && rv === null) : !!LP[name] && (l.align || null) === LP[name].align && lv === LP[name].left && rv === LP[name].right;
+  const pre = (name, label, blk) => `<button type="button" class="crd-tile lay-pre${isPre(name) ? ' on' : ''}" data-act="layoutPreset" data-id="${id}|${name}" title="${label}"><span class="lay-mini"><span class="lay-mini-b" style="${blk}"><i></i><i></i><i></i></span></span><span>${label}</span></button>`;
+  const txt = String(el.text || '').replace(/\s+/g, ' ').trim();
   return `<div class="pane-title">${L('Aligner la ligne','Align the line')}</div>
-  <div class="panel-block card-panel" data-layout-id="${id}">
-    <p style="font-size:12px;color:var(--ink-soft);line-height:1.5;margin:0 0 10px;">${L('S\u2019applique à la ligne en cours, quel que soit son type. Clique une autre ligne : le panneau la suit.','Applies to the current line, whatever its type. Click another line: the panel follows it.')}</p>
-    <div class="cp-row"><div class="cp-lbl">${L('Alignement du texte','Text alignment')}</div>
-      <div class="cp-seg">${al('', L('Par défaut','Default'))}${al('left', L('Gauche','Left'))}${al('center', L('Centre','Center'))}${al('right', L('Droite','Right'))}</div></div>
-    <div class="cp-row"><div class="cp-lbl">${L('Retrait gauche','Left indent')} — <span id="layLeftVal">${lv === null ? L('défaut','default') : lv.toFixed(1) + ' cm'}</span></div>
-      <input type="range" id="layLeftRange" min="0" max="12" step="0.1" value="${lv === null ? 0 : lv}">
-      <div class="cp-seg" style="margin-top:6px;"><button class="btn btn-sm" data-act="layoutSet" data-id="${id}|left|default">${L('Défaut','Default')}</button></div></div>
-    <div class="cp-row"><div class="cp-lbl">${L('Retrait droit','Right indent')} — <span id="layRightVal">${rv === null ? L('défaut','default') : rv.toFixed(1) + ' cm'}</span></div>
-      <input type="range" id="layRightRange" min="0" max="12" step="0.1" value="${rv === null ? 0 : rv}">
-      <div class="cp-seg" style="margin-top:6px;"><button class="btn btn-sm" data-act="layoutSet" data-id="${id}|right|default">${L('Défaut','Default')}</button></div></div>
-    <div class="cp-row"><div class="cp-lbl">${L('Raccourcis','Presets')}</div>
-      <div class="cp-seg">${pre('center', L('Centré étroit','Narrow centered'))}${pre('right', L('Bloc à droite','Right block'))}${pre('indent', L('Retrait 2 cm','2 cm indent'))}${pre('full', L('Pleine largeur','Full width'))}</div></div>
-    <p style="font-size:12px;color:var(--ink-soft);line-height:1.5;margin:0 0 10px;">${L('0 cm = comme une ligne d\u2019action. Les retraits se comptent depuis les bords de la colonne de texte et suivent l\u2019export PDF et l\u2019impression.','0 cm = like an action line. Indents are measured from the text column edges and carry through to PDF export and printing.')}</p>
-    <div class="cp-seg"><button class="btn btn-sm" data-act="layoutReset" data-id="${id}">${L('Rétablir la mise en page de cette ligne','Reset this line')}</button>
-    <button class="btn btn-sm btn-ghost" data-act="layoutClose">${L('Fermer','Close')}</button></div>
+  <div class="crd lay" data-layout-id="${id}">
+    <div class="lay-target"><span class="lay-type">${esc(typeLabelDisplay(el.type))}</span><span class="lay-snip">${txt ? esc(txt.length > 46 ? txt.slice(0, 44) + '…' : txt) : `<em>${L('ligne vide','empty line')}</em>`}</span></div>
+    <p class="crd-hint lay-hint">${L('Clique une autre ligne : le panneau la suit.','Click another line: the panel follows it.')}</p>
+    <div class="lay-diag" id="layDiag" aria-hidden="true">
+      <span class="lay-diag-col"><span class="lay-diag-b" id="layDiagB"><i></i><i></i><i></i></span></span>
+      <span class="lay-diag-l" id="layDiagL"></span><span class="lay-diag-r" id="layDiagR"></span>
+    </div>
+    <section class="crd-sec">
+      <div class="crd-h">${L('Alignement','Alignment')}</div>
+      <span class="crd-seg fill">
+        ${al('', svg('<path d="M3 8a5 5 0 1 0 1.5-3.6M3 2.5v2.3h2.3"/>') + `<span class="lay-seg-t">${L('Défaut','Default')}</span>`, L('Alignement par défaut du type de ligne','Default alignment for the line type'))}
+        ${al('left', svg('<path d="M2.5 4h11M2.5 7h7M2.5 10h11M2.5 13h7"/>'), L('À gauche','Left'))}
+        ${al('center', svg('<path d="M2.5 4h11M4.5 7h7M2.5 10h11M4.5 13h7"/>'), L('Centré','Centered'))}
+        ${al('right', svg('<path d="M2.5 4h11M6.5 7h7M2.5 10h11M6.5 13h7"/>'), L('À droite','Right'))}
+      </span>
+    </section>
+    <section class="crd-sec">
+      <div class="crd-h">${L('Retraits','Indents')}<small>${L('depuis les bords de la colonne','from the column edges')}</small></div>
+      ${ind('Left', lv, L('Retrait gauche','Left indent'))}
+      ${ind('Right', rv, L('Retrait droit','Right indent'))}
+    </section>
+    <section class="crd-sec">
+      <div class="crd-h">${L('Raccourcis','Presets')}</div>
+      <div class="crd-tiles four">
+        ${pre('center', L('Centré étroit','Narrow centred'), 'left:25%;right:25%;align-items:center;')}
+        ${pre('right', L('Bloc à droite','Right block'), 'left:50%;right:0;align-items:flex-end;')}
+        ${pre('indent', L('Retrait 2 cm','2 cm indent'), 'left:16%;right:0;')}
+        ${pre('full', L('Pleine largeur','Full width'), 'left:0;right:0;')}
+      </div>
+    </section>
+    <p class="crd-hint">${L('0 cm = comme une ligne d’action. Les retraits suivent l’export PDF et l’impression.','0 cm = like an action line. Indents carry through to PDF export and printing.')}</p>
+    <div class="crd-foot">
+      <button type="button" class="crd-btn" data-act="layoutReset" data-id="${id}" title="${L('Rétablir la mise en page de cette ligne','Reset this line')}">${icon('undo')}<span>${L('Rétablir','Reset')}</span></button>
+      <button type="button" class="crd-btn" data-act="layoutClose">${icon('close')}<span>${L('Fermer','Close')}</span></button>
+    </div>
   </div>`;
+}
+/* Schéma de la colonne de texte : la ligne y est dessinée telle qu'elle est vraiment posée (lue sur la page). */
+function layoutDiagSync(el){
+  const B = document.getElementById('layDiagB'); if(!B) return;
+  const div = document.querySelector('#page [data-id="' + el.id + '"]'), page = document.getElementById('page');
+  if(!div || !page) return;
+  const cs = getComputedStyle(page), pr = page.getBoundingClientRect(), z = pr.width / (page.offsetWidth || 1) || 1;
+  const colL = pr.left + (parseFloat(cs.paddingLeft) || 0) * z, colR = pr.right - (parseFloat(cs.paddingRight) || 0) * z, colW = colR - colL;
+  if(colW <= 0) return;
+  const r = div.getBoundingClientRect();
+  const a = Math.max(0, Math.min(100, (r.left - colL) / colW * 100)), b = Math.max(0, Math.min(100, (colR - r.right) / colW * 100));
+  B.style.left = a + '%'; B.style.right = b + '%';
+  const ta = getComputedStyle(div).textAlign;
+  B.style.alignItems = ta === 'center' ? 'center' : (ta === 'right' || ta === 'end') ? 'flex-end' : 'flex-start';
+  const cmPerPx = (S.project && S.project.format === 'us' ? 21.59 : 21) / ((page.offsetWidth || 1) * z);
+  const fmt = v => (Math.round(v * 10) / 10).toLocaleString(getLang() === 'en' ? 'en' : 'fr', { minimumFractionDigits:1, maximumFractionDigits:1 }) + ' cm';
+  const Lb = document.getElementById('layDiagL'), Rb = document.getElementById('layDiagR');
+  // Retrait réglé : on affiche la valeur choisie ; sinon, celle que l'on mesure sur la page.
+  const l = layoutOf(el), set = v => v !== null && v !== undefined && isFinite(v);
+  if(Lb) Lb.textContent = fmt(set(l.left) ? Number(l.left) : Math.max(0, r.left - colL) * cmPerPx);
+  if(Rb) Rb.textContent = fmt(set(l.right) ? Number(l.right) : Math.max(0, colR - r.right) * cmPerPx);
 }
 function showLayoutPanel(el){
   const side = document.getElementById('sidePane'); if(!side) return;
   side.dataset.mode = 'layout';
   side.classList.remove('hidden');
+  const top = side.scrollTop;
   side.innerHTML = layoutPanelHtml(el);
+  side.scrollTop = top;
   bindLayoutPanel(el);
 }
 function layoutTarget(){
@@ -309,13 +362,15 @@ function bindLayoutPanel(el){
     r.addEventListener('input', ()=>{
       if(!undone){ pushUndo(); undone = true; }
       const l = layoutOf(el); l[prop] = Number(r.value); el.layout = l;
-      const v = document.getElementById(vid); if(v) v.textContent = Number(r.value).toFixed(1) + ' cm';
+      const v = document.getElementById(vid); if(v) v.textContent = Number(r.value).toLocaleString(getLang() === 'en' ? 'en' : 'fr', { minimumFractionDigits:1, maximumFractionDigits:1 }) + ' cm';
       layoutApply(el); schedulePaginate(); scheduleAutosave();
+      layoutDiagSync(el);
     });
     r.addEventListener('change', ()=>{ undone = false; showLayoutPanel(el); });
   };
   bind('layLeftRange', 'layLeftVal', 'left');
   bind('layRightRange', 'layRightVal', 'right');
+  layoutDiagSync(el);
 }
 function insertCard(){
   if(!S.project) return;
