@@ -499,7 +499,7 @@ function wdSidesBuild(o){
   const meta = {};
   kept.forEach(sc=>{ meta[sc.id] = Object.assign({}, (real.sceneMeta || {})[sc.id], { lockedNum: nums[sc.id] }); });
   const clone = Object.assign({}, real, {
-    elements: [].concat(...kept.map(sc=>sc.els)), sceneMeta: meta, pageLock: null, versions: [], graveyard: [], comments: {},
+    elements: [].concat(...kept.map(sc=>sc.els)), sceneMeta: meta, pageLock: null, versions: [], graveyard: [], comments: {}, pageImages: undefined,   // images : leurs numéros de page sont ceux du scénario complet
     settings: Object.assign({}, real.settings, { numbersLocked:true, watermarkText:o.wm || '', titlePageEnabled:!!o.title })
   });
   return { clone, hl, count: kept.length };

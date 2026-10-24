@@ -28,7 +28,7 @@
 ===================================================================== */
 const PGI_HANDLES = ['nw','n','ne','e','se','s','sw','w'];
 const PGI_MIN = 2;             // plus petit côté d'un cadre, en % de la page
-let pgiOn = false, pgiSel = null, pgiCrop = false, pgiWatch = 0, pgiOpOpen = false, pgiPickAt = null;
+let pgiOn = false, pgiSel = null, pgiCrop = false, pgiWatch = 0, pgiOpOpen = false, pgiPickAt = null, pgiListOpen = false, pgiPickReplace = null;
 let pgiUndo = [], pgiRedo = [];
 
 function pgiList(p){
@@ -113,7 +113,10 @@ function pgiRender(force){
   const list = pgiList();
   const Ls = pgiLayers(); if(!Ls) return;
   Ls.stack.classList.toggle('pgi-on', pgiOn);
-  const sig = [g.pageH, g.pageW, g.count, pgiOn, pgiSel, pgiCrop, list.length].join('|') + '|' + list.map(m => [m.id, m.page, m.x, m.y, m.w, m.h, m.cl, m.ct, m.cr, m.cb, m.back, m.op, m.src.length].join(',')).join(';');
+  // Fenêtre étroite (page affichée en réduction) : la mini-barre et la taille gardent une taille lisible.
+  const zk = (S.pagination && S.pagination.zoom) || 1;
+  Ls.stack.style.setProperty('--pgi-iz', String(zk < 1 ? 1 / zk : 1));
+  const sig = [g.pageH, g.pageW, g.count, pgiOn, pgiSel, pgiCrop, list.length, zk].join('|') + '|' + list.map(m => [m.id, m.page, m.x, m.y, m.w, m.h, m.cl, m.ct, m.cr, m.cb, m.back, m.op, m.src.length].join(',')).join(';');
   if(!force && sig === pgiSig && Ls.back.isConnected) { pgiBarSync(); return; }
   pgiSig = sig;
   const byPage = { back:{}, front:{} };
@@ -131,7 +134,7 @@ function pgiRender(force){
         if(sel && pgiCrop) html += `<div class="pgi-ghost" style="left:${m.x - m.cl * fw}%;top:${m.y - m.ct * fh}%;width:${fw}%;height:${fh}%;"><img src="${m.src}" alt="" draggable="false"></div>`;
         html += `<div class="pgi${sel ? ' is-sel' : ''}${sel && pgiCrop ? ' is-crop' : ''}" data-pgi="${m.id}" style="left:${m.x}%;top:${m.y}%;width:${m.w}%;height:${m.h}%;">`
           + `<div class="pgi-clip"><img src="${m.src}" alt="" draggable="false" style="${pgiImgCss(m)}"></div>`
-          + (sel ? PGI_HANDLES.map(h => `<div class="pgi-h" data-h="${h}"></div>`).join('') + `<div class="pgi-dim">${pgiDimText(m)}</div>` : '')
+          + (sel ? PGI_HANDLES.map(h => `<div class="pgi-h" data-h="${h}"></div>`).join('') + `<div class="pgi-dim">${pgiDimText(m)}</div>` + pgiQuickHtml(m, g) : '')
           + `</div>`;
       });
       html += `</div>`;
@@ -143,6 +146,19 @@ function pgiRender(force){
     Ls[side].innerHTML = html;
   });
   pgiBarSync();
+}
+/* Mini-barre posée sur l'image sélectionnée : les gestes les plus courants, à portée de souris. */
+function pgiQuickHtml(m, g){
+  const below = m.y / 100 * g.pageH < 54;          // trop près du haut de la page : sous l'image
+  const b = (act, ic, label, cls) => `<button type="button" class="pgi-qa-b${cls ? ' ' + cls : ''}" data-act="${act}" title="${label}">${ic}<span>${label}</span></button>`;
+  const svg = p => `<svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">${p}</svg>`;
+  const crop = svg('<path d="M4 1.5V12h10.5M1.5 4H12v10.5"/>'), ok = svg('<path d="M3 8.5l3.2 3.2L13 4.8"/>');
+  const swap = svg('<path d="M2.5 5.5h9l-2.5-2.5M13.5 10.5h-9l2.5 2.5"/>');
+  const cropped = !!(m.cl || m.ct || m.cr || m.cb);
+  const inner = pgiCrop
+    ? b('pgiToggleCrop', ok, L('Valider le rognage','Apply crop'), 'is-main') + (cropped ? b('pgiUncrop', '', L('Image entière','Whole image')) : '')
+    : b('pgiToggleCrop', crop, L('Rogner','Crop')) + b('pgiReplace', swap, L('Remplacer','Replace')) + b('pgiDuplicate', icon('copy'), L('Dupliquer','Duplicate')) + b('pgiRemove', icon('trash'), L('Supprimer','Delete'), 'is-danger');
+  return `<div class="pgi-qa${below ? ' is-below' : ''}" data-stop="1">${inner}</div>`;
 }
 /* Taille réelle du cadre sur le papier, en centimètres (comme à l'impression). */
 function pgiDimText(m){
@@ -164,9 +180,25 @@ function pgiApply(m){
   });
 }
 function pgiChanged(full){
-  scheduleAutosave();
+  pgiSaveNow();
   if(full) pgiRender(true);
 }
+/* Sauvegarde des images : TOUT DE SUITE après chaque action (ajout, déplacement, rognage, suppression…),
+   et non 1,2 s plus tard comme la frappe — un rechargement ou un onglet fermé juste après ne perd rien.
+   Les réglages continus (curseur d'opacité, flèches) passent par l'enregistrement différé habituel, que
+   l'on force à la fermeture de l'onglet s'il est encore en attente. */
+let pgiPending = false;
+function pgiSaveNow(){
+  pgiPending = false;
+  if(!S.project) return;
+  clearTimeout(S.saveTimer); S.saveTimer = null;
+  markDot('saving');
+  try{ doAutosave(); }catch(e){}
+}
+function pgiSaveLater(){ pgiPending = true; scheduleAutosave(); }
+function pgiFlushPending(){ if(pgiPending && S.saveTimer) pgiSaveNow(); }
+window.addEventListener('pagehide', pgiFlushPending);
+document.addEventListener('visibilitychange', () => { if(document.hidden) pgiFlushPending(); });
 
 /* ---- Import d'un fichier image (même conversion que l'image libre de la page de titre) ---- */
 function pgiReadFile(file){
@@ -272,7 +304,11 @@ function pgiPickFiles(){
     inp = document.createElement('input'); inp.type = 'file'; inp.id = 'pgiFileInput'; inp.multiple = true;
     inp.accept = 'image/*,.png,.jpg,.jpeg,.webp,.gif,.svg,.bmp,.avif';
     inp.style.display = 'none';
-    inp.addEventListener('change', () => { const fs = Array.from(inp.files || []), at = pgiPickAt; inp.value = ''; pgiPickAt = null; pgiAddFiles(fs, at); });
+    inp.addEventListener('change', () => {
+      const fs = Array.from(inp.files || []), at = pgiPickAt, rp = pgiPickReplace;
+      inp.value = ''; pgiPickAt = null; pgiPickReplace = null; inp.multiple = true;
+      if(rp) pgiReplaceWith(rp, fs[0]); else pgiAddFiles(fs, at);
+    });
     document.body.appendChild(inp);
   }
   inp.click();
@@ -298,7 +334,7 @@ function pgiEnter(silent){
 }
 function pgiExit(){
   if(!pgiOn) return;
-  pgiOn = false; pgiSel = null; pgiCrop = false; pgiOpOpen = false;
+  pgiOn = false; pgiSel = null; pgiCrop = false; pgiOpOpen = false; pgiListOpen = false;
   clearInterval(pgiWatch);
   const b = document.getElementById('pgiBar'); if(b) b.remove();
   pgiRender(true);
@@ -309,6 +345,44 @@ function pgiSelect(id){
   pgiSel = id; pgiCrop = false; pgiOpOpen = false;
   pgiRender(true);
 }
+
+/* ---- Hors du mode Images : au survol d'une image, un bouton « Modifier l'image » pour y entrer directement ----
+   Seul ce petit bouton capte la souris : partout ailleurs, le clic va au texte, comme avant. */
+let pgiHovRaf = 0, pgiHovId = null;
+function pgiHoverHide(){ pgiHovId = null; const h = document.getElementById('pgiHover'); if(h) h.remove(); }
+document.addEventListener('mousemove', e => {
+  if(pgiOn || !S.project || S.view !== 'editor' || S.tab !== 'editor' || !pgiList().length){ if(pgiHovId) pgiHoverHide(); return; }
+  if(e.buttons){ if(pgiHovId) pgiHoverHide(); return; }
+  const x = e.clientX, y = e.clientY, tgt = e.target;
+  if(pgiHovRaf) return;
+  pgiHovRaf = requestAnimationFrame(() => {
+    pgiHovRaf = 0;
+    if(tgt && tgt.closest && tgt.closest('#pgiHover')) return;
+    const nodes = Array.from(document.querySelectorAll('#pgiFront .pgi, #pgiBack .pgi')), pane = document.getElementById('centerPane');
+    const pr = pane ? pane.getBoundingClientRect() : null;
+    let hit = null;
+    if(pr && x >= pr.left && x <= pr.right && y >= pr.top && y <= pr.bottom){
+      for(const n of nodes){ const r = n.getBoundingClientRect(); if(x >= r.left && x <= r.right && y >= r.top && y <= r.bottom){ hit = { n, r }; break; } }
+    }
+    if(!hit){ if(pgiHovId) pgiHoverHide(); return; }
+    const id = hit.n.dataset.pgi;
+    let h = document.getElementById('pgiHover');
+    if(!h){
+      h = document.createElement('button'); h.type = 'button'; h.id = 'pgiHover'; h.className = 'pgi-hover';
+      h.innerHTML = `${icon('image')}<span>${L('Modifier l’image','Edit image')}</span>`;
+      h.title = L('Déplacer, agrandir, rogner, supprimer…','Move, resize, crop, delete…');
+      h.addEventListener('mousedown', ev => ev.preventDefault());   // le curseur de texte reste où il est
+      h.addEventListener('click', ev => { ev.preventDefault(); ev.stopPropagation(); const k = pgiHovId; pgiHoverHide(); pgiEnter(true); if(k){ pgiSel = k; pgiCrop = false; pgiRender(true); } });
+      document.body.appendChild(h);
+    }
+    pgiHovId = id;
+    const top = Math.max(pr.top + 6, hit.r.top + 8);
+    h.style.top = Math.round(top) + 'px';
+    h.style.left = Math.round(Math.min(pr.right - 8, hit.r.right - 8)) + 'px';
+  });
+}, true);
+document.addEventListener('keydown', () => { if(pgiHovId) pgiHoverHide(); }, true);
+document.addEventListener('scroll', () => { if(pgiHovId) pgiHoverHide(); }, true);
 
 /* Barre d'outils du mode Images : même barre flottante que la page de titre (verre dépoli, boutons-icônes),
    posée en haut de la zone d'écriture sans rien décaler. */
@@ -330,7 +404,7 @@ function pgiBarHtml(){
   const b = (act, ic, label, tip, cls, id) => `<button type="button" class="tp-tb-btn${cls ? ' ' + cls : ''}" data-act="${act}"${id !== undefined ? ` data-id="${id}"` : ''} title="${tip || label}"${tip || label ? ` aria-label="${tip || label}"` : ''}>${ic}${label ? `<span>${label}</span>` : ''}</button>`;
   const sep = '<span class="tp-tb-sep"></span>';
   let html = `<div class="tp-tb pgi-tb" role="toolbar" aria-label="${L('Images sur les pages','Images on pages')}">
-    <span class="tp-tb-chip pgi-chip" title="${L('Images sur les pages','Images on pages')}">${icon('image')}${m ? '' : L('Images','Images')}${n ? ` <b>${n}</b>` : ''}</span>
+    <span class="tp-col-wrap pgi-list-wrap"><button type="button" class="tp-tb-chip pgi-chip${pgiListOpen ? ' on' : ''}" data-act="pgiListToggle" title="${L('Toutes les images du scénario (aller à une image, supprimer)','All images in the script (go to an image, delete)')}" aria-expanded="${pgiListOpen}">${icon('image')}${m ? '' : L('Images','Images')}${n ? ` <b>${n}</b>` : ''}<svg class="pgi-caret" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 4l2.5 2.5L7.5 4"/></svg></button>${pgiListOpen ? pgiListHtml() : ''}</span>
     ${b('pgiPickFiles', icon('plus'), L('Ajouter','Add'), L('Ajouter une ou plusieurs images sur la page affichée (ou glisse-les sur une page, ou Ctrl+V)','Add one or more images on the page shown (or drop them on a page, or Ctrl+V)'), 'pgi-tb-add')}
     ${sep}`;
   if(m){
@@ -379,10 +453,10 @@ function pgiBarSync(){
         m.op = +e.target.value; pgiApply(m);
         ['pgiOpVal','pgiOpBtnVal'].forEach(id => { const v = document.getElementById(id); if(v) v.textContent = Math.round(m.op * 100) + ' %'; });
         document.querySelectorAll('#pgiBar [data-act="pgiSetOp"]').forEach(x => x.classList.toggle('on', Math.abs(+x.dataset.id - m.op) < 0.001));
-        scheduleAutosave();
+        pgiSaveLater();
       }
     });
-    bar.addEventListener('change', e => { if(e.target && e.target.id === 'pgiOpacity'){ bar._opPushed = false; pgiSig = ''; pgiBarSync(); } });
+    bar.addEventListener('change', e => { if(e.target && e.target.id === 'pgiOpacity'){ bar._opPushed = false; pgiSaveNow(); pgiSig = ''; pgiBarSync(); } });
   }
   const html = pgiBarHtml();
   if(bar._html !== html){ bar.innerHTML = html; bar._html = html; bar._fit = null; }
@@ -434,7 +508,7 @@ function pgiOpClose(){
 }
 function pgiSetOp(v){
   const m = pgiCur(); v = +v; if(!m || !(v >= 0.1 && v <= 1) || m.op === v) return;
-  pgiPush(); m.op = v; pgiApply(m); scheduleAutosave(); pgiSig = ''; pgiBarSync();
+  pgiPush(); m.op = v; pgiApply(m); pgiSaveNow(); pgiSig = ''; pgiBarSync();
 }
 function pgiForward(){
   const a = pgiList(), m = pgiCur(); if(!m) return;
@@ -454,6 +528,75 @@ function pgiDuplicate(){
   pgiSel = c.id; pgiCrop = false;
   pgiChanged(true);
 }
+/* Remplacer l'image sélectionnée par une autre : même place, même largeur, nouvelles proportions. */
+function pgiReplace(){
+  const m = pgiCur(); if(!m) return;
+  pgiPickFiles();
+  pgiPickReplace = m.id; pgiPickAt = null;
+  const inp = document.getElementById('pgiFileInput'); if(inp) inp.multiple = false;
+}
+async function pgiReplaceWith(id, file){
+  if(!file) return;
+  const r = await pgiReadFile(file);
+  if(!r){ toast(L('Format d’image non reconnu par le navigateur : ','Image format not recognised by the browser: ') + (file.name || '')); return; }
+  const m = pgiFind(id); if(!m) return;
+  pgiPush();
+  const cy = m.y + m.h / 2;
+  m.src = r.src; m.ar = r.ar; m.cl = m.ct = m.cr = m.cb = 0;
+  m.h = m.w * r.ar * pgiPageRatio(); m.y = cy - m.h / 2;
+  pgiSel = m.id; pgiCrop = false;
+  pgiChanged(true);
+  toast(L('Image remplacée.','Image replaced.'));
+}
+/* Liste de toutes les images du scénario : aller à l'une d'elles, la supprimer, ou tout supprimer. */
+function pgiListHtml(){
+  const g = pgiGeo(), list = pgiList().slice().sort((a, b) => pgiPageOf(a, g ? g.count : 1) - pgiPageOf(b, g ? g.count : 1));
+  const rows = list.map(m => {
+    const k = pgiPageOf(m, g ? g.count : 1);
+    return `<div class="pgi-li${m.id === pgiSel ? ' on' : ''}">
+      <button type="button" class="pgi-li-go" data-act="pgiGoTo" data-id="${m.id}" title="${L('Aller à cette image','Go to this image')}">
+        <span class="pgi-li-th"><img src="${m.src}" alt="" draggable="false"></span>
+        <span class="pgi-li-t"><b>${L('Page ','Page ')}${esc(pgiPageLabel(k))}</b><small>${pgiDimText(m)} · ${m.back ? L('derrière le texte','behind text') : L('devant le texte','in front of text')}</small></span>
+      </button>
+      <button type="button" class="pgi-li-del" data-act="pgiRemoveId" data-id="${m.id}" title="${L('Supprimer cette image','Delete this image')}" aria-label="${L('Supprimer cette image','Delete this image')}">${icon('trash')}</button>
+    </div>`;
+  }).join('');
+  return `<div class="tp-tb-pop pgi-list-pop" data-stop="1">
+    <div class="pgi-list-head"><b>${L('Images du scénario','Images in the script')}</b><small>${list.length}</small></div>
+    ${list.length ? `<div class="pgi-list">${rows}</div>
+    <button type="button" class="pgi-list-clear" data-act="pgiRemoveAll">${icon('trash')}${L('Supprimer toutes les images','Delete all images')}</button>`
+    : `<p class="pgi-list-empty">${L('Aucune image pour l’instant.','No images yet.')}</p>`}
+  </div>`;
+}
+function pgiListToggle(){ pgiListOpen = !pgiListOpen; pgiOpOpen = false; pgiBarSync(); }
+function pgiListClose(){
+  pgiListOpen = false;
+  const bar = document.getElementById('pgiBar'); if(!bar) return;
+  const pop = bar.querySelector('.pgi-list-pop'); if(pop) pop.remove();
+  const btn = bar.querySelector('.pgi-chip'); if(btn) btn.classList.remove('on');
+  bar._html = null;
+}
+function pgiGoTo(id){
+  const m = pgiFind(id); if(!m) return;
+  pgiListOpen = false;
+  pgiSel = id; pgiCrop = false; pgiRender(true);
+  const n = document.querySelector(`.pgi[data-pgi="${id}"]`), pane = document.getElementById('centerPane');
+  if(n && pane){ const r = n.getBoundingClientRect(), pr = pane.getBoundingClientRect(); pane.scrollTop += (r.top + r.height / 2) - (pr.top + pr.height / 2) + 30; }
+}
+function pgiRemoveId(id){
+  if(!pgiFind(id)) return;
+  pgiSel = id; pgiRemove();
+}
+async function pgiRemoveAll(){
+  const n = pgiList().length; if(!n) return;
+  pgiListClose();
+  if(!await mmConfirm(L('Supprimer les ' + n + ' images du scénario ? (Ctrl+Z pour revenir en arrière)', 'Delete all ' + n + ' images in the script? (Ctrl+Z to undo)'), { title:L('Supprimer toutes les images','Delete all images'), ok:L('Tout supprimer','Delete all'), danger:true })) return;
+  pgiPush();
+  delete S.project.pageImages;
+  pgiSel = null; pgiCrop = false;
+  pgiChanged(true);
+  toast(L('Images supprimées (Ctrl+Z pour les retrouver).','Images deleted (Ctrl+Z to get them back).'));
+}
 function pgiRemove(){
   const m = pgiCur(); if(!m) return;
   pgiPush();
@@ -470,7 +613,8 @@ document.addEventListener('pointerdown', e => {
   const t = e.target;
   if(!t || !t.closest) return;
   if(pgiOpOpen && !t.closest('.pgi-op-wrap')) pgiOpClose();
-  if(t.closest('#pgiBar') || t.closest('.pgi-add')) return;
+  if(pgiListOpen && !t.closest('.pgi-list-wrap')) pgiListClose();
+  if(t.closest('#pgiBar') || t.closest('.pgi-add') || t.closest('.pgi-qa')) return;
   const box = t.closest('.pgi-layer .pgi');
   if(!box){
     // Clic sur une page, hors image : on désélectionne (le mode reste actif).
@@ -583,6 +727,7 @@ document.addEventListener('keydown', e => {
   const mod = e.ctrlKey || e.metaKey, k = e.key;
   let done = true;
   if(k === 'Escape' && pgiOpOpen) pgiOpClose();
+  else if(k === 'Escape' && pgiListOpen) pgiListClose();
   else if(k === 'Escape'){ if(pgiCrop){ pgiCrop = false; pgiRender(true); } else if(pgiSel){ pgiSel = null; pgiRender(true); } else pgiExit(); }
   else if(mod && !e.shiftKey && (k === 'z' || k === 'Z')) pgiDoUndo();
   else if(mod && ((k === 'y' || k === 'Y') || (e.shiftKey && (k === 'z' || k === 'Z')))) pgiDoRedo();
@@ -596,7 +741,7 @@ document.addEventListener('keydown', e => {
     pgiPush();
     if(k === 'ArrowLeft') m.x -= st; else if(k === 'ArrowRight') m.x += st;
     else if(k === 'ArrowUp') m.y -= st * pgiPageRatio(); else m.y += st * pgiPageRatio();
-    pgiApply(m); scheduleAutosave(); pgiSig = '';
+    pgiApply(m); pgiSaveLater(); pgiSig = '';
   }
   else done = false;
   if(done){ e.preventDefault(); e.stopPropagation(); }
@@ -684,5 +829,6 @@ function pgiDecorateSheet(sheet, k, p, count){
 Object.assign(ACTIONS, {
   pgiToggle, pgiEnter: () => pgiEnter(), pgiExit, pgiPickFiles, pgiToggleCrop, pgiUncrop, pgiRatio,
   pgiToggleBack, pgiForward, pgiBackward, pgiDuplicate, pgiRemove,
-  pgiSetFront, pgiSetBack, pgiOpToggle, pgiSetOp, pgiAddHere
+  pgiSetFront, pgiSetBack, pgiOpToggle, pgiSetOp, pgiAddHere,
+  pgiReplace, pgiListToggle, pgiGoTo, pgiRemoveId, pgiRemoveAll
 });
