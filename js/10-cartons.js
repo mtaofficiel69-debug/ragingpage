@@ -15,7 +15,10 @@ const CARD_FONTS = {
   serif:'Georgia, "Times New Roman", Times, serif',
   sans:'Helvetica, Arial, sans-serif'
 };
-const CARD_VARS = ['--card-size','--card-align','--card-weight','--card-style','--card-case','--card-font','--card-width','--card-ml','--card-mr','--card-sp'];
+const CARD_VARS = ['--card-size','--card-align','--card-weight','--card-style','--card-case','--card-font','--card-width','--card-ml','--card-mr','--card-sp','--card-color','--card-lh'];
+/* Couleur et interligne d'un carton (réglages ajoutés au panneau) : absents = rendu d'origine, au pixel près. */
+function cardColorOk(v){ return typeof v === 'string' && /^#[0-9a-f]{6}$/i.test(v); }
+function cardLhOk(v){ v = Number(v); return isFinite(v) && v >= 0.9 && v <= 2.5 && Math.abs(v - 1.35) > 0.001; }
 function cardDefaults(){
   return { size:22, align:'center', width:100, bold:true, italic:false, caps:true, font:'mono', frame:'none', space:2, full:false };
 }
@@ -55,63 +58,166 @@ function applyCardStyle(div, el){
   st.setProperty('--card-ml', (w >= 100 || al === 'left') ? '-3px' : 'auto');
   st.setProperty('--card-mr', (w >= 100 || al === 'right') ? '-3px' : 'auto');
   st.setProperty('--card-sp', (Math.max(0, Number(c.space)) * 18) + 'pt');
+  if(cardColorOk(c.color)) st.setProperty('--card-color', c.color); else st.removeProperty('--card-color');
+  if(cardLhOk(c.lh)) st.setProperty('--card-lh', String(Number(c.lh))); else st.removeProperty('--card-lh');
   if(c.frame && c.frame !== 'none' && !c.full) div.dataset.frame = c.frame; else delete div.dataset.frame;
   if(c.full) div.dataset.full = '1'; else { delete div.dataset.full; div.style.minHeight = ''; }
 }
+/* ---- Panneau « Carton » (à droite, quand le curseur est dans un carton) ----
+   Dans la DA de l'appli : modèles en un clic (avec aperçu), taille au point près, police avec aperçu,
+   alignement en icônes, cadres en vignettes, largeur au pourcentage près, interligne, couleur.
+   Tout passe par el.card et applyCardStyle : l'éditeur, l'impression et le PDF lisent le même rendu. */
+const CARD_PRESETS = [
+  ['title', ['Grand titre','Big title'],   { size:36, align:'center', width:100, bold:true,  italic:false, caps:true,  font:'mono',  frame:'none',   space:2, lh:1.35, color:'' }, 'TITRE'],
+  ['act',   ['Acte / intertitre','Act / divider'], { size:24, align:'center', width:75, bold:true, italic:false, caps:true, font:'mono', frame:'lines', space:2, lh:1.35, color:'' }, 'ACTE I'],
+  ['quote', ['Citation','Quote'],          { size:14, align:'center', width:75,  bold:false, italic:true,  caps:false, font:'serif', frame:'none',   space:2, lh:1.5,  color:'' }, '« Citation »'],
+  ['place', ['Lieu et date','Place & date'], { size:14, align:'left', width:100, bold:false, italic:false, caps:true,  font:'mono',  frame:'none',   space:1, lh:1.35, color:'' }, 'PARIS, 1942'],
+  ['box',   ['Encadré','Boxed'],           { size:16, align:'center', width:75,  bold:false, italic:false, caps:false, font:'sans',  frame:'box',    space:2, lh:1.35, color:'' }, 'Encadré'],
+  ['end',   ['Fin','The end'],             { size:48, align:'center', width:100, bold:true,  italic:false, caps:true,  font:'serif', frame:'none',   space:4, lh:1.35, color:'' }, 'FIN']
+];
+const CARD_COLORS = [['', ['Encre','Ink'], 'var(--paper-ink)'], ['#5a5f68', ['Gris','Grey']], ['#8e2430', ['Bordeaux','Burgundy']], ['#1f4e79', ['Bleu nuit','Navy']], ['#2f5d3a', ['Vert forêt','Forest green']]];
+function cardIsPreset(c, p){ return Object.keys(p).every(k => k === 'lh' ? Math.abs((Number(c.lh) || 1.35) - p.lh) < 0.001 : k === 'color' ? (c.color || '') === p.color : String(c[k]) === String(p[k])); }
 function cardPanelHtml(el){
   const c = cardOf(el), id = el.id;
-  const seg = (prop, opts) => opts.map(o =>
-    `<button class="btn btn-sm ${String(c[prop]) === String(o[0]) ? 'btn-primary' : ''}" data-act="cardSet" data-id="${id}|${prop}|${o[0]}">${o[1]}</button>`).join('');
-  const tog = (prop, label, title) =>
-    `<button class="btn btn-sm ${c[prop] ? 'btn-primary' : ''}" data-act="cardSet" data-id="${id}|${prop}|${!c[prop]}" title="${title||''}">${label}</button>`;
+  const svg = p => `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">${p}</svg>`;
+  const act = (prop, val) => `data-act="cardSet" data-id="${id}|${prop}|${val}"`;
+  const on = (prop, val) => String(c[prop]) === String(val) ? ' on' : '';
+  const lh = Number(c.lh) || 1.35, color = cardColorOk(c.color) ? c.color.toLowerCase() : '';
+  const presets = CARD_PRESETS.map(([k, name, p, demo]) => {
+    const fs = Math.max(9, Math.min(19, p.size * 0.42));
+    const st = `font-family:${CARD_FONTS[p.font]};font-size:${fs}px;font-weight:${p.bold ? 700 : 400};font-style:${p.italic ? 'italic' : 'normal'};text-transform:${p.caps ? 'uppercase' : 'none'};text-align:${p.align};`;
+    return `<button type="button" class="crd-preset${cardIsPreset(c, p) ? ' on' : ''}" data-act="cardPreset" data-id="${id}|${k}" title="${L(name[0], name[1])}">
+      <span class="crd-preset-demo" data-frame="${p.frame}" style="${st}">${esc(k === 'quote' ? L('« Citation »','“Quote”') : k === 'end' ? L('FIN','THE END') : k === 'box' ? L('Encadré','Boxed') : k === 'act' ? L('ACTE I','ACT I') : k === 'place' ? L('PARIS, 1942','PARIS, 1942') : L('TITRE','TITLE'))}</span>
+      <span class="crd-preset-name">${L(name[0], name[1])}</span></button>`;
+  }).join('');
+  const fonts = [['mono', L('Machine','Typewriter')], ['serif', 'Serif'], ['sans', 'Sans']].map(([k, n]) =>
+    `<button type="button" class="crd-tile${on('font', k)}" ${act('font', k)} title="${n}"><span class="crd-aa" style="font-family:${CARD_FONTS[k]};">Aa</span><span>${n}</span></button>`).join('');
+  const aligns = [['left', svg('<path d="M2.5 4h11M2.5 7h7M2.5 10h11M2.5 13h7"/>'), L('À gauche','Left')], ['center', svg('<path d="M2.5 4h11M4.5 7h7M2.5 10h11M4.5 13h7"/>'), L('Centré','Centered')], ['right', svg('<path d="M2.5 4h11M6.5 7h7M2.5 10h11M6.5 13h7"/>'), L('À droite','Right')]].map(([k, ic, n]) =>
+    `<button type="button" class="crd-seg-b${on('align', k)}" ${act('align', k)} title="${n}" aria-label="${n}">${ic}</button>`).join('');
+  const styles = [['bold', '<b>B</b>', L('Gras','Bold')], ['italic', '<i style="font-family:Georgia,serif;">I</i>', L('Italique','Italic')], ['caps', '<span style="font-size:11.5px;letter-spacing:.04em;">AA</span>', L('Majuscules','Capitals')]].map(([k, g, n]) =>
+    `<button type="button" class="crd-seg-b${c[k] ? ' on' : ''}" ${act(k, !c[k])} title="${n}" aria-label="${n}" aria-pressed="${!!c[k]}">${g}</button>`).join('');
+  const frames = [['none', L('Aucun','None')], ['lines', L('Filets','Rules')], ['box', L('Cadre','Box')], ['double', L('Double','Double')]].map(([k, n]) =>
+    `<button type="button" class="crd-tile${on('frame', k)}" ${act('frame', k)} title="${n}"><span class="crd-frame-demo" data-frame="${k}"><i></i><i></i></span><span>${n}</span></button>`).join('');
+  const seg = (prop, opts, cur) => opts.map(([v, n]) => `<button type="button" class="crd-seg-b txt${String(cur) === String(v) ? ' on' : ''}" ${act(prop, v)}>${n}</button>`).join('');
+  const colors = CARD_COLORS.map(([v, n, show]) => `<button type="button" class="crd-sw${color === v ? ' on' : ''}" ${act('color', v || 'none')} title="${L(n[0], n[1])}" aria-label="${L(n[0], n[1])}" style="--sw:${show || v};"></button>`).join('');
+  const custom = color && !CARD_COLORS.some(x => x[0] === color);
   return `<div class="pane-title">${L('Carton','Title card')}</div>
-  <div class="panel-block card-panel" data-card-id="${id}">
-    <div class="cp-row"><div class="cp-lbl">${L('Taille','Size')} — <span id="cardSizeVal">${c.size}</span> pt</div>
-      <input type="range" id="cardSizeRange" min="10" max="96" step="1" value="${c.size}">
-      <div class="cp-seg" style="margin-top:6px;">${seg('size',[[14,'S'],[22,'M'],[32,'L'],[48,'XL'],[72,'XXL']])}</div></div>
-    <div class="cp-row"><div class="cp-lbl">${L('Position du texte','Text alignment')}</div>
-      <div class="cp-seg">${seg('align',[['left',L('Gauche','Left')],['center',L('Centre','Center')],['right',L('Droite','Right')]])}</div></div>
-    <div class="cp-row"><div class="cp-lbl">${L('Largeur du bloc','Block width')}</div>
-      <div class="cp-seg">${seg('width',[[100,'100 %'],[75,'75 %'],[50,'50 %'],[33,'33 %']])}</div></div>
-    <div class="cp-row"><div class="cp-lbl">${L('Police','Font')}</div>
-      <div class="cp-seg">${seg('font',[['mono',L('Machine','Typewriter')],['serif','Serif'],['sans','Sans']])}</div></div>
-    <div class="cp-row"><div class="cp-lbl">${L('Style','Style')}</div>
-      <div class="cp-seg">${tog('bold','<b>B</b>',L('Gras','Bold'))}${tog('italic','<i>I</i>',L('Italique','Italic'))}${tog('caps','AA',L('Majuscules','Capitals'))}</div></div>
-    ${c.full ? '' : `<div class="cp-row"><div class="cp-lbl">${L('Cadre','Frame')}</div>
-      <div class="cp-seg">${seg('frame',[['none',L('Aucun','None')],['lines',L('Filets','Rules')],['box',L('Cadre','Box')],['double',L('Double','Double')]])}</div></div>`}
-    <div class="cp-row"><div class="cp-lbl">${L('Espace autour','Spacing')}</div>
-      <div class="cp-seg">${seg('space',[[0,L('Aucun','None')],[1,L('Serré','Tight')],[2,'Normal'],[4,L('Aéré','Airy')]])}</div></div>
-    <div class="cp-row"><div class="cp-lbl">${L('Page','Page')}</div>
-      <div class="cp-seg">${tog('full',L('Page entière, centré au milieu','Full page, centered'),L('Le carton prend sa propre feuille, centré verticalement.','The card gets its own page, vertically centered.'))}</div></div>
-    <p style="font-size:12px;color:var(--ink-soft);line-height:1.5;margin:0 0 10px;">${L('Maj+Entrée : retour à la ligne dans le carton.','Shift+Enter: line break inside the card.')}</p>
-    <button class="btn btn-sm btn-danger" data-act="deleteElement" data-id="${id}">${L('Supprimer ce carton','Delete this card')}</button>
+  <div class="crd" data-card-id="${id}">
+    <section class="crd-sec">
+      <div class="crd-h">${L('Modèles','Templates')}<small>${L('un clic, tout reste réglable','one click, all still adjustable')}</small></div>
+      <div class="crd-presets">${presets}</div>
+    </section>
+    <section class="crd-sec">
+      <div class="crd-h">${L('Texte','Text')}</div>
+      <div class="crd-line"><span class="crd-lbl">${L('Taille','Size')}</span>
+        <span class="crd-step"><button type="button" data-act="cardStep" data-id="${id}|size|-1" title="${L('Plus petit','Smaller')}" aria-label="${L('Plus petit','Smaller')}">−</button><input type="number" id="cardSizeNum" min="8" max="120" step="1" value="${c.size}" aria-label="${L('Taille en points','Size in points')}"><em>pt</em><button type="button" data-act="cardStep" data-id="${id}|size|1" title="${L('Plus grand','Bigger')}" aria-label="${L('Plus grand','Bigger')}">+</button></span></div>
+      <input type="range" class="crd-range" id="cardSizeRange" min="10" max="96" step="1" value="${Math.min(96, Math.max(10, c.size))}" aria-label="${L('Taille','Size')}">
+      <div class="crd-chips">${[[14,'S'],[22,'M'],[32,'L'],[48,'XL'],[72,'XXL']].map(([v, n]) => `<button type="button" class="crd-chip${on('size', v)}" ${act('size', v)}>${n}</button>`).join('')}</div>
+      <div class="crd-lbl crd-lbl-top">${L('Police','Font')}</div>
+      <div class="crd-tiles three">${fonts}</div>
+      <div class="crd-line crd-line-2">
+        <span class="crd-seg" role="group" aria-label="${L('Style','Style')}">${styles}</span>
+        <span class="crd-seg" role="group" aria-label="${L('Alignement','Alignment')}">${aligns}</span>
+      </div>
+      <div class="crd-line stack"><span class="crd-lbl">${L('Interligne','Line spacing')}</span>
+        <span class="crd-seg fill">${seg('lh', [[1.1, L('Serré','Tight')], [1.35, 'Normal'], [1.7, L('Aéré','Airy')]], [1.1, 1.35, 1.7].find(v => Math.abs(v - lh) < 0.001) || '')}</span></div>
+      <div class="crd-line"><span class="crd-lbl">${L('Couleur','Colour')}</span>
+        <span class="crd-sws">${colors}<label class="crd-sw crd-sw-custom${custom ? ' on' : ''}" title="${L('Autre couleur…','Other colour…')}" style="${custom ? '--sw:' + color + ';' : ''}"><input type="color" id="cardColorPick" value="${color || '#1a1d22'}" aria-label="${L('Autre couleur','Other colour')}"></label></span></div>
+    </section>
+    <section class="crd-sec">
+      <div class="crd-h">${L('Bloc','Block')}</div>
+      <div class="crd-line"><span class="crd-lbl">${L('Largeur','Width')}</span><span class="crd-val" id="cardWidthVal">${Math.round(c.width)} %</span></div>
+      <input type="range" class="crd-range" id="cardWidthRange" min="20" max="100" step="1" value="${Math.min(100, Math.max(20, Number(c.width) || 100))}" aria-label="${L('Largeur','Width')}">
+      <div class="crd-chips">${[[100,'100 %'],[75,'75 %'],[50,'50 %'],[33,'33 %']].map(([v, n]) => `<button type="button" class="crd-chip${on('width', v)}" ${act('width', v)}>${n}</button>`).join('')}</div>
+      ${c.full ? '' : `<div class="crd-lbl crd-lbl-top">${L('Cadre','Frame')}</div><div class="crd-tiles four">${frames}</div>`}
+      <div class="crd-line stack"><span class="crd-lbl">${L('Espace autour','Spacing')}</span>
+        <span class="crd-seg fill">${seg('space', [[0, L('Aucun','None')], [1, L('Serré','Tight')], [2, 'Normal'], [4, L('Aéré','Airy')]], c.space)}</span></div>
+      <button type="button" class="crd-switch${c.full ? ' on' : ''}" ${act('full', !c.full)} role="switch" aria-checked="${!!c.full}">
+        <span class="crd-switch-t"><b>${L('Page entière','Full page')}</b><small>${L('Le carton prend sa propre feuille, centré au milieu','The card gets its own page, centred in the middle')}</small></span><span class="crd-knob"></span></button>
+    </section>
+    <p class="crd-hint">${L('Maj+Entrée : retour à la ligne dans le carton.','Shift+Enter: line break inside the card.')}</p>
+    <div class="crd-foot">
+      <button type="button" class="crd-btn" data-act="cardReset" data-id="${id}" title="${L('Revenir au style de départ d’un carton','Back to a card’s starting style')}">${icon('undo')}<span>${L('Réinitialiser','Reset')}</span></button>
+      <button type="button" class="crd-btn is-danger" data-act="deleteElement" data-id="${id}">${icon('trash')}<span>${L('Supprimer','Delete')}</span></button>
+    </div>
   </div>`;
+}
+/* Applique un changement de style au carton, sans perdre le défilement du panneau. */
+function cardCommit(el, live){
+  const div = document.querySelector('#page [data-id="' + el.id + '"]');
+  if(div) applyCardStyle(div, el);
+  if(live){ schedulePaginate(); scheduleAutosave(); return; }
+  repaginateNow(); scheduleAutosave();
+  const side = document.getElementById('sidePane'), top = side ? side.scrollTop : 0;
+  showContextPanel(el);
+  if(side) side.scrollTop = top;
 }
 function bindCardPanel(el){
   const r = document.getElementById('cardSizeRange'); if(!r) return;
   let undone = false;
-  r.addEventListener('input', ()=>{
-    if(!undone){ pushUndo(); undone = true; }
-    el.card = cardOf(el); el.card.size = Number(r.value);
-    const v = document.getElementById('cardSizeVal'); if(v) v.textContent = r.value;
-    const div = document.querySelector('#page [data-id="' + el.id + '"]');
-    if(div) applyCardStyle(div, el);
-    schedulePaginate(); scheduleAutosave();
-  });
-  r.addEventListener('change', ()=>{ undone = false; showContextPanel(el); });
+  const live = (inp, apply) => {
+    inp.addEventListener('input', ()=>{
+      if(!undone){ pushUndo(); undone = true; }
+      el.card = cardOf(el); apply(inp.value);
+      cardCommit(el, true);
+    });
+    inp.addEventListener('change', ()=>{ undone = false; cardCommit(el); });
+  };
+  live(r, v => { el.card.size = Number(v); const n = document.getElementById('cardSizeNum'); if(n) n.value = v; });
+  const w = document.getElementById('cardWidthRange');
+  if(w) live(w, v => { el.card.width = Number(v); const t = document.getElementById('cardWidthVal'); if(t) t.textContent = v + ' %'; });
+  const n = document.getElementById('cardSizeNum');
+  if(n){
+    const go = ()=>{ const v = Math.round(Number(n.value)); if(!isFinite(v)) return; cardSet(el.id + '|size|' + Math.min(120, Math.max(8, v))); };
+    n.addEventListener('change', go);
+    n.addEventListener('keydown', e=>{ if(e.key === 'Enter'){ e.preventDefault(); go(); } });
+  }
+  const cp = document.getElementById('cardColorPick');
+  if(cp){
+    let pushed = false;
+    cp.addEventListener('input', ()=>{
+      if(!pushed){ pushUndo(); pushed = true; }
+      el.card = cardOf(el); el.card.color = cp.value.toLowerCase();
+      cardCommit(el, true);
+    });
+    cp.addEventListener('change', ()=>{ pushed = false; cardCommit(el); });
+  }
 }
 function cardSet(raw){
   const parts = String(raw).split('|');
   const el = findEl(parts[0]); if(!el || el.type !== 'card') return;
   const prop = parts[1], val = parts[2];
+  if(prop === 'color' && val !== 'none' && !cardColorOk(val)) return;
   pushUndo();
   el.card = cardOf(el);
-  el.card[prop] = (prop === 'size' || prop === 'width' || prop === 'space') ? Number(val)
+  if(prop === 'color'){ if(val === 'none') delete el.card.color; else el.card.color = val.toLowerCase(); }
+  else if(prop === 'lh'){ if(Math.abs(Number(val) - 1.35) < 0.001) delete el.card.lh; else el.card.lh = Number(val); }
+  else el.card[prop] = (prop === 'size' || prop === 'width' || prop === 'space') ? Number(val)
                 : val === 'true' ? true : val === 'false' ? false : val;
-  const div = document.querySelector('#page [data-id="' + el.id + '"]');
-  if(div) applyCardStyle(div, el);
-  repaginateNow(); scheduleAutosave();
-  showContextPanel(el);
+  cardCommit(el);
+}
+function cardStep(raw){
+  const parts = String(raw).split('|');
+  const el = findEl(parts[0]); if(!el || el.type !== 'card') return;
+  const c = cardOf(el), d = Number(parts[2]) || 0;
+  cardSet(el.id + '|size|' + Math.min(120, Math.max(8, Number(c.size) + d)));
+}
+function cardPreset(raw){
+  const parts = String(raw).split('|');
+  const el = findEl(parts[0]); if(!el || el.type !== 'card') return;
+  const p = CARD_PRESETS.find(x => x[0] === parts[1]); if(!p) return;
+  pushUndo();
+  const full = cardOf(el).full;
+  el.card = Object.assign(cardOf(el), p[2], { full });
+  if(Math.abs(el.card.lh - 1.35) < 0.001) delete el.card.lh;
+  if(!el.card.color) delete el.card.color;
+  cardCommit(el);
+}
+function cardReset(id){
+  const el = findEl(id); if(!el || el.type !== 'card') return;
+  pushUndo();
+  el.card = Object.assign(cardDefaults(), { full: cardOf(el).full });
+  cardCommit(el);
 }
 /* ---- Mise en page libre (v48) ---- */
 function layoutPanelHtml(el){
