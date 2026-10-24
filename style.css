@@ -2319,3 +2319,51 @@ html[data-theme="dark"] .topbar.tb-c4 .vault-chip.ok{color:#5FD39A;} html[data-t
 #homeView .wd-slug-r{margin-left:auto; text-align:right;}
 @keyframes wdSlugBlink{50%{opacity:0;}}
 @media (prefers-reduced-motion:reduce){ #homeView .wd-slug-c{animation:none;} }
+
+/* ---------- IMAGES SUR LES PAGES DU SCÉNARIO (js/37-page-images.js) ----------
+   Calques à part, posés sur les feuilles : le texte (#page) n'est jamais touché.
+   Hors du mode Images, ils ne captent aucun clic. */
+.pgi-layer{position:absolute; inset:0; pointer-events:none;}
+.pgi-layer.is-back{z-index:0;}
+.pgi-layer.is-front{z-index:2;}
+.pgi-page{position:absolute; left:0; width:100%; overflow:hidden;}
+.pgi-page.is-open{overflow:visible;}
+.pgi{position:absolute; box-sizing:border-box;}
+.pgi-clip{position:absolute; inset:0; overflow:hidden;}
+.pgi img, .pgi-ghost img, .pgi-print img{position:absolute; display:block; max-width:none; max-height:none; margin:0; padding:0; border:0;
+  -webkit-user-select:none; user-select:none; -webkit-user-drag:none;}
+.pgi-ghost{position:absolute; pointer-events:none; opacity:.32; outline:1px dashed var(--accent);}
+.pgi-ghost img{left:0; top:0; width:100%; height:100%;}
+#pageStack.pgi-on #page{pointer-events:none;}
+#pageStack.pgi-on .pgi{pointer-events:auto; cursor:move; touch-action:none;}
+#pageStack.pgi-on .pgi:hover{outline:1px dashed var(--accent);}
+#pageStack.pgi-on .pgi.is-sel{outline:2px solid var(--accent); outline-offset:0;}
+#pageStack.pgi-on .pgi.is-crop{outline:2px solid #E0A93B; cursor:grab;}
+.pgi-h{position:absolute; width:12px; height:12px; margin:-6px 0 0 -6px; background:#fff; border:2px solid var(--accent); border-radius:50%; box-sizing:border-box; z-index:2; touch-action:none;}
+.pgi.is-crop .pgi-h{border-radius:2px; border-color:#E0A93B; background:#E0A93B;}
+.pgi-h[data-h="nw"]{left:0; top:0; cursor:nwse-resize;}
+.pgi-h[data-h="n"]{left:50%; top:0; cursor:ns-resize;}
+.pgi-h[data-h="ne"]{left:100%; top:0; cursor:nesw-resize;}
+.pgi-h[data-h="e"]{left:100%; top:50%; cursor:ew-resize;}
+.pgi-h[data-h="se"]{left:100%; top:100%; cursor:nwse-resize;}
+.pgi-h[data-h="s"]{left:50%; top:100%; cursor:ns-resize;}
+.pgi-h[data-h="sw"]{left:0; top:100%; cursor:nesw-resize;}
+.pgi-h[data-h="w"]{left:0; top:50%; cursor:ew-resize;}
+.pgi-bar{position:fixed; z-index:900; transform:translateX(-50%); background:var(--surface); color:var(--ink);
+  border:1px solid var(--hair); border-radius:14px; box-shadow:0 10px 30px -10px #0005, 0 2px 6px #0002; padding:6px;}
+.pgi-bar-in{display:flex; align-items:center; gap:4px; flex-wrap:wrap; justify-content:center;}
+.pgi-bar .btn{display:inline-flex; align-items:center; gap:6px; white-space:nowrap;}
+.pgi-bar .btn .icon{width:15px; height:15px; flex:none;}
+.pgi-bar .btn.is-on{background:#E0A93B; border-color:#E0A93B; color:#fff;}
+.pgi-bar-t{display:inline-flex; align-items:center; gap:6px; padding:0 8px 0 4px; font-size:13px;}
+.pgi-bar-t .icon{width:16px; height:16px;}
+.pgi-bar-t small{color:var(--ink-soft); font-size:11.5px;}
+.pgi-sep{width:1px; align-self:stretch; background:var(--hair); margin:2px 4px;}
+.pgi-op{display:inline-flex; align-items:center; gap:6px; font-size:12px; color:var(--ink-soft); padding:0 4px;}
+.pgi-op input{width:84px;}
+.pgi-op em{font-style:normal; min-width:34px; font-variant-numeric:tabular-nums;}
+/* Impression / PDF : même cadre, en fraction de la page ; derrière ou devant le texte. */
+.pgi-print{position:absolute; overflow:hidden; pointer-events:none;}
+.pgi-print.is-back{z-index:-1;}
+.pgi-print.is-front{z-index:3;}
+.print-page.has-pgi-back{isolation:isolate;}

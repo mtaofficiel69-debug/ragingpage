@@ -842,5 +842,6 @@ function paginateEditor(force){
     try{ refreshSceneTools(); }catch(err){ /* les boutons de marge ne doivent jamais gêner la pagination */ }
   }
   refreshNav();   // les numéros de page affichés par le navigateur viennent d'ici
+  try{ pgiRender(); }catch(err){ /* images sur les pages (js/37-page-images.js) : calque à part, jamais dans le texte */ }
   if(window.__pgDebug) renderPgDebug(res);
 }

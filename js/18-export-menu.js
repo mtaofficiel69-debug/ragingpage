@@ -178,6 +178,7 @@ function printScript(){
       wm.textContent = p.settings.watermarkText; sheet.appendChild(wm);
     }
     linesOfPage.forEach((div, ix)=>{ sheet.appendChild(div); div.classList.toggle('pg-first', ix === 0); });
+    try{ pgiDecorateSheet(sheet, k, p, res.pages.length); }catch(e){}   // images sur les pages (js/37-page-images.js)
     wrap.appendChild(sheet);
   });
 

@@ -1061,6 +1061,7 @@ function moreMenuHtml(){
   return `${T(L('Écriture','Writing'))}
     ${dualBtnHtml('')}
     <button class="btn" data-act="openFreePageMenu" title="${L('Dédicace, citation, synopsis, intercalaire, page blanche... : autant que tu veux, où tu veux, sans toucher à la numérotation','Dedication, quote, synopsis, divider, blank page...: as many as you like, wherever you like, without touching the numbering')}">${icon('nonum')} ${L('Page sans numéro…','Unnumbered page…')}</button>
+    <button class="btn" data-act="pgiToggle" title="${L('Autant d\u2019images que tu veux, sur n\u2019importe quelle page : déplacer, agrandir, rogner. Le texte ne bouge pas.','As many images as you like, on any page: move, resize, crop. The text doesn\u2019t move.')}">${icon('image')} ${L('Images sur les pages…','Images on pages…')}</button>
     <button class="btn" data-act="openReplace">${icon('findrep')} Rechercher / remplacer</button>
     <button class="btn" data-act="openSynonyms">${icon('bubbles')} Synonymes</button>
     <button class="btn" data-act="wdOpenRename">${icon('cursor')} ${L('Renommer partout…','Rename everywhere…')}</button>
