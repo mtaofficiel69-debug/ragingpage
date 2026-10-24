@@ -106,6 +106,7 @@ function cpActions(){
     // Menu ⋮ › Écriture
     { id:'toggleDual', ic:'dual', t:['Dialogue simultané', 'Simultaneous dialogue'], k:'simultane dual dialogue double colonne', w:CP_W.mW, keys:[M, Sh, 'D'], ed:true, line:true, run:() => toggleDual() },
     { id:'openFreePageMenu', ic:'nonum', t:['Insérer une page sans numéro', 'Insert an unnumbered page'], k:'page sans numero dedicace citation synopsis intercalaire blanche unnumbered', w:CP_W.mW, ed:true, line:true, run:() => openFreePageMenu() },
+    { id:'pgiToggle', ic:'image', t:['Images sur les pages', 'Images on pages'], k:'image images photo illustration rogner recadrer agrandir crop picture', w:CP_W.mW, ed:true, run:() => pgiToggle() },
     { id:'openReplace', ic:'findrep', t:['Rechercher / remplacer', 'Find / replace'], k:'remplacer rechercher replace find', w:CP_W.mW, keys:[M, 'H'], ed:true, run:() => openReplace() },
     { id:'openSynonyms', ic:'bubbles', t:['Synonymes', 'Synonyms'], k:'synonyme mot thesaurus synonym', w:CP_W.mW, keys:[M, Sh, 'Y'], ed:true, line:true, run:() => A.openSynonyms() },
     { id:'wdOpenRename', ic:'cursor', t:['Renommer partout…', 'Rename everywhere…'], k:'renommer personnage nom rename character', w:CP_W.mW, ed:true, run:() => A.wdOpenRename() },

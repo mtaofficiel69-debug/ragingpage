@@ -314,9 +314,13 @@ function pdfReadSheet(sheet){
       w = img.naturalWidth * scale; h = img.naturalHeight * scale;
       x += (r.width - w) / 2; y += (r.height - h) / 2;
     }
-    (img.classList && img.classList.contains('tp-drawing-layer') ? page.topImages : page.images).push({
+    // Image posée sur une page du scénario (js/37-page-images.js) : son cadre la rogne, devant ou derrière le texte.
+    const pgi = img.parentNode && img.parentNode.classList && img.parentNode.classList.contains('pgi-print') ? img.parentNode : null;
+    let clip = null;
+    if(pgi){ const cr = pgi.getBoundingClientRect(); clip = { xPt:(cr.left - pr.left) * PX_TO_PT, yPt:(cr.top - pr.top) * PX_TO_PT, wPt:cr.width * PX_TO_PT, hPt:cr.height * PX_TO_PT }; }
+    ((img.classList && img.classList.contains('tp-drawing-layer')) || (pgi && pgi.classList.contains('is-front')) ? page.topImages : page.images).push({
       src: img.src, opacity: parseFloat(ics.opacity) || 1,
-      xPt: x * PX_TO_PT, yPt: y * PX_TO_PT, wPt: w * PX_TO_PT, hPt: h * PX_TO_PT
+      xPt: x * PX_TO_PT, yPt: y * PX_TO_PT, wPt: w * PX_TO_PT, hPt: h * PX_TO_PT, clip
     });
   });
 
@@ -471,6 +475,7 @@ function pdfPaintPage(doc, page){
     try{
       doc.saveGraphicsState();
       if(im.opacity < 1){ try{ doc.setGState(new doc.GState({ opacity:im.opacity })); }catch(e){} }
+      if(im.clip){ doc.rect(im.clip.xPt, im.clip.yPt, im.clip.wPt, im.clip.hPt, null); doc.clip(); doc.discardPath(); }   // image rognée
       doc.addImage(im.src, im.xPt, im.yPt, im.wPt, im.hPt);
       doc.restoreGraphicsState();
     }catch(e){ /* une image illisible ne doit pas faire échouer tout l'export */ }
@@ -534,6 +539,7 @@ function pdfPaintPage(doc, page){
     try{
       doc.saveGraphicsState();
       if(im.opacity < 1){ try{ doc.setGState(new doc.GState({ opacity:im.opacity })); }catch(e){} }
+      if(im.clip){ doc.rect(im.clip.xPt, im.clip.yPt, im.clip.wPt, im.clip.hPt, null); doc.clip(); doc.discardPath(); }   // image rognée
       doc.addImage(im.src, im.xPt, im.yPt, im.wPt, im.hPt);
       doc.restoreGraphicsState();
     }catch(e){ /* une image illisible ne doit pas faire échouer tout l'export */ }
@@ -596,6 +602,7 @@ function buildPdfStage(p, numbers){
       wm.textContent = p.settings.watermarkText; sheet.appendChild(wm);
     }
     linesOfPage.forEach((div, ix) => { sheet.appendChild(div); div.classList.toggle('pg-first', ix === 0); });
+    try{ pgiDecorateSheet(sheet, k, p, res.pages.length); }catch(e){}   // images sur les pages (js/37-page-images.js)
     stage.appendChild(sheet);
     sheets.push({ el:sheet, isTitle:false });
   });
