@@ -155,7 +155,7 @@ function convertPaint(p, type){
   const c0 = p.type === 'solid' ? p.color : p.stops[0].c;
   const c1 = p.type === 'solid' ? withAlpha(p.color, 0) : p.stops[p.stops.length-1].c;
   if(type === 'solid') return solid(c0);
-  const stops = p.type === 'solid' ? [stop(0, c0), stop(1, isLight(c0) ? '#14425E' : '#5DB6EC')] : p.stops;
+  const stops = p.type === 'solid' ? [stop(0, c0), stop(1, isLight(c0) ? '#5E1418' : '#F0646B')] : p.stops;
   void c1;
   return type === 'linear' ? linear(p.angle || 180, stops) : radial(stops, p.cx, p.cy);
 }
@@ -296,7 +296,7 @@ function renderBrushPreview(){
   });
 }
 function quickSwatches(target){
-  const cols = ['#FFFFFF','#0B0B10','#3699D4','#5DB6EC','#14425E','#D64545','#F2C94C','#F2994A','#2F9E44','#8E5BD6','#E86FB0'];
+  const cols = ['#FFFFFF','#0B0B10','#D9363E','#F0646B','#5E1418','#3699D4','#F2C94C','#F2994A','#2F9E44','#8E5BD6','#E86FB0'];
   return `<div class="qsw">${cols.map(c => `<button style="--c:${c}" class="${toHex(S.brush.color).toUpperCase()===c?'on':''}" data-act="brushColor" data-id="${c}" title="${c}"></button>`).join('')}${swatchBtn(S.brush.color, `data-act="pickColor" data-bind-color="color" data-target="${target}"`)}</div>`;
 }
 function brushPanel(){

@@ -335,10 +335,10 @@ function drawChecker(x, y, w, h){
   cx.restore();
 }
 function drawOverlay(){
-  const d = S.doc, z = S.zoom, acc = '#3699D4';
+  const d = S.doc, z = S.zoom, acc = '#D9363E';
   // repères de composition
   if(S.grid || S.safe){
-    cx.save(); cx.strokeStyle = 'rgba(54,153,212,.55)'; cx.lineWidth = 1; cx.setLineDash([5, 5]);
+    cx.save(); cx.strokeStyle = 'rgba(217,54,62,.55)'; cx.lineWidth = 1; cx.setLineDash([5, 5]);
     const p = docToScreen(0, 0), W = d.w*z, H = d.h*z;
     if(S.grid){
       cx.beginPath();
@@ -350,7 +350,7 @@ function drawOverlay(){
   }
   // survol
   if(S.hover && !S.drag && !S.sel.includes(S.hover) && S.tool === 'select'){
-    const o = objById(S.hover); if(o) outline(o, 'rgba(54,153,212,.7)', 1);
+    const o = objById(S.hover); if(o) outline(o, 'rgba(217,54,62,.7)', 1);
   }
   const sel = selObjs();
   if(S.tool === 'select' || S.tool === 'text' || (S.drag && S.drag.kind !== 'paint')){
@@ -379,7 +379,7 @@ function drawOverlay(){
   if(S.drag && (S.drag.kind === 'marquee' || S.drag.kind === 'create') && S.drag.cur){
     const a = docToScreen(S.drag.x0, S.drag.y0), b = docToScreen(S.drag.cur.x, S.drag.cur.y);
     cx.save();
-    cx.fillStyle = 'rgba(54,153,212,.10)'; cx.strokeStyle = acc; cx.lineWidth = 1;
+    cx.fillStyle = 'rgba(217,54,62,.10)'; cx.strokeStyle = acc; cx.lineWidth = 1;
     if(S.drag.kind === 'create') cx.setLineDash([5, 4]);
     const r = S.drag.kind === 'create' ? createRect() : null;
     if(r){ const p1 = docToScreen(r.x1, r.y1), p2 = docToScreen(r.x2, r.y2); cx.fillRect(p1.x, p1.y, p2.x-p1.x, p2.y-p1.y); cx.strokeRect(p1.x + .5, p1.y + .5, p2.x-p1.x, p2.y-p1.y); }
@@ -422,12 +422,12 @@ function groupHandles(){
 function drawHandle(hd){
   cx.save();
   if(hd.kind === 'rot'){
-    cx.strokeStyle = '#3699D4'; cx.lineWidth = 1; cx.beginPath(); cx.moveTo(hd.b.x, hd.b.y); cx.lineTo(hd.s.x, hd.s.y); cx.stroke();
+    cx.strokeStyle = '#D9363E'; cx.lineWidth = 1; cx.beginPath(); cx.moveTo(hd.b.x, hd.b.y); cx.lineTo(hd.s.x, hd.s.y); cx.stroke();
     cx.beginPath(); cx.arc(hd.s.x, hd.s.y, 6, 0, Math.PI*2); cx.fillStyle = '#fff'; cx.fill(); cx.lineWidth = 1.5; cx.stroke();
     cx.beginPath(); cx.arc(hd.s.x, hd.s.y, 2.4, -2.6, 1.6); cx.stroke();
   }else{
     const r = hd.kind === 'side' ? 3.6 : 4.6;
-    cx.fillStyle = '#fff'; cx.strokeStyle = '#3699D4'; cx.lineWidth = 1.5;
+    cx.fillStyle = '#fff'; cx.strokeStyle = '#D9363E'; cx.lineWidth = 1.5;
     cx.shadowColor = 'rgba(0,0,0,.18)'; cx.shadowBlur = 3;
     cx.beginPath();
     if(cx.roundRect) cx.roundRect(hd.s.x - r, hd.s.y - r, r*2, r*2, 1.5); else cx.rect(hd.s.x - r, hd.s.y - r, r*2, r*2);
@@ -729,7 +729,7 @@ function finishCreate(D){
   }else{
     let w = r.x2 - r.x1, h = r.y2 - r.y1, x = (r.x1 + r.x2)/2, y = (r.y1 + r.y2)/2;
     if(w*S.zoom < 6 && h*S.zoom < 6){ w = h = u*.3; x = D.x0; y = D.y0; }
-    o = mkShape(t, x, y, w, h, {fill:solid('#3699D4')});
+    o = mkShape(t, x, y, w, h, {fill:solid('#D9363E')});
   }
   insertObj(o);
   setTool('select');
@@ -897,7 +897,7 @@ function positionTextEdit(){
     padding:pad + 'px 0', outlineOffset:(4 - pad) + 'px',
     font:(o.italic ? 'italic ' : '') + (o.weight||400) + ' ' + (o.size*z) + 'px "' + o.font + '", Inter, sans-serif',
     lineHeight:String(o.lineHeight || 1), letterSpacing:(lay.ls*z) + 'px', textAlign:o.align || 'center',
-    textTransform:o.upper ? 'uppercase' : 'none', color:colorAlpha(col) < 0.15 ? '#3699D4' : toHex(col),
+    textTransform:o.upper ? 'uppercase' : 'none', color:colorAlpha(col) < 0.15 ? '#D9363E' : toHex(col),
     transform:'rotate(' + (o.rot||0) + 'deg) scale(' + (o.flipX ? -1 : 1) + ',' + (o.flipY ? -1 : 1) + ')'
   });
 }

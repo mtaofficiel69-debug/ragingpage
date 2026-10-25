@@ -312,7 +312,7 @@ function drawPlaceholder(ctx, o, scale, doc){
   ctx.stroke();
   ctx.restore();
   ctx.save();
-  ctx.setLineDash([8/scale, 6/scale]); ctx.strokeStyle = '#5DB6EC'; ctx.lineWidth = 1.5/scale;
+  ctx.setLineDash([8/scale, 6/scale]); ctx.strokeStyle = '#F0646B'; ctx.lineWidth = 1.5/scale;
   imageClip(ctx, o); ctx.stroke(); ctx.setLineDash([]);
   const fs = clamp(Math.min(w, h)*.06, 11/scale, 22/scale);
   ctx.fillStyle = '#EDEEF5'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
@@ -322,7 +322,7 @@ function drawPlaceholder(ctx, o, scale, doc){
   ctx.fillText(L('ou double-clique pour en choisir une','or double-click to choose one'), 0, fs*2.2);
   // petite icône image
   const s = fs*1.6;
-  ctx.strokeStyle = '#5DB6EC'; ctx.lineWidth = fs*.12; ctx.lineJoin = 'round';
+  ctx.strokeStyle = '#F0646B'; ctx.lineWidth = fs*.12; ctx.lineJoin = 'round';
   ctx.strokeRect(-s/2, -s*1.15, s, s*.8);
   ctx.beginPath(); ctx.moveTo(-s/2 + s*.05, -s*.42); ctx.lineTo(-s*.15, -s*.75); ctx.lineTo(s*.05, -s*.55); ctx.lineTo(s*.2, -s*.68); ctx.lineTo(s/2 - s*.05, -s*.42); ctx.stroke();
   ctx.restore();
