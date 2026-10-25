@@ -122,9 +122,9 @@ function exSummary(){
   }
   const pl = exPlan();
   const mpx = pl.W*pl.H/1e6;
-  const est = EX.fmt === 'png' ? mpx*1e6*1.2 : mpx*1e6*(0.05 + Math.pow((EX.jpegQ - 70)/30, 2)*0.3);
+  const est = EX.fmt === 'png' ? mpx*1e6*1.6 : mpx*1e6*(0.05 + Math.pow((EX.jpegQ - 70)/30, 2)*0.3);
   const size = pl.ph ? round(pl.ph.w*2.54, 1) + ' × ' + round(pl.ph.h*2.54, 1) + ' cm' : '';
-  el.innerHTML = `${icon('check')}<span><b>${fmtNum(pl.W)} × ${fmtNum(pl.H)} px</b> · ${pl.dpi} dpi${size ? ' · ' + size : ''} · ${L('jusqu\u2019à','up to')} ≈ ${fmtBytes(est)}` +
+  el.innerHTML = `${icon('check')}<span><b>${fmtNum(pl.W)} × ${fmtNum(pl.H)} px</b> · ${pl.dpi} dpi${size ? ' · ' + size : ''} · ≈ ${fmtBytes(est)}` +
     (pl.capped ? `<br><em>${L('Ce navigateur ne peut pas peindre une image aussi grande d’un seul tenant : elle est ramenée au maximum possible. Le PDF, lui, garde la pleine résolution.','This browser can’t paint such a large image in one piece: it’s reduced to the largest possible size. The PDF keeps the full resolution.')}</em>` : '') +
     (EX.fmt === 'pdf' ? `<br>${L('Prêt pour l’imprimeur : la page fait la taille réelle de l’affiche.','Ready for the printer: the page is the poster’s actual size.')}` : '') + '</span>';
 }
