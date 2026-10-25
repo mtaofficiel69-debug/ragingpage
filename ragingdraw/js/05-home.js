@@ -45,7 +45,7 @@ function renderHome(){
   <div id="homeView">
     <header class="wd-top">
       <div class="wd-brand">${rdLogo(40,'wd-logo',true)}${rdWordmark()}</div>
-      <div class="wd-top-r">${langFlagsHtml()}${themeToggleBtnHtml('btn-ghost btn-sm')}</div>
+      <div class="wd-top-r">${appLinksHtml()}${langFlagsHtml()}${themeToggleBtnHtml('btn-ghost btn-sm')}</div>
     </header>
     <div class="wd-body">
       <aside class="wd-side">
@@ -71,7 +71,7 @@ function renderHome(){
       <main class="wd-main">
         <div class="wd-main-h"><h1>${L('Mes affiches','My posters')}</h1>${nb ? `<span class="wd-count">${nb}</span>` : ''}${last ? `<button type="button" class="wd-resume" data-act="openPoster" data-id="${esc(last.id)}" title="${L('Rouvrir la dernière affiche modifiée','Reopen the last poster you edited')}"><span class="wd-resume-l">${L('Reprendre','Resume')}</span><span class="wd-resume-t">${esc(last.title || L('Sans titre','Untitled'))}</span>${icon('chevR')}</button>` : ''}</div>
         <div class="wd-table">${main}
-          <div class="wd-strip" aria-hidden="true"><span class="wd-strip-holes"></span><span class="wd-strip-sw">${['#3699D4','#5DB6EC','#14425E','#D64545','#F2C94C','#F2994A','#2F9E44','#8E5BD6','#E86FB0','#23262E','#FCFDFE'].map(c => `<i style="--c:${c}"></i>`).join('')}</span><span class="wd-strip-n">${L('PRISE 1','TAKE 1')}</span></div>
+          <div class="wd-strip" aria-hidden="true"><span class="wd-strip-holes"></span><span class="wd-strip-sw">${['#D9363E','#F0646B','#5E1418','#A51F2B','#F2C94C','#F2994A','#2F9E44','#8E5BD6','#E86FB0','#23262E','#FCFDFE'].map(c => `<i style="--c:${c}"></i>`).join('')}</span><span class="wd-strip-n">${L('PRISE 1','TAKE 1')}</span></div>
         </div>
       </main>
     </div>

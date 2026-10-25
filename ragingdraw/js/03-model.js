@@ -75,7 +75,7 @@ function mkText(text, x, y, w, o){
 function mkShape(shape, x, y, w, h, o){
   return Object.assign(baseObj('shape', x, y, w, h), {
     shape, radius:0, points:5, inner:.45, sides:6, arrow:false,
-    fill:solid('#3699D4'), stroke:{on:false, color:'#FFFFFF', width:6}
+    fill:solid('#D9363E'), stroke:{on:false, color:'#FFFFFF', width:6}
   }, o||{});
 }
 function mkPath(dec, x, y, w, h, o){

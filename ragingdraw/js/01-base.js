@@ -189,14 +189,14 @@ function icon(name, cls){
 /* ---------- Logo : le visage de Raging Page, mais sur une toile qui coule et avec un pinceau ---------- */
 function rdLogo(size, cls, splash){
   return '<svg class="' + (cls||'') + (splash ? ' rd-logo-splash' : '') + '" width="' + size + '" height="' + size + '" viewBox="0 0 64 64" aria-hidden="true">' +
-    '<rect class="mmlb" width="64" height="64" rx="14" fill="#1F6FA0"/>' +
+    '<rect class="rdlb" width="64" height="64" rx="14" fill="#A51F2B"/>' +
     '<path d="M12 7H53V57H12Z" fill="#FCFDFE" stroke="#FCFDFE" stroke-width="3" stroke-linejoin="round"/>' +
-    '<path d="M12 7H53V12.6c0 1.7-1 2.7-2.3 2.7s-2.3-1-2.3-2.7V12H43.6v5.2c0 1.9-1.1 3-2.5 3s-2.5-1.1-2.5-3V12H12Z" fill="#B7D4EC" stroke="#B7D4EC" stroke-width="3" stroke-linejoin="round"/>' +
-    '<path d="M16 25L31 30M50 27L35 30" stroke="#14425E" stroke-width="6" stroke-linecap="round"/>' +
-    '<circle cx="25" cy="38" r="6.6" fill="#14425E"/><circle cx="27.2" cy="35.8" r="1.9" fill="#FCFDFE"/>' +
-    '<circle cx="41" cy="38" r="6.6" fill="#14425E"/><circle cx="43.2" cy="35.8" r="1.9" fill="#FCFDFE"/>' +
-    '<path d="M20 51H37" stroke="#14425E" stroke-width="5.6" stroke-linecap="round"/>' +
-    '<g transform="translate(36 51) rotate(-30)"><path d="M-2 -1.9Q-2 -2.4 -1.4 -2.4H11V2.4H-1.4Q-2 2.4 -2 1.9Z" fill="#14425E"/><path d="M10.5 -3.1H15.5V3.1H10.5Z" fill="#5DB6EC"/><path d="M15.3 -3.6C20 -4.2 24.5 -2.6 28.5 0C24.5 2.6 20 4.2 15.3 3.6Z" fill="#FCFDFE"/><path d="M22 -3C24.4 -2.2 26.6 -1.2 28.5 0C26.6 1.2 24.4 2.2 22 3C23.2 1 23.2 -1 22 -3Z" fill="#5DB6EC"/></g>' +
+    '<path d="M12 7H53V12.6c0 1.7-1 2.7-2.3 2.7s-2.3-1-2.3-2.7V12H43.6v5.2c0 1.9-1.1 3-2.5 3s-2.5-1.1-2.5-3V12H12Z" fill="#F2C4C7" stroke="#F2C4C7" stroke-width="3" stroke-linejoin="round"/>' +
+    '<path d="M16 25L31 30M50 27L35 30" stroke="#5E1418" stroke-width="6" stroke-linecap="round"/>' +
+    '<circle cx="25" cy="38" r="6.6" fill="#5E1418"/><circle cx="27.2" cy="35.8" r="1.9" fill="#FCFDFE"/>' +
+    '<circle cx="41" cy="38" r="6.6" fill="#5E1418"/><circle cx="43.2" cy="35.8" r="1.9" fill="#FCFDFE"/>' +
+    '<path d="M20 51H37" stroke="#5E1418" stroke-width="5.6" stroke-linecap="round"/>' +
+    '<g transform="translate(36 51) rotate(-30)"><path d="M-2 -1.9Q-2 -2.4 -1.4 -2.4H11V2.4H-1.4Q-2 2.4 -2 1.9Z" fill="#5E1418"/><path d="M10.5 -3.1H15.5V3.1H10.5Z" fill="#F0646B"/><path d="M15.3 -3.6C20 -4.2 24.5 -2.6 28.5 0C24.5 2.6 20 4.2 15.3 3.6Z" fill="#FCFDFE"/><path d="M22 -3C24.4 -2.2 26.6 -1.2 28.5 0C26.6 1.2 24.4 2.2 22 3C23.2 1 23.2 -1 22 -3Z" fill="#F0646B"/></g>' +
     (splash ? '<g class="rd-splash"><circle class="sp sp1" cx="60" cy="36.5" r="3.4"/><circle class="sp sp2" cx="60" cy="36.5" r="3.4"/><circle class="sp sp3" cx="60" cy="36.5" r="3.4"/></g>' : '') +
     '</svg>';
 }
