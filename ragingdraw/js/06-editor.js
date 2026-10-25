@@ -142,14 +142,22 @@ function renderEditorShell(){
           <button class="btn" data-act="goHome" title="${L('Accueil','Home')}">${icon('home')}<span class="tb-lbl">${L('Accueil','Home')}</span></button>
           <span class="tb-div"></span>
           <input class="tb-title" id="docTitle" value="${esc(d.title)}" spellcheck="false" aria-label="${L('Titre de l’affiche','Poster title')}">
-          <span class="save-status saved" id="saveStatus"><i></i>${L('Enregistré','Saved')}</span>
-        </div>
-        <div class="topbar-right">
+          <span class="tb-div"></span>
+          <button class="btn tb-box" data-act="tbAddText" title="${L('Ajouter un texte au centre de l’affiche (T)','Add a text in the middle of the poster (T)')}">${icon('typeT')} + <span class="tb-lbl">${L('Texte','Text')}</span></button>
+          <button class="btn tb-box" data-act="addImage" title="${L('Importer une image (I)','Import an image (I)')}">${icon('image')} + <span class="tb-lbl">${L('Image','Image')}</span></button>
+          <button class="btn" data-act="tbAlignMenu" title="${L('Aligner la sélection : sur l’affiche, ou entre plusieurs éléments','Align the selection: on the poster, or between several elements')}">${icon('alignCH')}<span class="tb-lbl">${L('Aligner','Align')}</span></button>
+          <span class="tb-div"></span>
           <button class="btn" data-act="undo" title="${L('Annuler','Undo')} (Ctrl+Z)">${icon('undo')}</button>
           <button class="btn" data-act="redo" title="${L('Rétablir','Redo')} (Ctrl+Maj+Z)">${icon('redo')}</button>
           <span class="tb-div"></span>
+          <span class="save-status saved" id="saveStatus"><i></i>${L('Enregistré','Saved')}</span>
+          <span class="vault-chip off" id="driveChip" data-act="driveChipClick" role="button" tabindex="0"></span>
           ${langFlagsHtml()}
+        </div>
+        <div class="topbar-right">
+          <button class="fmt-indicator" data-act="openFormat" id="fmtIndicator" title="${L('Changer le format de l’affiche','Change the poster size')}">${esc(formatLabel(d))}</button>
           ${themeToggleBtnHtml('', true)}
+          <button class="btn" data-act="tbMoreMenu" title="${L('Plus d’options','More options')}">${icon('more')}</button>
           <button class="btn btn-primary" data-act="openExport">${icon('export')}<span class="tb-lbl">${L('Exporter','Export')}</span></button>
         </div>
       </div>
@@ -174,6 +182,7 @@ function renderEditorShell(){
 function updateDocInfo(){
   const el = document.getElementById('docInfo'); if(!el || !S.doc) return;
   const d = S.doc;
+  const fi = document.getElementById('fmtIndicator'); if(fi) fi.textContent = formatLabel(d);
   el.innerHTML = `<span>${esc(formatLabel(d))}</span><span>${d.objects.length} ${L(d.objects.length>1?'éléments':'élément', d.objects.length>1?'elements':'element')}</span>`;
 }
 function renderDock(){
@@ -216,7 +225,7 @@ function attachEditorEvents(){
   cv.addEventListener('pointerleave', () => { S.pointer = null; S.hover = null; requestRender(); });
   cv.addEventListener('dblclick', onDblClick);
   cv.addEventListener('wheel', onWheel, {passive:false});
-  cv.addEventListener('contextmenu', e => e.preventDefault());
+  cv.addEventListener('contextmenu', onCanvasContextMenu);
   const title = document.getElementById('docTitle');
   title.addEventListener('input', () => { S.doc.title = title.value; const r = document.getElementById('railTitle'); if(r) r.textContent = title.value; scheduleSave(); });
   title.addEventListener('change', () => { if(!title.value.trim()){ title.value = S.doc.title = L('Sans titre','Untitled'); } commit(); });
