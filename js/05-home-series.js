@@ -97,7 +97,7 @@ function renderHome(){
         ${mmLogo(40,'wd-logo',true)}
         ${mmWordmark()}
       </div>
-      <div class="wd-top-r">${langFlagsHtml()}${themeToggleBtnHtml('btn-ghost btn-sm')}</div>
+      <div class="wd-top-r">${appLinksHtml()}${langFlagsHtml()}${themeToggleBtnHtml('btn-ghost btn-sm')}</div>
     </header>
       <div class="wd-set"><div class="wd-set-col wd-set-l"><div class="wd-strip"></div>
         <svg viewBox="0 0 124 112" aria-hidden="true"><defs><clipPath id="wdCa"><rect x="14" y="29" width="96" height="13" rx="3"/></clipPath><clipPath id="wdCb"><rect x="14" y="44" width="96" height="11" rx="2"/></clipPath></defs>

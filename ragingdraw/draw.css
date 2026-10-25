@@ -603,3 +603,21 @@ input[type=range]:focus-visible::-webkit-slider-thumb{box-shadow:var(--focus-rin
   .dk-sep{margin:0 2px;}
   .zoombar{display:none;}
 }
+
+/* =====================================================================
+   PASSERELLES (accueil) : « Guide » et l'autre outil, en haut à droite
+===================================================================== */
+.app-links{display:flex; align-items:center; gap:6px;}
+.app-guide{display:inline-flex; align-items:center; gap:7px; padding:7px 10px; border-radius:6px; color:var(--ink); text-decoration:none; font-size:13.5px; font-weight:500; white-space:nowrap; transition:background .12s;}
+.app-guide:hover{background:var(--overlay-hover);}
+.app-guide .icon{width:15px; height:15px; color:var(--ink-soft);}
+.app-switch{display:inline-flex; align-items:center; gap:9px; height:36px; padding:0 12px 0 5px; border:1px solid var(--hair); border-radius:10px; background:var(--surface); color:var(--ink); text-decoration:none; box-shadow:var(--shadow-sm); transition:border-color .12s, box-shadow .12s;}
+.app-switch:hover{border-color:#B7D4EC; box-shadow:var(--shadow-sm), 0 0 0 3px rgba(54,153,212,.12);}
+.app-switch .as-logo{width:26px; height:26px; flex:none; display:block; border-radius:6px;}
+.app-switch .as-word{font-size:16px;}
+.app-switch .as-ar{width:14px; height:14px; color:var(--ink-soft); transition:transform .15s, color .15s;}
+.app-switch:hover .as-ar{transform:translateX(2px); color:var(--accent);}
+.app-guide:focus-visible, .app-switch:focus-visible{outline:none; box-shadow:0 0 0 3px rgba(54,153,212,.22);}
+.app-sep{width:1px; height:22px; background:var(--hair); margin:0 4px; flex:none;}
+@media (max-width:720px){ .app-guide span, .app-switch .as-word, .app-sep{display:none;} .app-switch{padding:0 8px 0 5px; gap:6px;} }
+@media (prefers-reduced-motion:reduce){ .app-switch .as-ar{transition:none;} }

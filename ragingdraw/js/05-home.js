@@ -45,7 +45,7 @@ function renderHome(){
   <div id="homeView">
     <header class="wd-top">
       <div class="wd-brand">${rdLogo(40,'wd-logo',true)}${rdWordmark()}</div>
-      <div class="wd-top-r">${langFlagsHtml()}${themeToggleBtnHtml('btn-ghost btn-sm')}</div>
+      <div class="wd-top-r">${appLinksHtml()}${langFlagsHtml()}${themeToggleBtnHtml('btn-ghost btn-sm')}</div>
     </header>
     <div class="wd-body">
       <aside class="wd-side">
